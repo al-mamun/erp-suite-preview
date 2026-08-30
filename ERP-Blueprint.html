@@ -483,6 +483,7 @@ footer p{max-width:64ch}
       <tr><td><a href="#s8">Cheque register</a></td><td>Received, deposited, cleared, bounced, endorsed — with due dates</td><td>Included</td></tr>
       <tr><td><a href="#s8">Cash boxes and banks</a></td><td>Safes tied to accounts, transfers, and bank reconciliation</td><td>Included</td></tr>
       <tr><td><a href="#s13">Salesmen and commission</a></td><td>By salesman, region and district, calculated from invoices</td><td>Included</td></tr>
+      <tr><td><a href="#s13">Commission by category</a></td><td>Rates per category and sub category, calculated line by line</td><td>New</td></tr>
     </tbody>
   </table></div>
 
@@ -1373,6 +1374,22 @@ footer p{max-width:64ch}
       <p>Sales and profit reports run by salesman, by region and by district, and the commission
       due is calculated from posted invoices — with the option to calculate it on paid invoices
       instead, if you prefer to pay commission only on money actually collected.</p></div>
+    <div class="beat"><p class="beat-label">The rate follows what was sold <span class="tag new">New</span></p>
+      <p>One percentage for a whole invoice does not describe how you actually pay. So the rate is
+      set on a small table of its own — <strong>Commission rules</strong>, beside the salesmen —
+      where a rate belongs to a <strong>category</strong> or, where it differs, to a
+      <strong>sub category</strong>. Laptops at 2%, an open-box laptop at 3%, solar at 3.5%,
+      paper at 1%, services at 5%. A rule can name one salesman or apply to everyone, and the
+      <strong>most specific rule wins</strong> — sub category beats category, and category beats
+      the salesman's own single rate.</p>
+      <p>The consequence matters more than the table. Commission stops being a percentage of a
+      document and becomes a calculation on <strong>each line</strong>: the system reads the item,
+      finds its category, applies that category's rate, and adds the lines up. The
+      <strong>Commission due</strong> report shows every line with the rule that priced it, so an
+      argument about a payment is settled by looking, not by recalculating. It also shows what a
+      single flat rate would have paid, side by side, so the difference is visible.</p>
+      <p>A salesman with no “On” setting — the shop counter, direct business — earns nothing and
+      is listed separately rather than silently left out.</p></div>
   </div>
 
   <div class="mod">

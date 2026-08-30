@@ -11050,5 +11050,163 @@ Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
 paint();
 </script>
 
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   CR-005 — COMMISSION BY CATEGORY AND SUB CATEGORY
+   CR-004 is not built here; the manager level is still a separate decision.
+
+   The client: "we have sales manager in some companies and commisions by
+   category or subcategory".
+
+   Until now a salesman had ONE rate applied to a whole invoice. Two things
+   were missing: somewhere to say the rate differs by what was sold, and a
+   calculation that reads the lines rather than the document total. Both are
+   built here, and the report computes — no commission figure is typed in.
+
+   What was already there and is reused: each salesman's own rate and his
+   "On" setting (invoice value or collected money), and the Category and
+   Sub category already carried by every item.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── the rate table. Blank salesman = applies to everyone. ── */
+L.commr = { t:'Commission rules',
+ sub:'What the rate is, by what was sold — the most specific rule wins',
+ add:'commrf', addT:'New rule', tools:['Excel','Print'],
+ cols:[C('Salesman'),C('Category'),C('Sub category'),n('Rate %'),C('Applies to'),C('From'),C('Status'),C('')],
+ rows:[
+  ['<span class="mu">All salesmen</span>','Laptops','Open box','3.00','The sub category','01/01/2026','<span class="pill ok">Active</span>',del()],
+  ['<span class="mu">All salesmen</span>','Laptops','<span class="mu">All</span>','2.00','The category','01/01/2026','<span class="pill ok">Active</span>',del()],
+  ['<span class="mu">All salesmen</span>','Solar','<span class="mu">All</span>','3.50','The category','01/01/2026','<span class="pill ok">Active</span>',del()],
+  ['<span class="mu">All salesmen</span>','Paper','<span class="mu">All</span>','1.00','The category','01/01/2026','<span class="pill ok">Active</span>',del()],
+  ['<span class="mu">All salesmen</span>','Services','<span class="mu">All</span>','5.00','The category','01/01/2026','<span class="pill ok">Active</span>',del()]
+ ]};
+
+/* ── the lines behind the commission: what each salesman sold, by category.
+      These add up to the "Sales this month" and "Collected" already shown on
+      the Salesmen screen, so the two screens cannot disagree. ── */
+const COMMLINES = [
+ { s:'Elie Haddad',     cat:'Laptops',  sub:'New',      value:14200, collected:11000 },
+ { s:'Elie Haddad',     cat:'Laptops',  sub:'Open box', value:4200,  collected:3200 },
+ { s:'Elie Haddad',     cat:'Solar',    sub:'—',        value:14200, collected:11000 },
+ { s:'Elie Haddad',     cat:'Paper',    sub:'—',        value:3520,  collected:2700 },
+ { s:'Elie Haddad',     cat:'Services', sub:'—',        value:2000,  collected:1500 },
+ { s:'Nabil Aoun',      cat:'Laptops',  sub:'New',      value:9880,  collected:9880 },
+ { s:'Nabil Aoun',      cat:'Solar',    sub:'—',        value:12000, collected:12000 },
+ { s:'Nabil Aoun',      cat:'Paper',    sub:'—',        value:1800,  collected:1800 },
+ { s:'Nabil Aoun',      cat:'Services', sub:'—',        value:1200,  collected:1200 },
+ { s:'Direct business', cat:'Laptops',  sub:'New',      value:12400, collected:12400 },
+ { s:'Direct business', cat:'Laptops',  sub:'Open box', value:2096,  collected:2096 },
+ { s:'Direct business', cat:'Solar',    sub:'—',        value:35188, collected:35188 },
+ { s:'Direct business', cat:'Paper',    sub:'—',        value:9536,  collected:9536 },
+ { s:'Direct business', cat:'Services', sub:'—',        value:2000,  collected:2000 }
+];
+
+/* the most specific rule wins: sub category, then category, then the
+   salesman's own rate as the fallback */
+function commRate(cat, sub){
+ const rows = (L.commr.rows || []).map(r => ({
+   cat: cellText(r[1]), sub: cellText(r[2]), rate: parseFloat(cellText(r[3])),
+   live: /active/i.test(cellText(r[6])) }));
+ let hit = rows.find(r => r.live && r.cat === cat && r.sub === sub);
+ if(hit) return { rate:hit.rate, why: cat + ' / ' + sub };
+ hit = rows.find(r => r.live && r.cat === cat && /^all$/i.test(r.sub));
+ if(hit) return { rate:hit.rate, why: cat };
+ return null;
+}
+function commFor(name){
+ const i = (L.sman.rows || []).find(r => cellText(r[colIdx('sman','Name')]) === name);
+ if(!i) return null;
+ return { pct: parseFloat(cellText(i[colIdx('sman','Commission %')])) || 0,
+          on: cellText(i[colIdx('sman','On')]) };
+}
+
+S.commd = function(){
+ const f2 = v => v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const names = [...new Set(COMMLINES.map(l => l.s))];
+ let body = [], grand = 0, grandFlat = 0, excluded = [];
+
+ names.forEach(nm => {
+  const sm = commFor(nm);
+  if(!sm){ return; }
+  if(sm.on === '—' || sm.on === ''){ excluded.push(nm); return; }
+  const mine = COMMLINES.filter(l => l.s === nm);
+  let sub = 0, base0 = 0;
+  mine.forEach(l => {
+   const r = commRate(l.cat, l.sub);
+   const base = /collected/i.test(sm.on) ? l.collected : l.value;
+   base0 += base;
+   const rate = r ? r.rate : sm.pct;
+   const com = Math.round(base * rate) / 100;
+   sub += com;
+   body.push(['<b>' + esc(nm) + '</b>', esc(l.cat), l.sub === '—' ? '<span class="mu">—</span>' : esc(l.sub),
+     f2(l.value), f2(l.collected), f2(rate) + '%',
+     r ? '<span class="mu">' + esc(r.why) + '</span>' : pill('wa', tr('His own rate')),
+     f2(base), '<b>' + f2(com) + '</b>']);
+  });
+  const flat = Math.round(base0 * sm.pct) / 100;
+  grand += sub; grandFlat += flat;
+  body.push(['<b>' + esc(nm) + ' — ' + tr('total') + '</b>','','','','','',
+    '<span class="mu">' + esc(sm.on) + '</span>', '<b>' + f2(base0) + '</b>', '<b>' + f2(sub) + '</b>']);
+ });
+ body.push(['<b>' + tr('All salesmen') + '</b>','','','','','','','','<b>' + f2(grand) + '</b>']);
+
+ return head('Commission due','Worked out line by line, at the rate for what was actually sold',
+   [btn('This month','p'),btn('Last month'),btn('Print'),btn('Excel'),btn('PDF')]) +
+  '<div class="g g3">' +
+   kpi('Commission due', 'US$ ' + f2(grand), 'across ' + (names.length - excluded.length) + ' salesmen') +
+   kpi('At one flat rate each', 'US$ ' + f2(grandFlat), 'what the old single rate would have paid') +
+   kpi('Difference', (grand >= grandFlat ? '+' : '−') + 'US$ ' + f2(Math.abs(grand - grandFlat)),
+       'because the rate follows what was sold', grand >= grandFlat ? 'u' : 'w') +
+  '</div>' +
+  pane(tr('Line by line'),
+   tbl([C('Salesman'),C('Category'),C('Sub category'),n('Sales value'),n('Collected'),
+        n('Rate'),C('Rule used'),n('Calculated on'),n('Commission')], body, { min:1240 })) +
+  (excluded.length ? pane(tr('Not on commission'),
+    dsState('empty', { title: excluded.join(', '),
+      text: tr('This salesman has no “On” setting, so no commission is calculated. Shop and direct sales usually sit here.') })) : '') +
+  note(tr('Every figure on this screen is calculated.'),
+   'The rates come from Commission rules, the values from what each salesman sold by category, and each line is worked out at the rate for its own category — not one rate across the whole invoice. Change a rule and this screen changes with it.');
+};
+
+/* ── put both on the menu, beside the screens they belong with ── */
+(function(){
+ MENU.forEach(g => {
+  const i = g.items.findIndex(x => x[0] === 'sman');
+  if(i >= 0 && !g.items.some(x => x[0] === 'commr'))
+   g.items.splice(i + 1, 0, ['commr','Commission rules','قواعد العمولة']);
+  const j = g.items.findIndex(x => x[0] === 'prep');
+  if(j >= 0 && !g.items.some(x => x[0] === 'commd'))
+   g.items.splice(j + 1, 0, ['commd','Commission due','العمولة المستحقة']);
+ });
+})();
+
+/* the form behind "New rule" */
+Object.assign(F, { commrf:{ t:'New commission rule', s:[{ h:'The rule', c:2, f:[
+  { l:'Salesman', t:'sel', o:['All salesmen','Elie Haddad','Nabil Aoun'] },
+  { l:'Category', t:'sel', o:['Laptops','Solar','Paper','Services'], req:1 },
+  { l:'Sub category', t:'sel', o:['All','New','Open box'] },
+  { l:'Rate %', t:'num', req:1 },
+  { l:'From', v:'01/01/2026', req:1 },
+  { t:'note', v:'<b>The most specific rule wins.</b> A rule naming a sub category beats one naming only the category, and a category rule beats the salesman’s own single rate. Nothing is calculated on the invoice total any more — every line is rated on what it actually is.' }
+]}]}});
+
+/* a way into the rules from the salesman list */
+S.sman = (orig => function(){
+ return orig().replace('<div class="tools">','<div class="tools">' +
+  '<button class="b" onclick="openTab(\'commr\',\'Commission rules\',\'قواعد العمولة\')">' +
+  tr('Commission rules') + '</button>');
+})(S.sman || function(){ return renderList('sman','Salesmen','المندوبون'); });
+
+Object.assign(AR, { 'Commission rules':'قواعد العمولة', 'Commission due':'العمولة المستحقة',
+ 'Line by line':'سطراً بسطر', 'Not on commission':'بدون عمولة', 'His own rate':'معدله الخاص',
+ 'All salesmen':'كل المندوبين', 'total':'المجموع', 'Rule used':'القاعدة المستخدمة',
+ 'Sales value':'قيمة المبيعات', 'Collected':'المحصّل', 'Calculated on':'محسوبة على',
+ 'Commission':'العمولة', 'Every figure on this screen is calculated.':'كل رقم في هذه الشاشة محسوب.',
+ 'This salesman has no “On” setting, so no commission is calculated. Shop and direct sales usually sit here.':
+   'هذا المندوب بلا إعداد «على»، لذلك لا تُحتسب عمولة. المبيعات المباشرة عادةً هنا.' });
+Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
+buildTree(); paint();
+</script>
+
 </body>
 </html>
