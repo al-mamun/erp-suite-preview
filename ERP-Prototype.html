@@ -11386,5 +11386,289 @@ Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
 buildTree(); paint();
 </script>
 
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   CR-008 — ATTRIBUTES AND VARIANTS
+
+   "same pant same brand same price different color … sizes, colours or any
+   attributes can be added, like weight … give freedom to add them to whoever
+   is authorised."
+
+   The distinction the whole design turns on: some attributes SPLIT STOCK and
+   some only describe. Colour and size split it — you must know you hold 9
+   black size 32, not just 52 pants. Weight and material do not; they are
+   facts about the item. An attribute that splits stock creates a variant with
+   its own barcode and its own quantity. One that does not is simply a field.
+
+   Attributes are defined by the user, not fixed in the software. A few come
+   ready; anyone with the right permission adds more.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── the attribute definitions ── */
+L.attrs = { t:'Attributes',
+ sub:'What can describe an item — and which of them split the stock',
+ add:'attrf', addT:'New attribute', tools:['Excel','Print'],
+ cols:[C('Code'),C('Name'),C('Arabic name'),C('Type'),C('Unit'),C('Splits stock'),
+       C('Applies to'),C('Values'),C('Who may add values'),C('Status'),C('')],
+ rows:[
+  ['ATT-01','Colour','لون','List','<span class="mu">—</span>','<span class="pill ok">Yes</span>','All items',
+   'Black · Blue · Beige · White · Grey','Manager · Administrator','<span class="pill ok">Active</span>',del()],
+  ['ATT-02','Size','قياس','List','<span class="mu">—</span>','<span class="pill ok">Yes</span>','Clothing',
+   '30 · 32 · 34 · 36 · 38','Manager · Administrator','<span class="pill ok">Active</span>',del()],
+  ['ATT-03','Weight','وزن','Number','kg','<span class="pill mu">No</span>','All items',
+   '<span class="mu">—</span>','Anyone who can edit an item','<span class="pill ok">Active</span>',del()],
+  ['ATT-04','Material','مادة','List','<span class="mu">—</span>','<span class="pill mu">No</span>','Clothing',
+   'Cotton · Denim · Linen','Manager · Administrator','<span class="pill ok">Active</span>',del()],
+  ['ATT-05','Warranty months','أشهر الكفالة','Number','months','<span class="pill mu">No</span>','Laptops',
+   '<span class="mu">—</span>','Manager · Administrator','<span class="pill ok">Active</span>',del()]
+ ]};
+
+/* ── one item that actually has variants, so the idea can be seen ── */
+(function(){
+ if(L.items.rows.some(r => cellText(r[colIdx('items','Item number')]) === 'IT-2101')) return;
+ const tmpl = L.items.rows[0];
+ const row = tmpl.map((c,i) => {
+  const h = (L.items.cols[i] || {}).h || '';
+  return ({ 'Item number':'IT-2101', 'Barcode':'6291200', 'Name':'Chino pant — slim',
+    'Arabic name':'بنطلون شينو', 'Category':'Clothing', 'Sub category':'<span class="mu">—</span>',
+    'Packages':'Piece', 'Cost':'14.00', 'Wholesale':'22.00', 'Retail':'28.00',
+    'On hand':'52', 'Minimum':'20', 'VAT':'11%' })[h] !== undefined
+    ? ({ 'Item number':'IT-2101', 'Barcode':'6291200', 'Name':'Chino pant — slim',
+        'Arabic name':'بنطلون شينو', 'Category':'Clothing', 'Sub category':'<span class="mu">—</span>',
+        'Packages':'Piece', 'Cost':'14.00', 'Wholesale':'22.00', 'Retail':'28.00',
+        'On hand':'52', 'Minimum':'20', 'VAT':'11%' })[h]
+    : (h === 'Status' ? '<span class="pill ok">Active</span>' : c);
+ });
+ L.items.rows.push(row);
+})();
+
+/* ── the variants: one row per combination that splits stock ── */
+const VARSTOCK = [['Black',30,6],['Black',32,9],['Black',34,7],
+                  ['Blue',30,4],['Blue',32,8],['Blue',34,5],
+                  ['Beige',30,3],['Beige',32,6],['Beige',34,4]];
+L.ivar = { t:'Item variants',
+ sub:'Every combination that holds its own stock, with its own barcode',
+ tools:['Excel','Print'],
+ cols:[C('Item'),C('Colour'),C('Size'),C('Barcode'),n('On hand'),n('Reserved'),n('Available'),
+       n('Cost'),C('Status'),C('')],
+ rows: VARSTOCK.map((v,i) => {
+   const res = (i === 1 ? 2 : i === 4 ? 1 : 0);
+   return ['Chino pant — slim', v[0], String(v[1]),
+     '<span class="ds-code">62912' + String(10 + i).padStart(2,'0') + '</span>',
+     String(v[2]), String(res), String(v[2] - res), '14.00',
+     v[2] - res <= 2 ? '<span class="pill wa">Low</span>' : '<span class="pill ok">OK</span>', del()];
+ })};
+
+/* ── the attributes that describe an item but do not split its stock ── */
+L.iattr = { t:'Item attributes', sub:'Facts about the item — these do not split the stock',
+ add:'iattrf', addT:'Add an attribute', tools:['Excel'],
+ cols:[C('Item'),C('Attribute'),C('Value'),C('Unit'),C('')],
+ rows:[
+  ['Chino pant — slim','Weight','0.45','kg',del()],
+  ['Chino pant — slim','Material','Cotton','<span class="mu">—</span>',del()],
+  ['HP 17T-CN400 Core 5','Weight','2.10','kg',del()],
+  ['HP 17T-CN400 Core 5','Warranty months','24','months',del()]
+ ]};
+
+/* the item record picks both up through the relationship layer that already
+   exists — no new detail mechanism, just two more related lists */
+(function(){
+ const rel = ENT.items.rel;
+ if(!rel.some(r => r.list === 'ivar'))
+  rel.unshift({ list:'ivar', via:'Item', label:'Variants' });
+ if(!rel.some(r => r.list === 'iattr'))
+  rel.splice(1, 0, { list:'iattr', via:'Item', label:'Attributes' });
+})();
+
+/* stock report and commission rules learn about the new category */
+(function(){
+ if(L.srep && !L.srep.rows.some(r => /Chino/.test(cellText(r[0]))))
+  L.srep.rows.push(['Chino pant — slim','Zahle main','52','3','49','14.00','728.00',
+    '29/08/2026','<span class="mu">—</span>','<span class="pill ok">OK</span>']);
+ if(L.commr && !L.commr.rows.some(r => cellText(r[1]) === 'Clothing'))
+  L.commr.rows.push(['<span class="mu">All salesmen</span>','Clothing','<span class="mu">All</span>',
+    '2.50','The category','01/01/2026','<span class="pill ok">Active</span>',del()]);
+})();
+
+/* ── the forms ── */
+Object.assign(F, {
+ attrf:{ t:'New attribute', s:[{ h:'The attribute', c:2, f:[
+   { l:'Name', req:1 }, { l:'Arabic name' },
+   { l:'Type', t:'sel', o:['List of values','Number','Text','Yes / no'], req:1 },
+   { l:'Unit', ph:'kg, cm, months — for a number' },
+   { l:'Applies to', t:'sel', o:['All items','Clothing','Laptops','Solar','Paper','Services'] },
+   { l:'Who may add values', t:'sel', o:['Manager · Administrator','Administrator only','Anyone who can edit an item'] },
+   { t:'note', k:'wa', v:'<b>Does this attribute split the stock?</b> Colour and size do — you need to know you hold nine black size 32, not fifty-two pants. Weight and material do not; they describe the item. Say yes only when you must count it separately, because every combination becomes its own barcode and its own quantity.' },
+   { l:'It splits the stock', t:'chk' }
+ ]}]},
+ iattrf:{ t:'Add an attribute to this item', s:[{ h:'The value', c:2, f:[
+   { l:'Attribute', t:'sel', o:['Weight','Material','Warranty months'], req:1 },
+   { l:'Value', req:1 },
+   { t:'note', v:'Only attributes that do not split the stock are set here. Colour and size are set on the variants, because each combination carries its own quantity.' }
+ ]}]}
+});
+
+/* ── on the menu, beside Items ── */
+(function(){
+ MENU.forEach(g => {
+  const i = g.items.findIndex(x => x[0] === 'items');
+  if(i >= 0 && !g.items.some(x => x[0] === 'attrs'))
+   g.items.splice(i + 1, 0, ['attrs','Attributes','الخصائص']);
+ });
+})();
+
+Object.assign(AR, { 'Attributes':'الخصائص', 'Item variants':'أصناف فرعية', 'Variants':'الأصناف الفرعية',
+ 'Item attributes':'خصائص الصنف', 'Splits stock':'يقسّم المخزون', 'Applies to':'ينطبق على',
+ 'Values':'القيم', 'Who may add values':'من يمكنه إضافة القيم', 'Colour':'اللون', 'Size':'القياس',
+ 'Weight':'الوزن', 'Material':'المادة', 'Warranty months':'أشهر الكفالة', 'Unit':'الوحدة',
+ 'New attribute':'خاصية جديدة', 'Clothing':'الألبسة' });
+Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
+buildTree(); paint();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   CR-009  A voucher may only post to a mature account
+   CR-010  A voucher may mix currencies, and a receipt may be split across them
+
+   The client: "dont allow jvs to write on acoount not mature — mature means
+   ex 41110001 (01 or 02 or 03 for currency)", and "when i make jv maybe i can
+   make 100 line and with usd and lbp mixt, also in reciept maybe customer pay
+   part in lbp and part in usd".
+
+   Two rules fall out of that, and the second one decides how the whole voucher
+   balances:
+
+   1  Only an account with nothing beneath it may be posted to. In his chart
+      the last segment is the currency, so 4111 is a heading and 41110001 is
+      the account you actually post to.
+
+   2  A voucher balances in POUNDS, not in dollars. Each line converts at its
+      own rate, so the dollar columns are free to be uneven — a USD line and an
+      LBP line on the same voucher is normal, not an error. Gating on the
+      dollar column would block correct vouchers and pass wrong ones.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── CR-009 — the currency level his example describes ── */
+(function(){
+ if(typeof CHART === 'undefined') return;
+ if(CHART.some(r => String(r[0]) === '41110001')) return;
+ const at = CHART.findIndex(r => String(r[0]) === '41111');
+ if(at < 0) return;
+ /* 41111 becomes a heading; the currency accounts beneath it are what you post to */
+ CHART.splice(at + 1, 0,
+   ['41110001','Ordinary clients — USD','زبائن عاديون — دولار','120,400.00'],
+   ['41110002','Ordinary clients — LBP','زبائن عاديون — ليرة','55,600.00'],
+   ['41110003','Ordinary clients — EUR','زبائن عاديون — يورو','0.00']);
+})();
+
+/* an account is mature when nothing sits beneath it */
+function acctMature(code){
+ if(typeof CHART === 'undefined') return true;
+ const c = String(code);
+ return !CHART.some(x => String(x[0]) !== c && String(x[0]).indexOf(c) === 0);
+}
+function maturePostable(){
+ return (typeof CHART === 'undefined' ? [] : CHART)
+   .filter(r => acctMature(r[0]) && String(r[0]).length >= 3)
+   .map(r => r[0] + ' · ' + r[1]);
+}
+window.acctMature = acctMature;
+
+/* the line form offers only mature accounts, and says why */
+Object.defineProperty(F, 'jvline', { configurable:true, get(){
+ const opts = maturePostable();
+ return { t:'Add a line to the voucher', s:[{ h:'Line', f:[
+  { l:'Account', t:'sel', o: opts.length ? opts : ['—'], req:1,
+    hint:'Only accounts with nothing beneath them are listed. ' +
+         'A heading such as 4111 totals the accounts under it and cannot be posted to.' },
+  { l:'Party', t:'sel', o:['—','Karam Trading','Bou Khalil Est.'] },
+  { l:'Description' },
+  { l:'Currency', t:'sel', o:['USD','LBP','EUR'], req:1 },
+  { l:'Debit', t:'num', v:'0' }, { l:'Credit', t:'num', v:'0' },
+  { l:'Rate', t:'num', v:'90000',
+    hint:'Each line carries its own rate. The voucher balances in pounds, so lines in different currencies may sit on the same voucher.' },
+  { l:'Cost centre', t:'sel', o:['Zahle branch','Beirut branch','Sales'] },
+  { t:'note', k:'wa', v:'<b>A heading is not an account you can post to.</b> In your chart the last two digits are the currency — <span class="ds-code">4111</span> is the heading, <span class="ds-code">41110001</span> is the dollar account beneath it. Only the second one appears in this list.' }
+ ]}]};
+}});
+
+/* refuse a heading even if one is typed in, and say which it is */
+checkModal = (base => function(){
+ const ok = base();
+ const body = document.querySelector('#mBody');
+ if(!body || CURFORM !== 'jvline') return ok;
+ const fw = [...body.querySelectorAll('.fw')]
+   .find(f => /^account/i.test((f.querySelector('label') || {}).textContent || ''));
+ if(!fw) return ok;
+ const ctl = fw.querySelector('.in'); if(!ctl) return ok;
+ const code = String(ctl.value || '').split('·')[0].trim();
+ if(!code || acctMature(code)) return ok;
+ const kids = CHART.filter(x => String(x[0]) !== code && String(x[0]).indexOf(code) === 0).length;
+ ctl.classList.add('is-err'); fw.classList.add('is-err');
+ if(!fw.querySelector('.fmsg.err'))
+  ctl.insertAdjacentHTML('afterend',
+   '<div class="fmsg err autogen">' + ic('alertC','ic-14') + '<span>' +
+   esc(code) + ' is a heading with ' + kids + ' accounts beneath it. Post to one of those instead.') ;
+ return false;
+})(checkModal);
+
+/* ── CR-010 — the voucher balances in pounds ── */
+S.jv = (orig => function(){
+ let html = orig();
+ const block = pane(tr('How this voucher balances'),
+   '<div class="flow">' +
+     '<span class="s">' + tr('Dollar columns') + '</span><span class="ar">·</span>' +
+     '<span class="s">' + pill('mu', tr('may be uneven')) + '</span><span class="ar">·</span>' +
+     '<span class="s on">' + tr('Pound columns') + '</span><span class="ar">=</span>' +
+     '<span class="s on">' + pill('ok', tr('must match')) + '</span></div>' +
+   note(tr('A voucher may carry as many lines as you need, in more than one currency.'),
+     'Every line converts at its own rate, so a dollar line and a pound line can sit on the same voucher — that is normal, not a mistake. Posting is gated on the pound columns, because the pound is the currency the books are kept in. Checking the dollar column instead would block correct vouchers and let wrong ones through.'));
+ const at = html.lastIndexOf('<div class="pane">');
+ return at < 0 ? html + block : html.slice(0, at) + block + html.slice(at);
+})(S.jv);
+
+/* ── CR-010 — a receipt taken partly in each currency ── */
+S.rcpt = (orig => function(){
+ let html = orig();
+ const rows = [
+  ['<span class="pill ok">USD</span>','Cash','5310 · Main cash box','1,200.00','90,000','108,000,000', del()],
+  ['<span class="pill ok">LBP</span>','Cash','5311 · Till 2 — shop','72,000,000','90,000','72,000,000', del()],
+  ['<b>' + tr('Total received') + '</b>','','','<b>2,000.00 USD</b>','','<b>180,000,000</b>','']
+ ];
+ const block = pane(tr('How he paid'),
+   tbl([C('Currency'),C('Method'),C('Money goes to'),n('Amount'),n('Rate'),n('In pounds'),C('')],
+     rows, { min:820 }) +
+   '<div class="flow" style="margin-top:10px">' +
+     '<span class="s on">' + tr('Received') + ' 180,000,000</span><span class="ar">=</span>' +
+     '<span class="s on">' + tr('Applied to invoices') + ' 180,000,000</span>' +
+     '<span class="ar">·</span><span class="s">' + pill('ok', tr('Balanced')) + '</span></div>' +
+   note(tr('One receipt, more than one currency.'),
+     'A customer often pays part in dollars and part in pounds. Each part keeps its own currency, its own rate and its own cash box, and the total is compared to the invoices in pounds. Splitting it into two vouchers would break the link between the payment and the invoices it settles.'),
+   addBtn('Add a payment line','rcptline'));
+ const at = html.indexOf('<div class="pane">', html.indexOf('Voucher'));
+ const next = html.indexOf('<div class="pane">', at + 10);
+ return next < 0 ? html + block : html.slice(0, next) + block + html.slice(next);
+})(S.rcpt);
+
+Object.assign(F, { rcptline:{ t:'Add a payment line', s:[{ h:'What he handed over', c:2, f:[
+  { l:'Currency', t:'sel', o:['USD','LBP','EUR'], req:1 },
+  { l:'Method', t:'sel', o:['Cash','Cheque','Bank transfer','Card','OMT / Whish'], req:1 },
+  { l:'Money goes to', t:'sel', o:['5310 · Main cash box','5311 · Till 2 — shop','5121 · Bank USD','5122 · Bank LBP','5113 · Cheques'], req:1 },
+  { l:'Amount', t:'num', req:1 }, { l:'Rate', t:'num', v:'90,000', req:1 },
+  { t:'note', v:'Each part of the payment keeps its own currency and rate. The receipt is compared to the invoices in pounds.' }
+]}]}});
+
+Object.assign(AR, { 'How this voucher balances':'كيف يتوازن هذا القيد', 'Dollar columns':'أعمدة الدولار',
+ 'may be uneven':'قد لا تتساوى', 'Pound columns':'أعمدة الليرة', 'must match':'يجب أن تتطابق',
+ 'How he paid':'كيف دفع', 'Total received':'إجمالي المقبوض', 'Received':'المقبوض',
+ 'Applied to invoices':'مطبّق على الفواتير', 'Add a payment line':'إضافة سطر دفع',
+ 'One receipt, more than one currency.':'سند واحد بأكثر من عملة.',
+ 'A voucher may carry as many lines as you need, in more than one currency.':
+   'يمكن للقيد أن يحمل أي عدد من السطور، وبأكثر من عملة.' });
+Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
+buildTree(); paint();
+</script>
+
 </body>
 </html>

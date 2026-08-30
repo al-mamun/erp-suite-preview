@@ -497,6 +497,7 @@ footer p{max-width:64ch}
       <tr><td><a href="#s9">Scale and weight barcodes</a></td><td>The till reads the weight out of the shop scale label</td><td>Included</td></tr>
       <tr><td><a href="#s9">Batches, serial numbers, expiry</a></td><td>Switched on per item, not for everything</td><td>Included</td></tr>
       <tr><td><a href="#s9">Bulk import from Excel</a></td><td>Items, customers and suppliers, with a check before writing</td><td>Included</td></tr>
+      <tr><td><a href="#s9">Attributes and variants</a></td><td>Colour, size, weight — you define them; the ones that split stock create variants</td><td>New</td></tr>
       <tr><td><a href="#s10">Warehouses and transfers</a></td><td>Per-user access, goods in transit, negative stock policy</td><td>Included</td></tr>
       <tr><td><a href="#s10">Stock count and adjustments</a></td><td>With variance approval</td><td>Included</td></tr>
       <tr><td><a href="#s10">Minimum quantity and reorder</a></td><td>Feeds the low-stock notification</td><td>Included</td></tr>
@@ -908,7 +909,27 @@ footer p{max-width:64ch}
   </div>
 
   <div class="mod">
-    <h3>Five things you can see about any account <span class="tag new">New</span></h3>
+        <div class="beat"><p class="beat-label">A voucher may only post to a mature account <span class="tag new">New</span></p>
+      <p>An account with other accounts beneath it is a <strong>heading</strong>. It totals what
+      sits under it and cannot be posted to. In your chart the last segment is the currency, so
+      <span class="ds-code">4111</span> is the heading and <span class="ds-code">41110001</span> —
+      the dollar account beneath it — is what a voucher writes to.</p>
+      <p>The account list on a voucher line offers only mature accounts. If a heading reaches the
+      line another way, the voucher is refused and told which heading it is and how many accounts
+      sit under it. This is the rule that keeps a balance meaningful: a total that has been posted
+      to directly can never be reconciled to the accounts it is supposed to total.</p></div>
+    <div class="beat"><p class="beat-label">Many lines, more than one currency <span class="tag new">New</span></p>
+      <p>A voucher may carry as many lines as the entry needs — a hundred is not unusual — and
+      those lines may be in different currencies. A dollar line and a pound line on the same
+      voucher is normal.</p>
+      <p>Which means the balance is checked in <strong>pounds</strong>, not in dollars. Every line
+      converts at its own rate, and the pound columns are what must match before Post is allowed.
+      Checking the dollar column instead would block correct vouchers and let wrong ones through.</p>
+      <p>The same is true of money coming in. A customer often pays <strong>part in dollars and
+      part in pounds</strong>, so a receipt takes more than one payment line — each with its own
+      currency, rate and cash box — and the total is compared to the invoices in pounds. Splitting
+      it into two vouchers would break the link between the payment and the invoices it settles.</p></div>
+<h3>Five things you can see about any account <span class="tag new">New</span></h3>
     <div class="beat"><p class="beat-label">Click an account and it opens five ways</p>
       <div class="tw"><table>
         <thead><tr><th>Tab</th><th>What it shows you</th></tr></thead>
@@ -1168,6 +1189,20 @@ footer p{max-width:64ch}
           <tr><td class="field">Minimum quantity</td><td>Triggers the low-stock notification</td><td>You have</td></tr>
         </tbody>
       </table></div></div>
+    <div class="beat"><p class="beat-label">Attributes, and the ones that split the stock <span class="tag new">New</span></p>
+      <p>You asked about the same pant, same brand, same price, in different colours. The answer
+      turns on one distinction, and it is worth being exact about it.</p>
+      <p>Some attributes <strong>split the stock</strong> and some only <strong>describe</strong>
+      the item. Colour and size split it — you have to know you hold nine black in size 32, not
+      fifty-two pants. Weight, material and warranty months do not; they are facts about the item.</p>
+      <p>An attribute that splits the stock creates a <strong>variant</strong>: every combination
+      gets its own barcode and its own quantity, and the till, the warehouse and the stock count
+      all work on that combination. An attribute that only describes is simply a field. Writing
+      colour into a plain text box on the item looks tidy and quietly breaks your stock — the
+      system could then tell you how many pants you have, but not how many are black.</p>
+      <p>The attributes are <strong>yours to define</strong>, not fixed in the software. Colour,
+      size, weight, material and warranty months come ready; anyone you authorise adds more, and
+      each one says whether it splits the stock and which categories it applies to.</p></div>
     <div class="beat"><p class="beat-label">One improvement worth explaining</p>
       <p>Today the box size lives on the item. If someone changes “box = 12” to “box = 10” next
       year, old documents quietly change meaning. In the new system <strong>the box size is copied
