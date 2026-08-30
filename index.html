@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="googlebot" content="noindex, nofollow">
+<title>ERP Suite — Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    color-scheme:light;
+    --paper:#f7f6f3; --card:#fffefb; --ink:#1c1a17; --ink-2:#4a453e; --ink-3:#7c756a;
+    --line:#e2ded5; --brass:#8a6d3b; --brass-soft:#f2ece0;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --paper:#171614; --card:#1f1e1b; --ink:#f0ede7; --ink-2:#bdb7ad; --ink-3:#8b857a;
+      --line:#33312c; --brass:#c9a55f; --brass-soft:#2a2620;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);
+    font:400 16px/1.6 "IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;padding:clamp(2rem,6vw,5rem) clamp(1.25rem,4vw,2.5rem) 4rem}
+  .eyebrow{font:500 .75rem/1 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--brass);margin:0 0 1rem}
+  h1{font-size:clamp(1.9rem,5vw,2.9rem);line-height:1.12;letter-spacing:-.02em;font-weight:600;margin:0 0 .75rem}
+  .standfirst{font-size:clamp(1rem,2.4vw,1.15rem);color:var(--ink-2);max-width:46ch;margin:0 0 2.75rem}
+  .cards{display:grid;gap:1.25rem;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr));margin:0 0 3rem}
+  a.card{display:flex;flex-direction:column;gap:.6rem;text-decoration:none;color:inherit;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.5rem 1.5rem 1.6rem;
+    transition:border-color .15s,transform .15s,box-shadow .15s}
+  a.card:hover{border-color:var(--brass);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.07)}
+  a.card:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+  .k{font:500 .7rem/1 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-3)}
+  .t{font-size:1.3rem;font-weight:600;letter-spacing:-.01em}
+  .d{font-size:.95rem;color:var(--ink-2);margin:0}
+  .go{margin-top:auto;padding-top:.9rem;font-size:.9rem;font-weight:500;color:var(--brass)}
+  .note{border-inline-start:3px solid var(--brass);background:var(--brass-soft);
+    padding:1.1rem 1.3rem;border-radius:0 8px 8px 0;font-size:.95rem;color:var(--ink-2);max-width:56ch}
+  .note b{color:var(--ink)}
+  footer{margin-top:3.5rem;padding-top:1.5rem;border-top:1px solid var(--line);
+    font-size:.85rem;color:var(--ink-3);display:flex;gap:1.25rem;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Prepared for Yorgo · Zahle, Lebanon</p>
+  <h1>Your new ERP system</h1>
+  <p class="standfirst">Two documents. The first explains what will be built, in plain language. The second lets you click through it.</p>
+
+  <div class="cards">
+    <a class="card" href="ERP-Blueprint.html">
+      <span class="k">Document 01</span>
+      <span class="t">Blueprint</span>
+      <p class="d">What the system does, section by section — buying, selling, stock, accounting, VAT, and the questions we still need answered.</p>
+      <span class="go">Read the blueprint →</span>
+    </a>
+    <a class="card" href="ERP-Prototype.html">
+      <span class="k">Document 02</span>
+      <span class="t">Clickable prototype</span>
+      <p class="d">Every screen, in English and Arabic, light and dark. Open records, search lists, walk the menus. Best on a laptop.</p>
+      <span class="go">Open the prototype →</span>
+    </a>
+  </div>
+
+  <div class="note">
+    <b>The prototype is a demonstration, not a working system.</b> The data in it is sample data,
+    nothing is saved, and refreshing the page puts everything back as it was. It is there so you can
+    see and judge the design before it is built.
+  </div>
+
+  <footer>
+    <span>ERP Suite · Preview</span>
+    <span>Prepared by Abdullah Al Mamun</span>
+  </footer>
+</div>
+</body>
+</html>

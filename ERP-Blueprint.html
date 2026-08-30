@@ -1,0 +1,2800 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="googlebot" content="noindex, nofollow">
+<title>ERP Suite Blueprint</title>
+<style>
+  :root{color-scheme:light dark}
+  html,body{margin:0}
+  body{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#fafaf9}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>ERP Suite Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+<style>
+:root{
+  --paper:#FBFAF8; --paper-2:#F3F2EE; --paper-3:#EAE9E4;
+  --ink:#161A1F; --ink-2:#3E464E; --ink-3:#6B7480;
+  --rule:#DEDDD7; --rule-2:#C9C8C1;
+  --accent:#15604E; --accent-soft:#E4EFE9; --accent-ink:#0E4438;
+  --debit:#2C5C8A; --credit:#9C5426;
+  --warn-bg:#FBF3E3; --warn-ink:#7A5312; --warn-rule:#E3CFA4;
+  --new-bg:#E4EFE9; --new-ink:#0E4438;
+  --have-bg:#EDEEF2; --have-ink:#40485A;
+  --shadow:0 1px 2px rgba(20,26,22,.05), 0 8px 24px -12px rgba(20,26,22,.14);
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#101412; --paper-2:#171C1A; --paper-3:#1E2422;
+    --ink:#E9ECE8; --ink-2:#B4BDB7; --ink-3:#8A948E;
+    --rule:#2A312E; --rule-2:#3A423E;
+    --accent:#57B396; --accent-soft:#16302A; --accent-ink:#8AD0B8;
+    --debit:#7FAEDA; --credit:#DFA274;
+    --warn-bg:#2B2310; --warn-ink:#E5C688; --warn-rule:#4C3D18;
+    --new-bg:#16302A; --new-ink:#8AD0B8;
+    --have-bg:#1C2128; --have-ink:#A8B3C4;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#101412; --paper-2:#171C1A; --paper-3:#1E2422;
+  --ink:#E9ECE8; --ink-2:#B4BDB7; --ink-3:#8A948E;
+  --rule:#2A312E; --rule-2:#3A423E;
+  --accent:#57B396; --accent-soft:#16302A; --accent-ink:#8AD0B8;
+  --debit:#7FAEDA; --credit:#DFA274;
+  --warn-bg:#2B2310; --warn-ink:#E5C688; --warn-rule:#4C3D18;
+  --new-bg:#16302A; --new-ink:#8AD0B8;
+  --have-bg:#1C2128; --have-ink:#A8B3C4;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+     font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:56px;align-items:start}
+@media (max-width:940px){.layout{grid-template-columns:1fr;gap:0}}
+
+/* ---------- masthead ---------- */
+.masthead{border-bottom:1px solid var(--rule);background:var(--paper-2)}
+.masthead .wrap{padding-top:56px;padding-bottom:44px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+         color:var(--accent);margin:0 0 18px}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(34px,5.4vw,54px);line-height:1.08;
+   margin:0 0 18px;letter-spacing:-.015em;text-wrap:balance;max-width:16ch}
+.standfirst{font-size:19px;line-height:1.55;color:var(--ink-2);max-width:60ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:30px;padding-top:22px;
+      border-top:1px solid var(--rule);font-size:13.5px;color:var(--ink-3)}
+.meta b{color:var(--ink-2);font-weight:600}
+
+/* ---------- contents rail ---------- */
+nav.toc{position:sticky;top:0;max-height:100vh;overflow-y:auto;padding:44px 0 44px;font-size:13.5px}
+nav.toc h2{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
+           color:var(--ink-3);margin:0 0 14px;font-weight:500}
+nav.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+nav.toc a{display:flex;gap:9px;text-decoration:none;color:var(--ink-2);padding:4px 8px;
+          border-radius:5px;line-height:1.35}
+nav.toc a:hover{background:var(--paper-2);color:var(--accent)}
+nav.toc a:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+nav.toc .n{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);padding-top:2px;min-width:16px}
+@media (max-width:940px){
+  nav.toc{position:static;max-height:none;border-bottom:1px solid var(--rule);padding:28px 0}
+  nav.toc ol{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:2px 18px}
+}
+
+/* ---------- article ---------- */
+article{padding:44px 0 96px;min-width:0}
+section{scroll-margin-top:20px;padding-bottom:8px}
+section+section{margin-top:60px;padding-top:52px;border-top:1px solid var(--rule)}
+h2{font-family:var(--serif);font-weight:700;font-size:clamp(26px,3.4vw,34px);line-height:1.18;
+   margin:0 0 8px;letter-spacing:-.012em;text-wrap:balance}
+h2 .num{font-family:var(--mono);font-size:14px;font-weight:400;color:var(--accent);
+        display:block;margin-bottom:8px;letter-spacing:.08em}
+h3{font-family:var(--serif);font-weight:600;font-size:22px;line-height:1.25;margin:38px 0 10px;
+   text-wrap:balance}
+h4{font-family:var(--sans);font-weight:600;font-size:15px;margin:24px 0 8px;color:var(--ink)}
+p{margin:0 0 15px;max-width:68ch}
+.lede{font-size:18px;color:var(--ink-2);max-width:64ch;margin-bottom:22px}
+ul,ol.body{margin:0 0 16px;padding-left:22px;max-width:66ch}
+li{margin-bottom:7px}
+strong{font-weight:600}
+code{font-family:var(--mono);font-size:.88em;background:var(--paper-3);padding:1px 5px;
+     border-radius:4px;color:var(--ink)}
+a{color:var(--accent)}
+
+/* ---------- module cards ---------- */
+.mod{background:var(--paper-2);border:1px solid var(--rule);border-radius:10px;
+     padding:26px 28px;margin:0 0 20px;box-shadow:var(--shadow)}
+.mod > h3{margin-top:0}
+.mod .beat{margin-top:20px}
+.mod .beat:first-of-type{margin-top:16px}
+.beat-label{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+            color:var(--ink-3);margin:0 0 6px;font-weight:500}
+.beat p{margin-bottom:8px}
+.beat ul{margin-bottom:0}
+
+/* ---------- tags ---------- */
+.tag{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;
+     text-transform:uppercase;padding:3px 8px;border-radius:20px;vertical-align:middle;
+     margin-left:8px;font-weight:500;white-space:nowrap}
+.tag.new{background:var(--new-bg);color:var(--new-ink)}
+.tag.have{background:var(--have-bg);color:var(--have-ink)}
+.tag.later{background:var(--warn-bg);color:var(--warn-ink)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:0 0 20px;border:1px solid var(--rule);border-radius:9px;background:var(--paper-2)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:460px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+   color:var(--ink-3);font-weight:500;background:var(--paper-3);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:13.5px}
+td.field{font-family:var(--mono);font-size:13px;white-space:nowrap;color:var(--ink)}
+.dr{color:var(--debit);font-weight:600}
+.cr{color:var(--credit);font-weight:600}
+
+/* ---------- callouts ---------- */
+.note{border-left:3px solid var(--accent);background:var(--accent-soft);padding:16px 20px;
+      border-radius:0 8px 8px 0;margin:0 0 20px}
+.note p:last-child{margin-bottom:0}
+.note .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+           color:var(--accent-ink);display:block;margin-bottom:6px;font-weight:500}
+.ask{border-left:3px solid var(--warn-rule);background:var(--warn-bg);padding:16px 20px;
+     border-radius:0 8px 8px 0;margin:0 0 20px}
+.ask .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+          color:var(--warn-ink);display:block;margin-bottom:6px;font-weight:500}
+.ask p:last-child{margin-bottom:0}
+blockquote{margin:0 0 18px;padding:2px 0 2px 20px;border-left:2px solid var(--rule-2);
+           font-family:var(--serif);font-size:18px;line-height:1.5;color:var(--ink-2);max-width:60ch}
+blockquote p{margin:0 0 8px}
+blockquote p:last-child{margin:0}
+blockquote cite{display:block;margin-top:8px;font-family:var(--sans);font-size:13px;
+                font-style:normal;color:var(--ink-3)}
+
+/* ---------- figures ---------- */
+figure{margin:26px 0;padding:0}
+figure svg{display:block;width:100%;max-width:100%;height:auto;border:1px solid var(--rule);
+           border-radius:9px;background:var(--paper-2);padding:14px 10px}
+figcaption{font-size:13.5px;color:var(--ink-3);margin-top:10px;max-width:64ch;line-height:1.5}
+.svg-box{fill:var(--paper);stroke:var(--rule-2);stroke-width:1.25}
+.svg-box-a{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+.svg-t{fill:var(--ink);font-family:"IBM Plex Sans",sans-serif;font-size:12.5px}
+.svg-t-s{fill:var(--ink-3);font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+         letter-spacing:.05em}
+.svg-t-b{fill:var(--ink);font-family:"IBM Plex Sans",sans-serif;font-size:13px;font-weight:600}
+.svg-t-a{fill:var(--accent-ink);font-family:"IBM Plex Sans",sans-serif;font-size:12.5px;font-weight:600}
+.svg-line{stroke:var(--ink-3);stroke-width:1.25;fill:none}
+.svg-line-a{stroke:var(--accent);stroke-width:1.75;fill:none}
+.svg-dash{stroke:var(--ink-3);stroke-width:1.25;fill:none;stroke-dasharray:5 4}
+
+/* ---------- grids ---------- */
+.grid{display:grid;gap:14px;margin:0 0 22px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.card{background:var(--paper-2);border:1px solid var(--rule);border-radius:9px;padding:16px 18px}
+.card h4{margin:0 0 6px}
+.card p{font-size:14.5px;color:var(--ink-2);margin:0}
+.card .k{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+         color:var(--accent);display:block;margin-bottom:7px}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--rule);background:var(--paper-2);padding:40px 0 56px;
+       font-size:14px;color:var(--ink-3)}
+footer p{max-width:64ch}
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Prepared for Yorgo · Zahle, Lebanon</p>
+    <h1>Your new ERP system, explained</h1>
+    <p class="standfirst">Everything we are going to build, in plain language: every module, every
+    screen, what each one stores, and what happens in your accounts when you use it. Written so
+    you can read it without a programmer beside you — and so your accountant can check that the
+    accounting is right.</p>
+    <div class="meta">
+      <span><b>Prepared by</b> Abdullah Al Mamun</span>
+      <span><b>Version</b> 1.2</span>
+      <span><b>Date</b> 30 August 2026</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+<nav class="toc" aria-label="Contents">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#s0"><span class="n">0</span><span>How to read this blueprint</span></a></li>
+    <li><a href="#s1"><span class="n">1</span><span>What you asked for</span></a></li>
+    <li><a href="#s2"><span class="n">2</span><span>Everything in one list</span></a></li>
+    <li><a href="#s3"><span class="n">3</span><span>The system at a glance</span></a></li>
+    <li><a href="#s4"><span class="n">4</span><span>One ledger at the centre</span></a></li>
+    <li><a href="#s5"><span class="n">5</span><span>Dollars and pounds</span></a></li>
+    <li><a href="#s6"><span class="n">6</span><span>Your chart of accounts</span></a></li>
+    <li><a href="#s7"><span class="n">7</span><span>Customers and suppliers</span></a></li>
+    <li><a href="#s8"><span class="n">8</span><span>Cheques, cash &amp; banks</span></a></li>
+    <li><a href="#s9"><span class="n">9</span><span>Items and packaging</span></a></li>
+    <li><a href="#s10"><span class="n">10</span><span>Warehouses and stock</span></a></li>
+    <li><a href="#s11"><span class="n">11</span><span>What your stock is worth</span></a></li>
+    <li><a href="#s12"><span class="n">12</span><span>Buying</span></a></li>
+    <li><a href="#s13"><span class="n">13</span><span>Selling and prices</span></a></li>
+    <li><a href="#s14"><span class="n">14</span><span>Point of sale (POS)</span></a></li>
+    <li><a href="#s15"><span class="n">15</span><span>Production</span></a></li>
+    <li><a href="#s16"><span class="n">16</span><span>Fixed assets New</span></a></li>
+    <li><a href="#s17"><span class="n">17</span><span>Payroll</span></a></li>
+    <li><a href="#s18"><span class="n">18</span><span>VAT and year end</span></a></li>
+    <li><a href="#s19"><span class="n">19</span><span>The rest of the accounting</span></a></li>
+    <li><a href="#s20"><span class="n">20</span><span>Reports and dashboards</span></a></li>
+    <li><a href="#s21"><span class="n">21</span><span>Companies &amp; cost centres</span></a></li>
+    <li><a href="#s22"><span class="n">22</span><span>Users and permissions</span></a></li>
+    <li><a href="#s23"><span class="n">23</span><span>Notifications New</span></a></li>
+    <li><a href="#s24"><span class="n">24</span><span>Two languages</span></a></li>
+    <li><a href="#s25"><span class="n">25</span><span>Working without internet</span></a></li>
+    <li><a href="#s26"><span class="n">26</span><span>Selling it to others</span></a></li>
+    <li><a href="#s27"><span class="n">27</span><span>Your own control panel</span></a></li>
+    <li><a href="#s28"><span class="n">28</span><span>Backup and safety</span></a></li>
+    <li><a href="#s29"><span class="n">29</span><span>Moving from your old system</span></a></li>
+    <li><a href="#s30"><span class="n">30</span><span>Click through it today</span></a></li>
+    <li><a href="#s31"><span class="n">31</span><span>How we build it</span></a></li>
+    <li><a href="#s32"><span class="n">32</span><span>What we need from you</span></a></li>
+    <li><a href="#s33"><span class="n">33</span><span>Words explained</span></a></li>
+  </ol>
+</nav>
+
+<article>
+
+<section id="s0">
+  <h2><span class="num">Section 0</span>How to read this blueprint</h2>
+  <p class="lede">This is the working product blueprint: a plain-language description of what the ERP is
+  meant to do, how its parts fit together, and which decisions still need your confirmation. It is
+  written so you, your accountant and the development team can all point to the same thing when we
+  discuss a screen or a rule.</p>
+
+  <div class="grid g3">
+    <div class="card">
+      <span class="k">The product</span>
+      <h4>One ERP, three doors</h4>
+      <p>The business application is the main ERP. The desktop application adds offline working and
+      POS capability. A separate owner console manages the SaaS platform and its subscribers.</p>
+    </div>
+    <div class="card">
+      <span class="k">The accounting centre</span>
+      <h4>One ledger, many views</h4>
+      <p>Sales, purchasing, stock, POS, payroll and assets feed the accounting core. Reports and
+      dashboards read from the ledger rather than keeping separate totals.</p>
+    </div>
+    <div class="card">
+      <span class="k">The working rule</span>
+      <h4>Confirmed, planned, or open</h4>
+      <p><strong>Confirmed</strong> means you have told us. <strong>Planned</strong> means it belongs in
+      the design but still needs implementation. <strong>Open</strong> means we will not guess until you decide.</p>
+    </div>
+  </div>
+
+  <h3>The system in one picture</h3>
+  <figure>
+    <svg viewBox="0 0 920 330" role="img" aria-label="Diagram showing the ERP business application and offline desktop feeding one accounting ledger, with reporting and dashboards above, and a separate owner console managing tenants and licences">
+      <defs>
+        <marker id="bpA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g color="var(--ink-3)">
+        <rect class="svg-box" x="25" y="105" width="250" height="145" rx="8"/>
+        <text class="svg-t-b" x="150" y="133" text-anchor="middle">BUSINESS ERP</text>
+        <text class="svg-t" x="48" y="160">Sales · Purchasing · Inventory</text>
+        <text class="svg-t" x="48" y="184">POS · Production · Payroll</text>
+        <text class="svg-t" x="48" y="208">Customers · Suppliers · Assets</text>
+        <text class="svg-t-s" x="48" y="233">WEB + DESKTOP</text>
+
+        <path class="svg-line-a" marker-end="url(#bpA)" d="M280 178 L355 178"/>
+
+        <rect class="svg-box-a" x="360" y="95" width="235" height="165" rx="8"/>
+        <text class="svg-t-a" x="477" y="126" text-anchor="middle">ACCOUNTING CORE</text>
+        <text class="svg-t" x="382" y="154">Journal vouchers</text>
+        <text class="svg-t" x="382" y="178">Multi-currency + rates</text>
+        <text class="svg-t" x="382" y="202">Receivables · Payables</text>
+        <text class="svg-t" x="382" y="226">Stock value · Tax · Periods</text>
+        <text class="svg-t-s" x="382" y="248">ONE LEDGER</text>
+
+        <path class="svg-line" marker-end="url(#bpA)" d="M600 178 L675 178"/>
+
+        <rect class="svg-box" x="680" y="105" width="215" height="145" rx="8"/>
+        <text class="svg-t-b" x="787" y="133" text-anchor="middle">REPORTING</text>
+        <text class="svg-t" x="700" y="160">P&amp;L · Trial balance</text>
+        <text class="svg-t" x="700" y="184">Balance sheet · VAT</text>
+        <text class="svg-t" x="700" y="208">Dashboards · Branch view</text>
+        <text class="svg-t-s" x="700" y="233">USD + LBP</text>
+
+        <rect class="svg-box" x="250" y="20" width="420" height="52" rx="8"/>
+        <text class="svg-t-b" x="460" y="52" text-anchor="middle">OFFLINE DESKTOP / POS → SYNC WHEN CONNECTED</text>
+        <path class="svg-dash" marker-end="url(#bpA)" d="M460 74 L460 94"/>
+
+        <rect class="svg-box" x="690" y="20" width="205" height="52" rx="8"/>
+        <text class="svg-t-b" x="792" y="43" text-anchor="middle">OWNER CONSOLE</text>
+        <text class="svg-t-s" x="792" y="61" text-anchor="middle">TENANTS · LICENCES · VERSIONS</text>
+      </g>
+    </svg>
+    <figcaption>The business side and the owner side are deliberately separate. The accounting core is
+    shared by the business workflows, while the owner console controls the commercial platform.</figcaption>
+  </figure>
+
+  <h3>The important facts at a glance</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Topic</th><th>Current blueprint position</th></tr></thead>
+    <tbody>
+      <tr><td>Product model</td><td>Multi-tenant ERP that can be resold to multiple businesses</td></tr>
+      <tr><td>Applications</td><td>Web + desktop; mobile is deferred</td></tr>
+      <tr><td>Languages</td><td>English + Arabic with RTL support</td></tr>
+      <tr><td>Currency model</td><td>LBP functional currency; USD and LBP reporting; EUR and additional currencies supported by the catalogue</td></tr>
+      <tr><td>Offline</td><td>Desktop/POS can work without connection and sync when connectivity returns</td></tr>
+      <tr><td>Live companies</td><td>Eight existing companies, migrated one at a time rather than all at once</td></tr>
+      <tr><td>Go-live target</td><td>01/01/2027</td></tr>
+      <tr><td>Migration</td><td>Masters and opening information move; historical transactions remain available in the old system read-only</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span class="lbl">One important distinction</span>
+    <p><strong>“Included” in this blueprint does not mean “already built.”</strong> It means the capability
+    belongs to the intended product scope. The clickable prototype is a design and workflow validation
+    tool; production software, database, security, synchronization and accounting posting engines still
+    have to be implemented and tested.</p>
+  </div>
+
+  <h3>A simple way to follow the whole system</h3>
+  <div class="grid g4">
+    <div class="card"><span class="k">01</span><h4>Set up</h4><p>Company, branches, users, accounts, currencies, taxes and permissions.</p></div>
+    <div class="card"><span class="k">02</span><h4>Operate</h4><p>Buy, receive, stock, sell, use POS, produce, collect and pay.</p></div>
+    <div class="card"><span class="k">03</span><h4>Account</h4><p>Post the documents, value stock, calculate exchange differences and close periods.</p></div>
+    <div class="card"><span class="k">04</span><h4>Understand</h4><p>Reports, dashboards, VAT, branch performance, year end and audit history.</p></div>
+  </div>
+
+  <div class="note">
+    <span class="lbl">This blueprint is a living document</span>
+    <p>When a requirement is clarified, this document should be updated rather than relying on a
+    message from weeks earlier. The prototype, functional specification, accounting posting rules and
+    technical design should all stay aligned with this baseline.</p>
+  </div>
+</section>
+
+<section id="s1">
+  <h2><span class="num">Section 1</span>What you asked for</h2>
+  <p class="lede">Before anything else — here is what you told us, in your own words. Everything in
+  this document comes from these answers. If we have misunderstood something, this is the page to
+  correct.</p>
+
+  <blockquote>
+    <p>“We need an ERP system to sell it for many businesses.”</p>
+    <p>“I have all my customers on the old system and I need to move them all… I can make it on
+    01/01/2027.”</p>
+    <p>“Statement to finance government should be based on LBP, but 90% of customers make deal and
+    invoices USD since it is more stable and strong.”</p>
+    <p>“We need report named difference of exchange — you know it?”</p>
+    <cite>From our conversation, 27–28 August 2026</cite>
+  </blockquote>
+
+  <p>You also gave us a full list: online and offline with sync, multi-company and multi-branch,
+  licence and subscription management, production, payment terms, a screen to link the main
+  accounts, payroll and HR, dashboards for sales, inventory and profit, notifications for expiry,
+  minimum quantity and payments due, full multi-currency accounting, packing structure, user
+  permissions, automatic backup, full reports with printing and export to Excel and Word, customer
+  classification with credit limits and discount rules, the full 7-class chart of accounts, cost
+  centres, and three different sales screens.</p>
+
+  <p><strong>All of it is in this document.</strong> Section 27 lists the few questions still open.</p>
+
+  <div class="note">
+    <span class="lbl">We also studied your software</span>
+    <p>You sent us your current system and a copy of your database. We went through it properly —
+    every screen, every table, every field, and the way it writes your journal vouchers. So this is
+    not a general ERP proposal. It is built around how <em>your</em> business actually works, and
+    it keeps the things your current system already does well.</p>
+  </div>
+</section>
+
+<section id="s2">
+  <h2><span class="num">Section 2</span>Everything in one list</h2>
+  <p class="lede">Every part of the system on one page, so you can check nothing is missing. Each
+  row links to the section that describes it in full.</p>
+
+  <p><strong>Included</strong> means it is part of the system we are building.
+  <strong>Next step</strong> means it comes straight after we go live, by your own decision.
+  <strong>Own project</strong> means it is real work that is planned and scheduled separately.</p>
+
+  <h3>Foundation</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Part</th><th>What it covers</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#s21">Companies and branches</a></td><td>Many companies, each with its own books; branches inside them</td><td>Included</td></tr>
+      <tr><td><a href="#s26">Separate businesses in one system</a></td><td>Every business you sell to is isolated from every other, inside the database itself</td><td>Included</td></tr>
+      <tr><td><a href="#s22">Users, roles and permissions</a></td><td>Roles, per-screen rights, per-warehouse and per-branch access</td><td>Included</td></tr>
+      <tr><td><a href="#s22">Audit record</a></td><td>Who did what, when and why — sealed against tampering</td><td>Included</td></tr>
+      <tr><td><a href="#s28">Automatic backup and restore</a></td><td>Daily and continuous, with per-business restore</td><td>Included</td></tr>
+      <tr><td><a href="#s3">Web application</a></td><td>Any computer, any place</td><td>Included</td></tr>
+      <tr><td><a href="#s3">Desktop application</a></td><td>Installed, and works offline</td><td>Included</td></tr>
+      <tr><td><a href="#s25">Working offline and syncing</a></td><td>Whole sites offline, salesmen in the field, and dropouts</td><td>Included</td></tr>
+      <tr><td><a href="#s23">Notifications</a></td><td>Expiry, minimum quantity, payments due, cheques due and more</td><td>Included</td></tr>
+      <tr><td><a href="#s24">Two languages, English and Arabic</a></td><td>Language switch per user, right-to-left screens and printing, built in from day one</td><td>Included</td></tr>      <tr><td><a href="#s27">Your own control panel</a></td><td>A second, separate programme for you: subscribers, plans, versions, support and platform settings</td><td>Included</td></tr>
+      <tr><td><a href="#s27">Currency catalogue</a></td><td>You add any currency once — decimals, rounding and symbol — and each customer switches on the ones he trades in</td><td>Included</td></tr>
+      <tr><td><a href="#s27">Each customer on his own web address</a></td><td>Live immediately on ours, his own domain later, with his email sending from it too</td><td>Included</td></tr>
+      <tr><td><a href="#s27">Branding and white label</a></td><td>His name or yours, on the login screen and on the printouts</td><td>Included</td></tr>
+      <tr><td><a href="#s27">Versions and rollout</a></td><td>One build released in waves — your own companies first, everybody else last</td><td>Included</td></tr>
+      <tr><td><a href="#s27">My subscription — the customer's own page</a></td><td>His plan, his dates, his invoices, his limits and a one-click export of all his data</td><td>Included</td></tr>
+      <tr><td><a href="#s27">One account page per customer</a></td><td>His companies, users, domain, licence, billing, data, tickets and every action you took</td><td>Included</td></tr>
+      <tr><td><a href="#s27">Assisted access</a></td><td>Support with his permission, for a time he chooses, with a banner on his screen and a log on both sides</td><td>Included</td></tr>
+      <tr><td><a href="#s27">Trials and sign-ups</a></td><td>Who is trying it and which step they got stuck on</td><td>Included</td></tr>
+      <tr><td><a href="#s27">Console team and audit log</a></td><td>Who on your side can reach the panel, what each may do, and what each has done</td><td>Included</td></tr>
+      <tr><td><a href="#s27">Usage, billing and support</a></td><td>What each customer uses, what he pays, what he costs you, and every question he has asked</td><td>Included</td></tr>
+      <tr><td><a href="#s25">Sync report</a></td><td>Every sync recorded, with a one-page weekly report — the “failed permanently” column must always be zero</td><td>Included</td></tr>
+      <tr><td><a href="#s30">Working prototype</a></td><td>Every screen and field, clickable in a browser, in both languages, before anything is built</td><td>Included</td></tr>
+
+    </tbody>
+  </table></div>
+
+  <h3>Accounting</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Part</th><th>What it covers</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#s6">Chart of accounts</a></td><td>Your 7 classes, sub-accounts per company, protected once used</td><td>Included</td></tr>
+      <tr><td><a href="#s6">Linked accounts screen</a></td><td>Map each posting purpose to an account — what makes it sellable</td><td>Included</td></tr>
+      <tr><td><a href="#s6">Journal vouchers</a></td><td>Manual double entry, with the rate and pound columns</td><td>Included</td></tr>
+      <tr><td><a href="#s5">Multi-currency</a></td><td>Dollars, pounds, euro — pounds as the base for the government</td><td>Included</td></tr>
+      <tr><td><a href="#s5">Two rates per currency</a></td><td>Sale and purchase, plus closing, average and historical</td><td>Included</td></tr>
+      <tr><td><a href="#s5">Rate history</a></td><td>Rates are never overwritten; each has its own date</td><td>Included</td></tr>
+      <tr><td><a href="#s5">Difference of exchange</a></td><td>Realised on payment, and unrealised at month end</td><td>Included</td></tr>
+      <tr><td><a href="#s5">Revaluation run</a></td><td>Month end and the statutory year-end adjustment</td><td>Included</td></tr>
+      <tr><td><a href="#s21">Cost centres</a></td><td>A second label on every entry, across every module</td><td>Included</td></tr>
+      <tr><td><a href="#s18">Periods and locking</a></td><td>Open, closed and locked months, with controlled reopening</td><td>Included</td></tr>
+      <tr><td><a href="#s18">Year end close and open</a></td><td>Checklist, closing, and clean opening balances</td><td>Included</td></tr>
+      <tr><td><a href="#s18">VAT return</a></td><td>Quarterly, reproducible, and it locks the quarter when filed</td><td>Included</td></tr>
+      <tr><td><a href="#s19">Opening balances</a></td><td>Ledger, customers invoice by invoice, suppliers, stock, assets, cheques — with three checks before go-live</td><td>Included</td></tr>
+      <tr><td><a href="#s19">Day book and general ledger</a></td><td>The statutory journal and ledger Lebanon expects, kept ten years</td><td>Included</td></tr>
+      <tr><td><a href="#s19">Collections and follow-up</a></td><td>Daily call list, promises to pay, a five-stage chasing ladder</td><td>Included</td></tr>
+      <tr><td><a href="#s19">Recurring entries</a></td><td>Rent, insurance, depreciation, and accruals that reverse themselves</td><td>Included</td></tr>
+      <tr><td><a href="#s19">Budgets</a></td><td>Per account and per cost centre, with variance warnings</td><td>Included</td></tr>
+      <tr><td><a href="#s19">Expense allocation</a></td><td>Shared costs split between branches by a rule, not by hand</td><td>Included</td></tr>
+      <tr><td><a href="#s19">Between your own companies</a></td><td>Two-sided posting with the same reference, matched monthly</td><td>Included</td></tr>
+      <tr><td><a href="#s19">All companies on one page</a></td><td>Group result with sales between companies taken back out</td><td>Included</td></tr>
+      <tr><td><a href="#s19">Withholding tax</a></td><td>Rules per supplier or expense — built, and shipped switched off</td><td>Included</td></tr>
+      <tr><td><a href="#s16">Fixed assets and depreciation</a></td><td>Register, depreciation run into class 6, disposal</td><td>Included</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Customers, suppliers and money</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Part</th><th>What it covers</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#s7">Customer and supplier records</a></td><td>One list, two roles, with currency and price level</td><td>Included</td></tr>
+      <tr><td><a href="#s7">Classification and discount bands</a></td><td>Cash only, minimum and maximum discount, per group</td><td>Included</td></tr>
+      <tr><td><a href="#s7">Credit limits and holds</a></td><td>Warn, block the order, block the delivery, or require approval</td><td>Included</td></tr>
+      <tr><td><a href="#s7">Payment terms</a></td><td>You create them, each linked to its own account on the chart of accounts</td><td>Included</td></tr>
+      <tr><td><a href="#s7">Instalments</a></td><td>Each instalment its own due date and its own exchange difference</td><td>Included</td></tr>
+      <tr><td><a href="#s7">Ageing</a></td><td>Your own buckets, by due date or document date</td><td>Included</td></tr>
+      <tr><td><a href="#s8">Cheque register</a></td><td>Received, deposited, cleared, bounced, endorsed — with due dates</td><td>Included</td></tr>
+      <tr><td><a href="#s8">Cash boxes and banks</a></td><td>Safes tied to accounts, transfers, and bank reconciliation</td><td>Included</td></tr>
+      <tr><td><a href="#s13">Salesmen and commission</a></td><td>By salesman, region and district, calculated from invoices</td><td>Included</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Inventory</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Part</th><th>What it covers</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#s9">Items, categories and units</a></td><td>With English and Arabic names on every record</td><td>Included</td></tr>
+      <tr><td><a href="#s9">Packing structure</a></td><td>Large box, box, piece — each with its own barcode and prices</td><td>Included</td></tr>
+      <tr><td><a href="#s9">Scale and weight barcodes</a></td><td>The till reads the weight out of the shop scale label</td><td>Included</td></tr>
+      <tr><td><a href="#s9">Batches, serial numbers, expiry</a></td><td>Switched on per item, not for everything</td><td>Included</td></tr>
+      <tr><td><a href="#s9">Bulk import from Excel</a></td><td>Items, customers and suppliers, with a check before writing</td><td>Included</td></tr>
+      <tr><td><a href="#s10">Warehouses and transfers</a></td><td>Per-user access, goods in transit, negative stock policy</td><td>Included</td></tr>
+      <tr><td><a href="#s10">Stock count and adjustments</a></td><td>With variance approval</td><td>Included</td></tr>
+      <tr><td><a href="#s10">Minimum quantity and reorder</a></td><td>Feeds the low-stock notification</td><td>Included</td></tr>
+      <tr><td><a href="#s11">Three costing methods</a></td><td>Last price, average, FIFO — chosen per item</td><td>Included</td></tr>
+      <tr><td><a href="#s11">Landed cost</a></td><td>Freight, duty and clearing added into the cost of goods</td><td>Included</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Buying and selling</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Part</th><th>What it covers</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#s12">Purchase order, receipt, bill</a></td><td>With goods received not yet invoiced held properly</td><td>Included</td></tr>
+      <tr><td><a href="#s12">Purchase returns</a></td><td>—</td><td>Included</td></tr>
+      <tr><td><a href="#s13">Quotation, order, delivery note, invoice</a></td><td>Use all of it or go straight to an invoice</td><td>Included</td></tr>
+      <tr><td><a href="#s13">Sales returns and credit notes</a></td><td>Stock returns at the cost it left at</td><td>Included</td></tr>
+      <tr><td><a href="#s13">Four price levels</a></td><td>Super wholesale, wholesale, retail, bulk — per packaging level</td><td>Included</td></tr>
+      <tr><td><a href="#s13">Last price for this customer</a></td><td>Shown with its date and its unit</td><td>Included</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Point of sale (POS)</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Part</th><th>What it covers</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#s14">POS module</a></td><td>Terminals, shifts, cash control, payment methods, hardware, X and Z reports</td><td>Included</td></tr>
+      <tr><td><a href="#s14">Screen 1 — sales invoice</a></td><td>Office and wholesale counter</td><td>Included</td></tr>
+      <tr><td><a href="#s14">Screen 2 — supermarket till</a></td><td>Barcode, split payment, shifts, blind count, X and Z, offline</td><td>Included</td></tr>
+      <tr><td><a href="#s14">Screen 3 — restaurant</a></td><td>Tables, touch, courses, kitchen printing by department, delivery</td><td>Own project</td></tr>
+      <tr><td><a href="#s25">Salesmen selling in the field</a></td><td>Van stock, own numbers, cash collected, settlement on return</td><td>Included</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Production, people and reporting</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Part</th><th>What it covers</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#s15">Recipes and production orders</a></td><td>Versioned recipes, real consumption, cost centres</td><td>Included</td></tr>
+      <tr><td><a href="#s15">Real cost of goods</a></td><td>Components plus labour plus overhead, per order</td><td>Included</td></tr>
+      <tr><td><a href="#s15">Repacking and un-building</a></td><td>25 kg into 25 bags, with value conserved exactly</td><td>Included</td></tr>
+      <tr><td><a href="#s15">Production reports</a></td><td>Raw material used, cost per order, yield</td><td>Included</td></tr>
+      <tr><td><a href="#s17">Simple payroll</a></td><td>Employees, salary components, deductions, payslips</td><td>Included</td></tr>
+      <tr><td><a href="#s17">NSSF, income tax, end of service</a></td><td>Built as rules, so they are added without a rebuild</td><td>Next step</td></tr>
+      <tr><td><a href="#s20">Report builder</a></td><td>Your own layouts without a new version of the software</td><td>Included</td></tr>
+      <tr><td><a href="#s20">Three dashboards</a></td><td>Sales, inventory, and profit with the key numbers</td><td>Included</td></tr>
+      <tr><td><a href="#s20">Printing and export</a></td><td>Your own print layouts; Excel, Word, PDF and CSV</td><td>Included</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Selling the system, and moving in</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Part</th><th>What it covers</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#s26">Licence management</a></td><td>Users, devices, modules and expiry — works offline too</td><td>Included</td></tr>
+      <tr><td><a href="#s26">Subscriptions</a></td><td>Monthly, quarterly, half-yearly, yearly, with renewal reminders</td><td>Included</td></tr>
+      <tr><td><a href="#s26">Setting up a new customer</a></td><td>Company, chart of accounts, tax, currencies, licence — in minutes</td><td>Included</td></tr>
+      <tr><td><a href="#s26">Support access</a></td><td>Time limited, reason recorded, visible to the customer</td><td>Included</td></tr>
+      <tr><td><a href="#s29">Moving your data across</a></td><td>Accounts, customers, items, and opening balances</td><td>Included</td></tr>
+      <tr><td><a href="#s29">Reconciliation</a></td><td>Old balance beside new balance, until every line is zero</td><td>Included</td></tr>
+      <tr><td><a href="#s29">One company at a time</a></td><td>Simplest first, then the rest</td><td>Included</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span class="lbl">If something is not on this list</span>
+    <p>Then we have missed it, and we want to know. Tell us and it goes in — this list is meant to
+    be checked line by line, not admired.</p>
+  </div>
+</section>
+
+<section id="s3">
+  <h2><span class="num">Section 3</span>The whole system at a glance</h2>
+  <p class="lede">One system, reached three different ways. Same data, same accounts, same reports
+  — whichever one you open.</p>
+
+  <figure>
+    <svg viewBox="0 0 860 350" role="img" aria-label="Diagram showing a web browser, desktop application and point-of-sale device connecting to one ERP server and one database, with the desktop and till holding a local copy that works offline and syncs later">
+      <defs>
+        <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g color="var(--ink-3)">
+        <rect class="svg-box" x="30" y="24" width="230" height="58" rx="7"/>
+        <text class="svg-t-b" x="145" y="48" text-anchor="middle">Web browser</text>
+        <text class="svg-t-s" x="145" y="66" text-anchor="middle">ANY COMPUTER, ANY PLACE</text>
+
+        <rect class="svg-box" x="300" y="24" width="230" height="58" rx="7"/>
+        <text class="svg-t-b" x="415" y="48" text-anchor="middle">Desktop application</text>
+        <text class="svg-t-s" x="415" y="66" text-anchor="middle">INSTALLED ON A PC</text>
+
+        <rect class="svg-box" x="570" y="24" width="260" height="58" rx="7"/>
+        <text class="svg-t-b" x="700" y="48" text-anchor="middle">Till &amp; salesman device</text>
+        <text class="svg-t-s" x="700" y="66" text-anchor="middle">SHOP COUNTER, VAN, MARKET</text>
+
+        <rect x="310" y="112" width="210" height="38" rx="6" fill="var(--paper-3)" stroke="var(--rule-2)" stroke-width="1.25" stroke-dasharray="5 4"/>
+        <text class="svg-t" x="415" y="136" text-anchor="middle">Local copy</text>
+        <rect x="580" y="112" width="240" height="38" rx="6" fill="var(--paper-3)" stroke="var(--rule-2)" stroke-width="1.25" stroke-dasharray="5 4"/>
+        <text class="svg-t" x="700" y="136" text-anchor="middle">Local copy</text>
+
+        <path class="svg-line" marker-end="url(#ar1)" d="M145 84 L145 178 L340 178 L340 192"/>
+        <path class="svg-line" d="M415 84 L415 112"/>
+        <path class="svg-line" marker-end="url(#ar1)" d="M415 150 L415 192"/>
+        <path class="svg-line" d="M700 84 L700 112"/>
+        <path class="svg-line" marker-end="url(#ar1)" d="M700 150 L700 178 L520 178 L520 192"/>
+
+        <text class="svg-t-s" x="150" y="170">ALWAYS ONLINE</text>
+        <text class="svg-t-s" x="560" y="170">SYNCS WHEN INTERNET RETURNS</text>
+
+        <rect class="svg-box-a" x="250" y="196" width="360" height="58" rx="7"/>
+        <text class="svg-t-a" x="430" y="221" text-anchor="middle">The ERP server</text>
+        <text class="svg-t-s" x="430" y="239" text-anchor="middle">CHECKS AND POSTS EVERYTHING</text>
+
+        <path class="svg-line-a" marker-end="url(#ar1)" d="M430 254 L430 274"/>
+
+        <rect class="svg-box" x="190" y="278" width="480" height="54" rx="7"/>
+        <text class="svg-t-b" x="430" y="300" text-anchor="middle">One database</text>
+        <text class="svg-t-s" x="430" y="318" text-anchor="middle">ALL COMPANIES · ALL BRANCHES · ALL YEARS</text>
+      </g>
+    </svg>
+    <figcaption>The browser needs internet. The desktop application and the till keep a copy of
+    what they need, so they keep working when the line drops — then send everything up when it
+    comes back. The server is the only thing allowed to post to your accounts.</figcaption>
+  </figure>
+
+  <h3>Why one server decides everything</h3>
+  <p>In your current system, every computer connects straight to the database. That is fast, but it
+  means each computer decides for itself what is allowed.</p>
+  <p>In the new system there is a server in the middle. Every invoice, payment and stock movement
+  passes through it, and it checks the rules — is the period closed, is the customer over his
+  credit limit, does the entry balance — before anything is written. <strong>This is what makes the
+  system safe to sell to other businesses</strong>, because a customer cannot break their own books
+  by accident.</p>
+</section>
+
+<section id="s4">
+  <h2><span class="num">Section 4</span>One ledger at the centre</h2>
+  <p class="lede">This is the most important idea in the whole system, and everything else follows
+  from it.</p>
+
+  <p>Accounting is not a module that sits beside stock and sales. <strong>It is the floor that
+  everything stands on.</strong> When you sell something, the sale writes a debit and a credit.
+  When stock leaves the warehouse, that writes a debit and a credit. When you run payroll, when you
+  depreciate an asset, when a cheque bounces — every one of them writes into the same ledger.</p>
+
+  <figure>
+    <svg viewBox="0 0 860 372" role="img" aria-label="Diagram showing sales, purchases, stock, point of sale, payroll and production all posting into one central ledger, with trial balance, profit and loss, balance sheet and VAT return calculated from that ledger">
+      <defs>
+        <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g color="var(--ink-3)">
+        <rect class="svg-box" x="20" y="24" width="126" height="50" rx="6"/>
+        <text class="svg-t" x="83" y="54" text-anchor="middle">Sales</text>
+        <rect class="svg-box" x="159" y="24" width="126" height="50" rx="6"/>
+        <text class="svg-t" x="222" y="54" text-anchor="middle">Purchases</text>
+        <rect class="svg-box" x="298" y="24" width="126" height="50" rx="6"/>
+        <text class="svg-t" x="361" y="54" text-anchor="middle">Stock</text>
+        <rect class="svg-box" x="437" y="24" width="126" height="50" rx="6"/>
+        <text class="svg-t" x="500" y="54" text-anchor="middle">Point of sale</text>
+        <rect class="svg-box" x="576" y="24" width="126" height="50" rx="6"/>
+        <text class="svg-t" x="639" y="54" text-anchor="middle">Payroll</text>
+        <rect class="svg-box" x="715" y="24" width="126" height="50" rx="6"/>
+        <text class="svg-t" x="778" y="54" text-anchor="middle">Production</text>
+
+        <path class="svg-line" marker-end="url(#ar2)" d="M83 76 L83 112 L200 112 L200 142"/>
+        <path class="svg-line" marker-end="url(#ar2)" d="M222 76 L222 118 L290 118 L290 142"/>
+        <path class="svg-line" marker-end="url(#ar2)" d="M361 76 L361 142"/>
+        <path class="svg-line" marker-end="url(#ar2)" d="M500 76 L500 142"/>
+        <path class="svg-line" marker-end="url(#ar2)" d="M639 76 L639 118 L570 118 L570 142"/>
+        <path class="svg-line" marker-end="url(#ar2)" d="M778 76 L778 112 L660 112 L660 142"/>
+        <text class="svg-t-s" x="430" y="106" text-anchor="middle">EVERY MOVEMENT POSTS A DEBIT AND A CREDIT</text>
+
+        <rect class="svg-box-a" x="120" y="146" width="620" height="80" rx="8"/>
+        <text class="svg-t-a" x="430" y="180" text-anchor="middle" font-size="16">The ledger</text>
+        <text class="svg-t" x="430" y="203" text-anchor="middle">Written once. Never edited, never deleted.</text>
+
+        <path class="svg-line-a" marker-end="url(#ar2)" d="M430 226 L430 262"/>
+        <text class="svg-t-s" x="446" y="250">REPORTS ARE CALCULATED FROM IT</text>
+
+        <rect class="svg-box" x="30" y="266" width="190" height="56" rx="6"/>
+        <text class="svg-t" x="125" y="299" text-anchor="middle">Trial balance</text>
+        <rect class="svg-box" x="236" y="266" width="190" height="56" rx="6"/>
+        <text class="svg-t" x="331" y="299" text-anchor="middle">Profit &amp; loss</text>
+        <rect class="svg-box" x="442" y="266" width="190" height="56" rx="6"/>
+        <text class="svg-t" x="537" y="299" text-anchor="middle">Balance sheet</text>
+        <rect class="svg-box" x="648" y="266" width="190" height="56" rx="6"/>
+        <text class="svg-t" x="743" y="299" text-anchor="middle">VAT return</text>
+
+        <text class="svg-t-s" x="430" y="348" text-anchor="middle">NO REPORT KEEPS ITS OWN TOTALS — SO TWO REPORTS CAN NEVER DISAGREE</text>
+      </g>
+    </svg>
+    <figcaption>Every module writes into one ledger. Every report is calculated from that same
+    ledger. This is why your stock value and your accounts can never drift apart.</figcaption>
+  </figure>
+
+  <h3>Three rules we will not break</h3>
+
+  <div class="grid g3">
+    <div class="card">
+      <span class="k">Rule one</span>
+      <h4>Posted is permanent</h4>
+      <p>While a document is a draft you can change it freely. Once it is posted it can never be
+      edited or deleted — only reversed by a new entry. So last month's reports stay the same
+      forever.</p>
+    </div>
+    <div class="card">
+      <span class="k">Rule two</span>
+      <h4>The moment is frozen</h4>
+      <p>The exchange rate, the price, the tax rate, the box size — whatever was true when you
+      posted stays on the document. Change them tomorrow and history does not move.</p>
+    </div>
+    <div class="card">
+      <span class="k">Rule three</span>
+      <h4>Every number explains itself</h4>
+      <p>Click any figure on any report and you see the entries behind it, and who posted them,
+      and when. Nothing in the system is a number without a story.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <span class="lbl">A small thing that matters a lot</span>
+    <p>We store money as exact decimal numbers, not as the “floating point” numbers most small
+    systems use. At 90,000 pounds to the dollar, that difference is real: floating point loses tiny
+    fractions on every calculation, and after a year those fractions are why a trial balance is out
+    by a few pounds that nobody can find. Ours cannot do that.</p>
+  </div>
+</section>
+
+<section id="s5">
+  <h2><span class="num">Section 5</span>Dollars and pounds</h2>
+  <p class="lede">You told us the heart of the problem: your customers deal in dollars, the
+  government wants pounds. Here is exactly how we handle it.</p>
+
+  <h3>Every entry holds three amounts</h3>
+  <p>When you raise an invoice in dollars, we do not convert it and throw the dollars away, and we
+  do not keep two separate sets of books. <strong>We store all three numbers on the same line.</strong></p>
+
+  <figure>
+    <svg viewBox="0 0 860 250" role="img" aria-label="Diagram of one invoice line stored three ways: one thousand dollars, multiplied by the rate of ninety thousand which is saved on the invoice, giving ninety million pounds">
+      <g color="var(--ink-3)">
+        <rect x="30" y="18" width="800" height="36" rx="6" fill="var(--paper-3)" stroke="var(--rule-2)" stroke-width="1.25"/>
+        <text class="svg-t" x="48" y="41">Sales invoice INV-2027-000412 · 4 January 2027 · Customer: Karam Trading</text>
+
+        <rect class="svg-box" x="30" y="76" width="240" height="104" rx="7"/>
+        <text class="svg-t-s" x="150" y="102" text-anchor="middle">THE CUSTOMER'S CURRENCY</text>
+        <text class="svg-t-b" x="150" y="136" text-anchor="middle" font-size="24">$1,000.00</text>
+        <text class="svg-t" x="150" y="162" text-anchor="middle">what he agreed to pay</text>
+
+        <text class="svg-t-b" x="292" y="134" text-anchor="middle" font-size="20">×</text>
+
+        <rect class="svg-box-a" x="314" y="76" width="240" height="104" rx="7"/>
+        <text class="svg-t-s" x="434" y="102" text-anchor="middle">THE RATE THAT DAY</text>
+        <text class="svg-t-a" x="434" y="136" text-anchor="middle" font-size="24">90,000</text>
+        <text class="svg-t" x="434" y="162" text-anchor="middle">saved onto the invoice</text>
+
+        <text class="svg-t-b" x="576" y="134" text-anchor="middle" font-size="20">=</text>
+
+        <rect class="svg-box" x="598" y="76" width="232" height="104" rx="7"/>
+        <text class="svg-t-s" x="714" y="102" text-anchor="middle">FOR THE GOVERNMENT</text>
+        <text class="svg-t-b" x="714" y="136" text-anchor="middle" font-size="24">90,000,000</text>
+        <text class="svg-t" x="714" y="162" text-anchor="middle">Lebanese pounds</text>
+
+        <rect x="30" y="200" width="800" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.25"/>
+        <text class="svg-t-a" x="430" y="222" text-anchor="middle">If the rate moves tomorrow, this invoice does not change. Ever.</text>
+      </g>
+    </svg>
+    <figcaption>One line, three values. Because the pound amount is stored — not calculated later
+    — your government statement and your dollar view are always the same numbers seen two ways.</figcaption>
+  </figure>
+
+  <div class="note">
+    <span class="lbl">Something extra we are giving you</span>
+    <p>We also store the <strong>US dollar value</strong> on every single entry, the same way. That
+    means you get a full balance sheet and profit and loss <strong>in dollars</strong> and
+    <strong>in pounds</strong> — and neither one is a translation of the other, so they can never
+    disagree. For a business where 90% of trade is in dollars but the state only accepts pounds,
+    this is worth a lot.</p>
+  </div>
+
+  <h3>Two rates, and more when you need them</h3>
+  <p>Your system today keeps one rate for each currency. You told us you actually use two — a sale
+  rate of 90,000 and a purchase rate of 89,500. So the new system keeps a rate <em>list</em>, and
+  each rate has a type and a date:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Rate type</th><th>Used for</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td class="field">Sale</td><td>Every sales invoice and customer receipt</td><td class="num">90,000</td></tr>
+      <tr><td class="field">Purchase</td><td>Every supplier bill and payment</td><td class="num">89,500</td></tr>
+      <tr><td class="field">Closing</td><td>End of month and end of year revaluation</td><td class="num">89,500</td></tr>
+      <tr><td class="field">Average</td><td>Translating profit and loss over a period</td><td class="num">—</td></tr>
+      <tr><td class="field">Historical</td><td>Capital and opening balances, which never move</td><td class="num">—</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>Rates are never overwritten. When the official rate changes you add a <strong>new</strong>
+  rate with a new date. Everything posted before keeps the old one. And because entering a rate is
+  one of the most powerful actions in the system, only named people can do it, the screen shows you
+  the old rate and the percentage change before you confirm, and every change is recorded with who
+  and when.</p>
+
+  <h3>The difference of exchange report — both halves</h3>
+  <p>You asked for this by name. There are two halves, and most small systems only build the first.</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <span class="k">Half one · realised</span>
+      <h4>The customer paid at a different rate</h4>
+      <p>You invoiced at 90,000. He pays two months later when the rate is 91,000. The difference
+      is real money and it posts to your exchange account the moment the payment is matched.</p>
+      <p style="margin-top:10px"><strong>And because you told us customers pay in instalments —
+      “yes in business all is acceptable” — each payment takes its own rate.</strong> Three
+      payments across three months means three separate differences, each at the rate of its own
+      day. Not one calculation at the end.</p>
+    </div>
+    <div class="card">
+      <span class="k">Half two · unrealised</span>
+      <h4>The rate moved and nobody has paid yet</h4>
+      <p>At the end of each month, every unpaid dollar invoice, every dollar supplier balance and
+      every dollar bank account is worth a different number of pounds than it was. That difference
+      has to be posted or the balance sheet is wrong that morning.</p>
+      <p style="margin-top:10px"><strong>This is the half usually left out</strong>, and with 90%
+      of your invoices in dollars it is the half that matters most to you.</p>
+    </div>
+  </div>
+
+  <p>The report shows both, for every customer and every supplier: the original amount, the rate on
+  the document, the rate at payment or at month end, the difference in pounds, and which account it
+  went to.</p>
+
+  <div class="note">
+    <span class="lbl">One detail your accountant will check</span>
+    <p>Only <em>money</em> accounts get revalued — cash, banks, customers, suppliers. Stock and
+    fixed assets do <strong>not</strong>, because they are not money and international accounting
+    rules say they stay at their original cost. Most home-made systems revalue everything, which is
+    wrong. Each account in your chart carries a setting saying which treatment it gets, and your
+    accountant confirms it once at the start.</p>
+  </div>
+</section>
+
+<section id="s6">
+  <h2><span class="num">Section 6</span>Your chart of accounts</h2>
+  <p class="lede">Your seven classes, exactly as you use them today — plus one screen that makes
+  this system sellable to any other business.</p>
+
+  <div class="mod">
+    <h3>The account tree <span class="tag have">You have this</span></h3>
+    <div class="beat"><p class="beat-label">What it does</p>
+      <p>Holds your seven classes and every sub-account underneath them. Classes 1 to 7 stay fixed;
+      each company creates its own sub-accounts in the tree, exactly as you described.</p></div>
+    <div class="beat"><p class="beat-label">What each account stores</p>
+      <div class="tw"><table>
+        <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="field">Code</td><td>The account number. Carries the meaning — the first digit is the class</td></tr>
+          <tr><td class="field">Name / Name in Arabic</td><td>Editable at any time</td></tr>
+          <tr><td class="field">Parent</td><td>Where it sits in the tree</td></tr>
+          <tr><td class="field">Group or postable</td><td>A group account is a heading; you cannot post to it</td></tr>
+          <tr><td class="field">Currency restriction</td><td>Optional — for example a dollar bank account</td></tr>
+          <tr><td class="field">Revaluation treatment</td><td>Whether month-end revaluation touches it (see section 4)</td></tr>
+          <tr><td class="field">Active</td><td>Accounts are switched off, never deleted</td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">One protection we add</p>
+      <p>Once an account has even one entry against it, <strong>its number can never be changed and
+      it can never be deleted</strong> — only switched off. The name stays editable forever. Without
+      this rule, one person renumbering an account quietly changes every report you ever printed.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>The linked accounts screen <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What it does</p>
+      <p>This was your idea and it is the single most valuable thing on your list. One screen where
+      you say: <em>sales post to this account, VAT to this one, customers to this one, cash to this
+      one.</em></p></div>
+    <div class="beat"><p class="beat-label">Why it matters so much</p>
+      <p>In your current software those account numbers are written inside the programme itself.
+      That works perfectly for you — but it means the software can only be sold to a business
+      willing to use <em>your</em> chart of accounts.</p>
+      <p>With this screen, any business maps its own accounts once, on one page, and everything
+      posts correctly. <strong>It is a few days of work and it is the difference between a system
+      you use and a product you sell.</strong></p></div>
+    <div class="beat"><p class="beat-label">How it looks</p>
+      <p>A list grouped by area — Sales, Purchasing, Inventory, Money, Tax, Exchange, Payroll,
+      Production — with one line for each purpose and a box to pick the account. You can also set
+      a different account for a particular customer group, product group or branch.</p>
+      <p>The system will not let a company go live with any required line still empty, and it shows
+      you a progress bar until they are all filled.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Journal vouchers <span class="tag have">You have this</span></h3>
+    <div class="beat"><p class="beat-label">What it does</p>
+      <p>Manual double-entry, the same screen you use today: a header with date, currency, rate and
+      reference, and a grid of lines with account, debit and credit — and beside them the
+      <strong>rate</strong> and the <strong>pound columns</strong>, exactly as your current
+      Financial Transaction screen shows them.</p></div>
+    <div class="beat"><p class="beat-label">What is different</p>
+      <ul>
+        <li>The running difference is shown at the bottom in red, and <strong>the Post button stays
+        disabled until it is zero</strong></li>
+        <li>Every line can carry a cost centre and a branch</li>
+        <li>Posted vouchers are reversed, never edited — and reversing is one click</li>
+      </ul></div>
+  </div>
+
+  <div class="mod">
+    <h3>Five things you can see about any account <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Click an account and it opens five ways</p>
+      <div class="tw"><table>
+        <thead><tr><th>Tab</th><th>What it shows you</th></tr></thead>
+        <tbody>
+          <tr><td>Details</td><td>Its code, both names, its parent, and how it behaves — whether it can be posted to, whether it needs a cost centre, whether the month-end rate touches it</td></tr>
+          <tr><td>Balances</td><td>Per currency, per month, per cost centre. Never one number with no explanation</td></tr>
+          <tr><td>Movements</td><td>Every entry that made the balance, with the voucher, the person and the rate</td></tr>
+          <tr><td><strong>Used by</strong></td><td>Every rule and every customer that depends on this account — <em>before</em> you change or block it</td></tr>
+          <tr><td>Opening balance</td><td>What it started the year with, and what it is made up of</td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">Why the “Used by” tab exists</p>
+      <p>The most expensive mistake in an accounting system is quietly changing something that
+      other things depend on. Before you block an account, this tab tells you that five posting
+      rules and a hundred and seventy-six customers point at it. Then it tells you plainly what
+      the system will refuse: you cannot delete an account with movements, you can move it under
+      another parent, and you can merge it — each with a note on what happens to the history.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Two decisions we have taken for you</h3>
+    <div class="beat"><p class="beat-label">Balances are never stored on the account</p>
+      <p>Your current system keeps a running debit and credit on each account row, and a second
+      table of balances beside the journal. We are not carrying either across. Every figure is
+      worked out from the entries themselves, with a fast summary kept for speed and
+      <strong>checked against the real entries every night</strong>. A stored balance sitting next
+      to a journal is the classic way a chart of accounts quietly stops agreeing with itself, and
+      nobody notices for four months.</p></div>
+    <div class="beat"><p class="beat-label">The account numbers are a starting point, not a decision</p>
+      <p>We load a full Lebanese chart — your seven classes, five levels deep, around a hundred and
+      fifty accounts, in both languages. Your accountant confirms the exact numbers in the first
+      week. Changing one costs nothing, because <strong>no account number is written inside the
+      programme</strong> — only in the linked accounts screen. That is the single biggest
+      improvement over what you have now, where the numbers are built into the software itself.</p></div>
+  </div>
+</section>
+
+<section id="s7">
+  <h2><span class="num">Section 7</span>Customers and suppliers</h2>
+
+  <div class="mod">
+    <h3>One list, two roles <span class="tag have">You have this</span></h3>
+    <div class="beat"><p class="beat-label">What it does</p>
+      <p>Customers and suppliers live in one list with a flag, the way your system does it today —
+      because the same company is often both.</p></div>
+    <div class="beat"><p class="beat-label">What each one stores</p>
+      <div class="tw"><table>
+        <thead><tr><th>Field</th><th>Meaning</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="field">Code, name, Arabic name</td><td>—</td><td>You have</td></tr>
+          <tr><td class="field">Customer / supplier</td><td>Either or both</td><td>You have</td></tr>
+          <tr><td class="field">Default currency</td><td>Drives the currency of his documents and his prices</td><td>You have</td></tr>
+          <tr><td class="field">Price level</td><td>Super wholesale, wholesale, retail or bulk</td><td>You have</td></tr>
+          <tr><td class="field">Classification</td><td>The group he belongs to — see below</td><td><strong>New</strong></td></tr>
+          <tr><td class="field">Credit limit</td><td>With the currency it is measured in</td><td><strong>New</strong></td></tr>
+          <tr><td class="field">Credit rule</td><td>Ignore · warn · block the order · block the delivery · needs approval</td><td><strong>New</strong></td></tr>
+          <tr><td class="field">Blocked</td><td>Nothing · no delivery · no invoice · everything</td><td><strong>New</strong></td></tr>
+          <tr><td class="field">Payment terms</td><td>Cash, so many days, or an instalment plan</td><td><strong>New</strong></td></tr>
+          <tr><td class="field">Salesman, region, district, city</td><td>—</td><td>You have</td></tr>
+          <tr><td class="field">Tax number and tax group</td><td>Decides how he is taxed</td><td>Partly</td></tr>
+          <tr><td class="field">Account in the chart</td><td>His sub-account under class 4</td><td>You have</td></tr>
+        </tbody>
+      </table></div></div>
+  </div>
+
+  <div class="mod">
+    <h3>Customer classification <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What you asked for</p>
+      <p>“Customer setup and classification — cash only, maximum discount, minimum discount, credit
+      limit.”</p></div>
+    <div class="beat"><p class="beat-label">How it works</p>
+      <p>You create groups — for example <em>Cash only</em>, <em>Wholesale</em>, <em>Key
+      account</em> — and each group carries its own rules: which price level it gets by default,
+      the smallest and largest discount a salesman may give, whether credit is allowed at all, and
+      the default payment terms.</p>
+      <p>Then every customer belongs to a group and inherits those rules. A salesman who tries to
+      go outside the discount band gets stopped, and a manager can override it with a reason that is
+      recorded.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Payment terms — you create them <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What you asked for</p>
+      <p>“Payment term will be dynamic, so if a company has a special payment term it is possible to
+      create it and link it to an account on the chart of accounts.”</p></div>
+    <div class="beat"><p class="beat-label">How it works</p>
+      <p>You create as many terms as you need — cash on delivery, cheque on delivery, bank transfer,
+      net 30, net 90, three instalments, or a special arrangement used by one customer only. Nothing
+      is a fixed list built into the software.</p>
+      <p>Each term says how it behaves — paid on the spot, one payment after so many days, end of
+      month, or split into instalments with your own percentages and dates — and
+      <strong>each term names the account it uses.</strong></p></div>
+    <div class="beat"><p class="beat-label">Why linking to an account matters</p>
+      <p>This is the part that is a real accounting decision rather than a setting, and it is worth
+      being clear about.</p>
+      <ul>
+        <li>A term paid <strong>on the spot</strong> names where the money lands — the cash box, the
+        bank, or the cheques account. No customer balance is created at all</li>
+        <li>A term that gives <strong>credit</strong> names which customer control account carries
+        the balance. Most sales go to the normal customer account — but you can send instalment or
+        long-dated sales to a separate one</li>
+      </ul>
+      <p>The reason to do that: your balance sheet then separates <strong>money due soon from money
+      due later</strong>, instead of showing one figure for everything owed to you. Your accountant
+      will recognise this immediately.</p></div>
+    <div class="beat"><p class="beat-label">And the protection that comes with it</p>
+      <p>When money owed to you sits in more than one account, each account is reconciled against
+      <strong>its own</strong> open invoices — so both still agree with the ledger exactly. The
+      account used is written onto each invoice when it posts, so changing a term next year never
+      re-classifies what happened last year.</p>
+      <p>The system also checks that the account you pick is the right kind. A customer balance can
+      only point at a customer control account; a cash term can only point at cash, bank or cheques.
+      It will not let a wrong link be saved.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Balances, ageing and instalments <span class="tag have">Improved</span></h3>
+    <div class="beat"><p class="beat-label">How instalments are handled</p>
+      <p>When an invoice has a payment plan, the system does not keep one balance and count down.
+      It creates <strong>one open item for each instalment, each with its own due date.</strong></p>
+      <p>That one decision makes everything else work correctly: the ageing report is truthful, the
+      reminder knows which instalment is late, and — most importantly — <strong>each instalment
+      calculates its own exchange difference at the rate of the day it was paid.</strong></p></div>
+    <div class="beat"><p class="beat-label">Ageing</p>
+      <p>The buckets are yours to set — 30, 60, 90 days or whatever you use — and you can run the
+      report by due date (for collection) or by document date (for provisions). Both views, same
+      data.</p></div>
+    <div class="beat"><p class="beat-label">Credit control</p>
+      <p>What a customer “owes” is more than his invoice balance. The system counts posted invoices,
+      goods delivered but not yet invoiced, and open orders, minus any money on account. That total
+      is what is checked against his limit.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Where your customers are</h3>
+    <div class="beat"><p class="beat-label">District, region, city — kept, because you already use them</p>
+      <p>Your current system stores a district, a region and a city on every customer, and your
+      invoices carry them. All three come across, as one tree you maintain yourself, with a salesman
+      attached to each area.</p></div>
+    <div class="beat"><p class="beat-label">What it is actually for</p>
+      <p>It is not decoration. It is what lets you see sales by area, give a route to a salesman,
+      plan a van's day, and set a delivery charge per zone in the restaurant. Sales by area was one
+      of the first things you asked to be able to see.</p></div>
+  </div>
+</section>
+
+<section id="s8">
+  <h2><span class="num">Section 8</span>Cheques, cash boxes and banks</h2>
+  <p class="lede">You told us cheque collection on due date is normal practice in Lebanon. So we
+  treat a cheque properly — as a thing with a life of its own, not as a word on a payment.</p>
+
+  <p>Most small systems record “paid by cheque” and stop there. That is not how the business
+  actually works. A post-dated cheque sits in your drawer for two months, it might go to a supplier
+  instead of the bank, and if it bounces it has to unwind everything and reopen the customer's
+  balance.</p>
+
+  <h3>The life of a cheque</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Stage</th><th>What happens in your accounts</th></tr></thead>
+    <tbody>
+      <tr><td>You receive a customer's cheque</td><td>The customer's balance is cleared. The cheque becomes an <strong>asset in its own account</strong> — not cash, because it is not cash yet</td></tr>
+      <tr><td>You deposit it for collection</td><td>It moves to “cheques under collection”</td></tr>
+      <tr><td>It clears</td><td>Now it becomes money in the bank</td></tr>
+      <tr><td>It bounces</td><td>The customer's balance comes back, with its original due date, and the bank charge is posted to him</td></tr>
+      <tr><td>You give it to a supplier instead</td><td>The supplier's balance is reduced, and the cheque is still tracked — because if it bounces, that debt returns</td></tr>
+      <tr><td>Your own cheque to a supplier</td><td>Held as a liability until it is presented at the bank</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>What each cheque stores</h3>
+  <p>Number, bank, drawer name, customer or supplier, currency, amount, issue date, <strong>due
+  date</strong>, current status, where it is now, and the full history of every step with dates.</p>
+
+  <div class="mod">
+    <h3>Cash boxes and bank accounts <span class="tag have">You have this</span></h3>
+    <div class="beat"><p class="beat-label">What it does</p>
+      <p>Your system today has safes — cash boxes, each tied to an account, with transfers between
+      them. We keep exactly that, and add bank accounts alongside them.</p>
+      <ul>
+        <li>As many cash boxes as you need, each linked to its own account in class 5</li>
+        <li>A cashier can be tied to one box, so he only takes money in and out of his own</li>
+        <li>Transfers between boxes, and between a box and a bank, are documents that post</li>
+        <li>Bank accounts can be in dollars or pounds, and are revalued at month end</li>
+        <li><strong>Bank reconciliation</strong> — tick off what has cleared against the statement,
+        so you always know what is genuinely in the bank</li>
+      </ul></div>
+  </div>
+
+  <div class="note">
+    <span class="lbl">The report you will use most</span>
+    <p>A due-date calendar: which cheques are coming due this week, which are late, which are in
+    the drawer and which are at the bank — and the same for your own cheques going out. Put that
+    beside your customer and supplier due dates and you have a real forward view of your cash.</p>
+  </div>
+</section>
+
+<section id="s9">
+  <h2><span class="num">Section 9</span>Items and packaging</h2>
+  <p class="lede">This is the part of your current system that is built best, and we are keeping the
+  model almost exactly as it is.</p>
+
+  <figure>
+    <svg viewBox="0 0 860 258" role="img" aria-label="Diagram showing a large box containing six boxes, each box containing twelve pieces, with each level having its own barcode and its own four selling prices, and stock always counted in pieces">
+      <defs>
+        <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g color="var(--ink-3)">
+        <rect class="svg-box" x="30" y="30" width="222" height="130" rx="7"/>
+        <text class="svg-t-b" x="141" y="58" text-anchor="middle">Large box</text>
+        <text class="svg-t-s" x="141" y="86" text-anchor="middle">OWN BARCODE</text>
+        <text class="svg-t-s" x="141" y="106" text-anchor="middle">OWN 4 PRICES</text>
+        <text class="svg-t" x="141" y="136" text-anchor="middle">= 72 pieces</text>
+
+        <path class="svg-line" marker-end="url(#ar3)" d="M252 95 L316 95"/>
+        <text class="svg-t-s" x="284" y="86" text-anchor="middle">HOLDS 6</text>
+
+        <rect class="svg-box" x="320" y="30" width="222" height="130" rx="7"/>
+        <text class="svg-t-b" x="431" y="58" text-anchor="middle">Box</text>
+        <text class="svg-t-s" x="431" y="86" text-anchor="middle">OWN BARCODE</text>
+        <text class="svg-t-s" x="431" y="106" text-anchor="middle">OWN 4 PRICES</text>
+        <text class="svg-t" x="431" y="136" text-anchor="middle">= 12 pieces</text>
+
+        <path class="svg-line" marker-end="url(#ar3)" d="M542 95 L606 95"/>
+        <text class="svg-t-s" x="574" y="86" text-anchor="middle">HOLDS 12</text>
+
+        <rect class="svg-box-a" x="610" y="30" width="220" height="130" rx="7"/>
+        <text class="svg-t-a" x="720" y="58" text-anchor="middle">Piece</text>
+        <text class="svg-t-s" x="720" y="86" text-anchor="middle">OWN BARCODE</text>
+        <text class="svg-t-s" x="720" y="106" text-anchor="middle">OWN 4 PRICES</text>
+        <text class="svg-t" x="720" y="136" text-anchor="middle">the base unit</text>
+
+        <rect x="30" y="184" width="800" height="52" rx="7" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.25"/>
+        <text class="svg-t-a" x="430" y="206" text-anchor="middle">Stock is always counted in pieces</text>
+        <text class="svg-t" x="430" y="226" text-anchor="middle">but you buy, sell, scan and count at whichever level you are holding</text>
+      </g>
+    </svg>
+    <figcaption>Each level has its own barcode, so the till can scan a single piece or a full box.
+    And a box price is not twelve times the piece price — each level carries its own four prices.</figcaption>
+  </figure>
+
+  <div class="mod">
+    <h3>What an item stores</h3>
+    <div class="beat">
+      <div class="tw"><table>
+        <thead><tr><th>Field</th><th>Meaning</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="field">Code and name</td><td>Plus Arabic name</td><td>You have</td></tr>
+          <tr><td class="field">Category / sub-category</td><td>—</td><td>You have</td></tr>
+          <tr><td class="field">Base unit</td><td>Usually the piece. Stock is always held in this</td><td>You have</td></tr>
+          <tr><td class="field">Packaging levels</td><td>Each with its factor, its barcode and its prices</td><td>You have</td></tr>
+          <tr><td class="field">Taxable</td><td>Yes or no — you told us some items are, some are not</td><td>You have</td></tr>
+          <tr><td class="field">Costing method</td><td>Last price, average or FIFO — chosen per item</td><td><strong>New</strong></td></tr>
+          <tr><td class="field">Track batches / expiry</td><td>Switched on only for items that need it</td><td><strong>New</strong></td></tr>
+          <tr><td class="field">Track serial numbers</td><td>Same — per item, not for everything</td><td><strong>New</strong></td></tr>
+          <tr><td class="field">Minimum quantity</td><td>Triggers the low-stock notification</td><td>You have</td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">One improvement worth explaining</p>
+      <p>Today the box size lives on the item. If someone changes “box = 12” to “box = 10” next
+      year, old documents quietly change meaning. In the new system <strong>the box size is copied
+      onto every document when you post it</strong>, so an invoice from last year always means what
+      it meant when you printed it — the same protection as the exchange rate.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Bulk import from Excel <span class="tag have">You have this</span></h3>
+    <div class="beat"><p class="beat-label">What it does</p>
+      <p>Your system already imports items, customers and suppliers from Excel with a template, and
+      that stays — it is genuinely useful and your staff already know it.</p>
+      <p>What we add is a check before anything is written: the file is read, every row is
+      validated, and you see a report of what will be created, what will be updated and what is
+      wrong — <strong>before</strong> you confirm. A bad import is very hard to undo, so the system
+      shows you first.</p>
+      <p>The same works in the other direction: any list in the system exports to Excel, so you can
+      edit prices or details outside and bring them back.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Barcodes, including scale labels <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What it adds</p>
+      <p>Alongside normal barcodes, the till understands the special in-store barcodes a shop scale
+      prints — the ones where the weight or the price is inside the barcode itself. Scan a package
+      of cheese and the till reads the weight out of the label and prices it. Without this, a
+      supermarket till cannot work with a counter scale at all.</p></div>
+  </div>
+</section>
+
+<section id="s10">
+  <h2><span class="num">Section 10</span>Warehouses and stock</h2>
+
+  <div class="mod">
+    <h3>Warehouses with their own permissions <span class="tag have">You have this</span></h3>
+    <div class="beat"><p class="beat-label">What it does</p>
+      <p>As many warehouses as you need, and each user sees only the ones he is allowed to see —
+      exactly as your system does today. Transfers between warehouses are proper documents that
+      post like any other stock movement.</p></div>
+    <div class="beat"><p class="beat-label">What is added</p>
+      <ul>
+        <li><strong>Goods in transit</strong> — stock that has left one warehouse but not yet
+        arrived at the other is visible and valued, not missing</li>
+        <li><strong>Stock count</strong> with a variance report and approval before it posts</li>
+        <li><strong>Negative stock is a decision, not an accident</strong> — for each warehouse you
+        choose block, warn, or allow and reconcile later</li>
+        <li><strong>Reservations</strong> — so two people cannot sell the same last piece</li>
+      </ul></div>
+  </div>
+</section>
+
+<section id="s11">
+  <h2><span class="num">Section 11</span>What your stock is worth</h2>
+  <p class="lede">You asked for three methods, selectable: last price, average, and FIFO. Here is
+  what each one means in plain terms.</p>
+
+  <div class="grid g3">
+    <div class="card">
+      <span class="k">Method one</span>
+      <h4>Last price</h4>
+      <p>Everything is valued at the most recent price you paid. Simplest to explain. This is
+      closest to how your system works today.</p>
+    </div>
+    <div class="card">
+      <span class="k">Method two</span>
+      <h4>Average</h4>
+      <p>Every purchase blends into a running average cost. Steady, and the least surprising when
+      prices move up and down.</p>
+    </div>
+    <div class="card">
+      <span class="k">Method three</span>
+      <h4>FIFO</h4>
+      <p>First in, first out. The oldest stock is sold first, at the price you actually paid for
+      that batch. The most accurate for profit, and the most work to keep.</p>
+    </div>
+  </div>
+
+  <p><strong>The method is chosen per item</strong>, with a default for the company — so a fast
+  commodity can be on average while a controlled item is on FIFO. Changing an item's method applies
+  from a date forward; it never rewrites what happened before.</p>
+
+  <div class="note">
+    <span class="lbl">Why this is a real change</span>
+    <p>Today, when you enter a purchase, the new cost is written over the item's old cost. That
+    means the value of what you bought last month quietly changes when you buy the same thing
+    cheaper this month. In the new system every receipt keeps its own cost, so the value of your
+    stock and the profit on every sale are calculated from what you actually paid.</p>
+  </div>
+
+  <h3>Landed cost <span class="tag new">New</span></h3>
+  <p>Freight, customs duty and clearing charges can be spread over a shipment — by value, weight or
+  quantity — so they become part of what the goods cost. For an importer this is the difference
+  between knowing your margin and guessing it.</p>
+</section>
+
+<section id="s12">
+  <h2><span class="num">Section 12</span>Buying</h2>
+
+  <div class="mod">
+    <h3>From order to payment</h3>
+    <div class="beat"><p class="beat-label">What it does</p>
+      <p>Your system today goes straight to a supplier bill. We add the steps before it, so that
+      goods arriving before the invoice are still on your books where they belong:</p>
+      <ul>
+        <li><strong>Purchase order</strong> — what you asked for, at what price</li>
+        <li><strong>Goods receipt</strong> — what actually arrived. Stock goes up now, and the
+        value sits in a “received not invoiced” account</li>
+        <li><strong>Supplier bill</strong> — clears that account and creates the payable</li>
+        <li><strong>Purchase return</strong> — for what goes back</li>
+      </ul>
+      <p>If the bill does not match the order, the difference is shown and needs approval above a
+      limit you set.</p></div>
+    <div class="beat"><p class="beat-label">What happens in your accounts</p>
+      <p>Buying $1,000 of goods with 11% VAT, at the purchase rate of 89,500:</p>
+      <div class="tw"><table>
+        <thead><tr><th>Side</th><th>Account</th><th class="num">Dollars</th><th class="num">Pounds</th></tr></thead>
+        <tbody>
+          <tr><td class="dr">Debit</td><td>Inventory</td><td class="num">1,000.00</td><td class="num">89,500,000</td></tr>
+          <tr><td class="dr">Debit</td><td>VAT you can reclaim</td><td class="num">110.00</td><td class="num">9,845,000</td></tr>
+          <tr><td class="cr">Credit</td><td>The supplier</td><td class="num">1,110.00</td><td class="num">99,345,000</td></tr>
+        </tbody>
+      </table></div>
+      <p>Note the rate: <strong>purchases use 89,500, sales use 90,000.</strong> The gap between
+      your two rates is real income, and over the year it shows up properly in your exchange
+      account instead of disappearing.</p></div>
+  </div>
+</section>
+
+<section id="s13">
+  <h2><span class="num">Section 13</span>Selling and prices</h2>
+
+  <figure>
+    <svg viewBox="0 0 860 268" role="img" aria-label="Diagram of the sales flow from quotation to sales order to delivery note to invoice to payment, showing that stock leaves at the delivery note, the ledger and VAT post at the invoice, and a cheque may be created at payment">
+      <defs>
+        <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g color="var(--ink-3)">
+        <rect class="svg-box" x="18" y="40" width="140" height="52" rx="6"/>
+        <text class="svg-t" x="88" y="71" text-anchor="middle">Quotation</text>
+        <path class="svg-line" marker-end="url(#ar4)" d="M158 66 L184 66"/>
+
+        <rect class="svg-box" x="188" y="40" width="140" height="52" rx="6"/>
+        <text class="svg-t" x="258" y="71" text-anchor="middle">Sales order</text>
+        <path class="svg-line" marker-end="url(#ar4)" d="M328 66 L354 66"/>
+
+        <rect class="svg-box" x="358" y="40" width="140" height="52" rx="6"/>
+        <text class="svg-t" x="428" y="71" text-anchor="middle">Delivery note</text>
+        <path class="svg-line" marker-end="url(#ar4)" d="M498 66 L524 66"/>
+
+        <rect class="svg-box-a" x="528" y="40" width="140" height="52" rx="6"/>
+        <text class="svg-t-a" x="598" y="71" text-anchor="middle">Invoice</text>
+        <path class="svg-line" marker-end="url(#ar4)" d="M668 66 L694 66"/>
+
+        <rect class="svg-box" x="698" y="40" width="144" height="52" rx="6"/>
+        <text class="svg-t" x="770" y="71" text-anchor="middle">Payment</text>
+
+        <path class="svg-dash" marker-end="url(#ar4)" d="M428 92 L428 142"/>
+        <path class="svg-dash" marker-end="url(#ar4)" d="M598 92 L598 142"/>
+        <path class="svg-dash" marker-end="url(#ar4)" d="M770 92 L770 142"/>
+
+        <rect class="svg-box" x="338" y="146" width="180" height="58" rx="6"/>
+        <text class="svg-t" x="428" y="170" text-anchor="middle">Stock leaves</text>
+        <text class="svg-t-s" x="428" y="190" text-anchor="middle">AND IS VALUED</text>
+
+        <rect class="svg-box" x="508" y="146" width="180" height="58" rx="6"/>
+        <text class="svg-t" x="598" y="170" text-anchor="middle">Ledger &amp; VAT post</text>
+        <text class="svg-t-s" x="598" y="190" text-anchor="middle">RATE STAMPED HERE</text>
+
+        <rect class="svg-box" x="698" y="146" width="144" height="58" rx="6"/>
+        <text class="svg-t" x="770" y="170" text-anchor="middle">Cheque, if any</text>
+        <text class="svg-t-s" x="770" y="190" text-anchor="middle">GOES TO THE REGISTER</text>
+
+        <text class="svg-t-s" x="18" y="240">EVERY STEP IS OPTIONAL — YOU CAN GO STRAIGHT TO AN INVOICE, THE WAY YOU DO TODAY</text>
+      </g>
+    </svg>
+    <figcaption>The chain, with what each step does underneath it. You are never forced through all
+    five — a counter sale is one document.</figcaption>
+  </figure>
+
+  <div class="mod">
+    <h3>Four price levels, priced per packaging level <span class="tag have">You have this</span></h3>
+    <div class="beat"><p class="beat-label">How it works</p>
+      <p>Super wholesale, wholesale, retail and bulk. Each customer has a default level. A salesman
+      can go outside it only if his permission and his customer's discount band allow it.</p>
+      <p>And prices sit on <strong>each packaging level separately</strong> — because as you know,
+      a box price is not twelve times the piece price.</p></div>
+    <div class="beat"><p class="beat-label">Prices in two currencies</p>
+      <p>Price lists are kept in dollars and the pound price is calculated at the sale rate. You
+      confirmed this is right — items follow the customer's currency at the rate, with no special
+      cases.</p></div>
+    <div class="beat"><p class="beat-label">Last price for this customer <span class="tag have">You have this</span></p>
+      <p>When you sell to a customer, the system shows what he paid last time — with
+      <strong>the date and the packaging level beside it</strong>, because a last price for a box
+      tells you nothing when today you are selling pieces.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Salesmen and commission <span class="tag have">You have this</span></h3>
+    <div class="beat"><p class="beat-label">What it does</p>
+      <p>Every customer and every invoice can carry a salesman, and every salesman has his
+      commission percentage — as your system does today. Regions and districts group them, so you
+      can see performance by area as well as by person.</p>
+      <p>Sales and profit reports run by salesman, by region and by district, and the commission
+      due is calculated from posted invoices — with the option to calculate it on paid invoices
+      instead, if you prefer to pay commission only on money actually collected.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>What happens when you post a sale</h3>
+    <div class="beat">
+      <p>Selling $1,000 of goods with 11% VAT at 90,000, where the goods cost you $600:</p>
+      <div class="tw"><table>
+        <thead><tr><th>Side</th><th>Account</th><th class="num">Dollars</th><th class="num">Pounds</th></tr></thead>
+        <tbody>
+          <tr><td class="dr">Debit</td><td>The customer</td><td class="num">1,110.00</td><td class="num">99,900,000</td></tr>
+          <tr><td class="cr">Credit</td><td>Sales</td><td class="num">1,000.00</td><td class="num">90,000,000</td></tr>
+          <tr><td class="cr">Credit</td><td>VAT you owe</td><td class="num">110.00</td><td class="num">9,900,000</td></tr>
+          <tr><td class="dr">Debit</td><td>Cost of goods sold</td><td class="num">600.00</td><td class="num">54,000,000</td></tr>
+          <tr><td class="cr">Credit</td><td>Inventory</td><td class="num">600.00</td><td class="num">54,000,000</td></tr>
+        </tbody>
+      </table></div>
+      <p><strong>The stock movement and the accounting happen in the same instant</strong>, in one
+      entry. That is why your stock value can never drift away from your class 3 balance.</p></div>
+  </div>
+</section>
+
+<section id="s14">
+  <h2><span class="num">Section 14</span>Point of sale (POS)</h2>
+  <p class="lede">A full POS module, with <strong>three different screens</strong> on top of it: a
+  normal sales invoice, a supermarket till, and a restaurant touch screen. Everything underneath
+  them — terminals, shifts, cash, hardware, offline working and the accounting — is shared.</p>
+
+  <div class="mod">
+    <h3>What the POS module itself contains</h3>
+    <div class="beat"><p class="beat-label">Terminals</p>
+      <p>Each till is registered: its name, its branch, its warehouse, its receipt number range, its
+      printer and drawer, and which screen it opens with. A terminal can be a counter PC, a laptop
+      in a van, or a touch screen in a restaurant — the setup is the same.</p></div>
+    <div class="beat"><p class="beat-label">Shifts and cash</p>
+      <p>A shift opens with a float and closes with a count. In between the system tracks every
+      movement of cash: sales, refunds, money taken out to the safe, money put in, and payouts.
+      <strong>Closing is a blind count</strong> — the cashier counts the drawer without seeing what
+      the system expects, and only a supervisor sees the difference.</p></div>
+    <div class="beat"><p class="beat-label">Payment methods</p>
+      <p>Cash, card, voucher, gift card, on account — each one linked to its own account, so the
+      day's money lands in the right place. <strong>Split payment</strong> across several methods in
+      one sale, with change given only on cash.</p></div>
+    <div class="beat"><p class="beat-label">Hardware</p>
+      <div class="tw"><table>
+        <thead><tr><th>Device</th><th>How it works</th></tr></thead>
+        <tbody>
+          <tr><td>Barcode scanner</td><td>Plugs in and types — no setup needed at all</td></tr>
+          <tr><td>Receipt printer, 80 mm</td><td>Through a small helper programme on the till, which is the reliable way</td></tr>
+          <tr><td>Cash drawer</td><td>Opens through the printer — so no printer, no drawer. Every opening is logged, including a no-sale opening</td></tr>
+          <tr><td>Customer display</td><td>A second screen showing the customer what is being scanned</td></tr>
+          <tr><td>Counter scale</td><td>Weight read from the scale label barcode, or from the scale directly</td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">POS reports</p>
+      <p>X report (a look during the shift, changes nothing) · Z report (closes the day, cannot be
+      repeated or deleted) · sales by hour, by cashier, by till, by department · refunds and voids
+      with their reasons · cash differences by cashier over time, which is how you spot a pattern
+      rather than a single bad day.</p></div>
+    <div class="beat"><p class="beat-label">And it works offline</p>
+      <p>Every till sells, prints and takes cash with the internet down, then sends the day up when
+      it returns — see section 24.</p></div>
+  </div>
+
+  <h3>The three screens on top of it</h3>
+  <p>All three share the items, the prices, the tax, the stock and the accounting. Only the screen
+  changes.</p>
+
+  <div class="mod">
+    <h3>Screen one · The invoice <span class="tag have">You have this</span></h3>
+    <div class="beat"><p class="beat-label">Who uses it</p>
+      <p>Your office and your wholesale counter. Keyboard-driven, customer first, full document with
+      terms, delivery and printing. This is the screen you use today.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Screen two · The supermarket till <span class="tag new">Rebuilt</span></h3>
+    <div class="beat"><p class="beat-label">Who uses it</p>
+      <p>A shop counter. Fast, barcode-first, meant to be used all day without a mouse.</p></div>
+    <div class="beat"><p class="beat-label">What it does</p>
+      <ul>
+        <li>Scan and go, including <strong>scale labels</strong> with the weight inside the barcode</li>
+        <li><strong>Split payment</strong> — part cash, part card, part on account, in one sale</li>
+        <li><strong>Shift open and close</strong>, with a blind cash count: the cashier counts the
+        drawer without seeing what the system expects, and only a supervisor sees the difference</li>
+        <li><strong>X report</strong> during the shift (a look, changes nothing) and
+        <strong>Z report</strong> at the end (closes the day, cannot be repeated or deleted)</li>
+        <li><strong>Refunds against the original receipt</strong>, and the system remembers how much
+        of each line has already been refunded — so the same receipt cannot be refunded twice</li>
+        <li>Price overrides and refunds need a manager PIN <em>on the spot</em>, with a reason,
+        without logging the cashier out</li>
+        <li><strong>Works offline</strong> — sells and prints with the internet down</li>
+      </ul></div>
+    <div class="beat"><p class="beat-label">How the day reaches your accounts</p>
+      <p>Not one journal entry per receipt — a supermarket would drown the ledger. <strong>One
+      summary entry per till per day</strong>, when the shift closes: cash, card, on account, VAT,
+      sales by department, cost of goods, and the cash difference. The individual receipts stay in
+      the POS records where you can search them.</p>
+      <p>Two accounts we always include and most small systems forget: a <strong>card clearing
+      account</strong>, so the bank's fees do not silently eat your sales figure, and <strong>cash
+      in transit</strong>, so a Tuesday shift can be matched to a Thursday deposit.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Screen three · The restaurant <span class="tag later">Its own project</span></h3>
+    <div class="beat"><p class="beat-label">What you asked for</p>
+      <p>Touch control, tables, delivery, and printing to different departments.</p></div>
+    <div class="beat"><p class="beat-label">All of that will be built</p>
+      <p>Floor plan and tables · a bill that stays open for an hour and can be edited from a
+      waiter's handheld and the counter at the same time · courses and sending to the kitchen ·
+      <strong>printing to each preparation department separately</strong> — grill, cold, bar — where
+      only newly ordered items print, not the whole bill again · options and cooking notes ·
+      splitting a bill by item, by person or equally · moving a table · void and complimentary with
+      a manager's approval and a reason · service charge and tips kept apart, because one is your
+      revenue and one is the staff's money · and <strong>delivery</strong> with addresses, zones,
+      drivers and driver cash at the end of the shift.</p></div>
+    <div class="beat"><p class="beat-label">The honest word</p>
+      <p>You said the three screens are “just screen design”. For the first two that is true — they
+      share the same items, prices, accounting and stock, and only the screen changes.</p>
+      <p><strong>The third one is different.</strong> A shop sale takes twenty seconds and is
+      finished. A restaurant bill stays open for ninety minutes, is changed by three people from
+      three devices, survives a shift change, and talks to the kitchen the whole time. That is a
+      second application sharing the same accounting — which is exactly why Square, Lightspeed and
+      the others sell their retail and restaurant products separately.</p>
+      <p>We are happy to build it and we know how. It simply needs to be planned and scheduled as
+      its own piece of work rather than assumed to arrive with the till.</p></div>
+    <div class="ask"><span class="lbl">Question for you</span>
+      <p>Which of your businesses needs the restaurant screen, and is it needed at the start or
+      later?</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>The restaurant screen is four screens, not one <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What we found when we drew it properly</p>
+      <p>“A touch screen for restaurant” turned out to be four different jobs, and a restaurant
+      needs all four on the same evening.</p>
+      <div class="tw"><table>
+        <thead><tr><th>Screen</th><th>What it has to do</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Hall</strong></td><td>Tables you can see at a glance — free, occupied, bill printed. Open a table, add courses, send each course to the kitchen when the one before is cleared, split the bill between guests, move or merge tables</td></tr>
+          <tr><td><strong>Terrace</strong></td><td>The same, for a second area with its own tables and often its own prices</td></tr>
+          <tr><td><strong>Delivery</strong></td><td>Address, phone, zone and delivery charge; a driver assigned; a timer running; and the cash each driver is holding until he settles at the end of the night</td></tr>
+          <tr><td><strong>Takeaway</strong></td><td>A ticket number, a queue the kitchen can see, and a board at the counter that calls the customer when it is ready</td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">Print setup for several departments — what you asked for</p>
+      <p>One order becomes several tickets. Food to the kitchen, grills to the grill, drinks to the
+      bar, the bill to the cashier, a slip to the driver. The routing follows the item category, so
+      it is set up once and never thought about again.</p></div>
+    <div class="beat"><p class="beat-label">Why delivery is an accounting screen, not just an operations one</p>
+      <p>The money a driver carries in his pocket is your money, and it is out of your cash box for
+      three hours. Each driver holds cash against his own name, and settling him at the end of the
+      night is a receipt voucher — so the till and the accounts agree before anyone goes home.</p></div>
+  </div>
+</section>
+
+<section id="s15">
+  <h2><span class="num">Section 15</span>Production</h2>
+  <p class="lede">You said production needs improvement, and that it must link to cost centres and
+  give you the real cost of goods.</p>
+
+  <div class="mod">
+    <h3>Recipes and production orders <span class="tag new">Rebuilt</span></h3>
+    <div class="beat"><p class="beat-label">The recipe</p>
+      <p>For each thing you make: which components, how much of each, and how much waste to expect.
+      Recipes have versions with dates, so changing a recipe next year does not change what last
+      year's production cost.</p>
+      <p>A recipe can contain another made item, so you can build in stages.</p></div>
+    <div class="beat"><p class="beat-label">The production order</p>
+      <p>Draft → released → finished → closed. Components come out of stock, the finished goods go
+      in, and <strong>the operator can correct what was actually used</strong> — which is the whole
+      point, because otherwise the system just assumes the recipe was followed exactly and you never
+      see a real variance.</p></div>
+    <div class="beat"><p class="beat-label">The real cost of goods</p>
+      <p>The finished item's cost is calculated from what actually went into it:</p>
+      <div class="tw"><table>
+        <tbody>
+          <tr><td>Components actually consumed, at their real cost</td></tr>
+          <tr><td>+ labour</td></tr>
+          <tr><td>+ overheads</td></tr>
+          <tr><td>− the value of any by-products</td></tr>
+          <tr><td><strong>÷ good units produced = the cost of one unit</strong></td></tr>
+        </tbody>
+      </table></div>
+      <p>If the job cost more than the recipe said, the difference goes to one clear account —
+      <em>production variance</em> — so you can ask why.</p></div>
+    <div class="beat"><p class="beat-label">Cost centres</p>
+      <p>Every production line carries a cost centre, so you can see what each line, department or
+      product family actually costs and earns.</p></div>
+    <div class="beat"><p class="beat-label">Also covered</p>
+      <p><strong>Repacking</strong> — one 25 kg sack into 25 one-kilo bags — is handled as a recipe
+      with different units, and the value is conserved exactly, to the last pound.
+      <strong>Un-building</strong> is there too, for returns and mistakes.</p></div>
+    <div class="beat"><p class="beat-label">Reports</p>
+      <p>Raw material consumed by period · cost per production order · actual usage against the
+      recipe · yield · finished goods produced.</p></div>
+  </div>
+</section>
+
+<section id="s16">
+  <h2><span class="num">Section 16</span>Fixed assets <span class="tag new">New</span></h2>
+  <p class="lede">Class 2 of your chart is Fixed Assets. You confirmed you want this properly:
+  “about 2 and 6 yes sure I need it as you explained.”</p>
+
+  <div class="mod">
+    <div class="beat"><p class="beat-label">The asset register</p>
+      <p>Each asset: description, category, purchase date and cost, useful life, depreciation
+      method, which branch and cost centre it belongs to, and where it physically is.</p>
+      <p>Assets can be created directly from a supplier bill, so buying a vehicle and registering it
+      is one flow, not two.</p></div>
+    <div class="beat"><p class="beat-label">Depreciation</p>
+      <p>A <strong>run</strong> you perform each period — not a report that calculates a number
+      nobody posts. It writes the depreciation into class 6 exactly as you described, it can be
+      previewed before posting, and it can be reversed.</p></div>
+    <div class="beat"><p class="beat-label">Disposal</p>
+      <p>Sell or scrap an asset and the system removes the cost and the accumulated depreciation
+      and posts the gain or loss for you.</p></div>
+  </div>
+</section>
+
+<section id="s17">
+  <h2><span class="num">Section 17</span>Payroll</h2>
+  <p class="lede">You said: “now I need simple payroll without NSSF — later if needed will add it.”
+  So that is exactly what we build.</p>
+
+  <div class="mod">
+    <h3>Simple payroll <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What is included now</p>
+      <ul>
+        <li>Employee records with contract details, branch and cost centre</li>
+        <li>Salary made of components — basic, transport, housing, any allowance you define</li>
+        <li>Deductions and advances against salary</li>
+        <li>A payroll run that produces payslips and posts <strong>one entry per run</strong></li>
+        <li>Salaries in dollars or pounds, because both happen in practice</li>
+      </ul></div>
+    <div class="beat"><p class="beat-label">How we build it so NSSF is easy to add later</p>
+      <p>The salary calculation is built as <strong>rules with dates</strong>, not as fixed
+      arithmetic inside the programme. A rule has a base, a formula, a ceiling and a period when it
+      applies.</p>
+      <p>That means when you want NSSF — contributions, ceilings, end of service, the income tax
+      brackets and the quarterly declarations — they are added as new rules, not as a rebuild of
+      payroll. We have already researched the current Lebanese rates and rules and they are
+      documented, waiting.</p></div>
+  </div>
+</section>
+
+<section id="s18">
+  <h2><span class="num">Section 18</span>VAT and year end</h2>
+
+  <div class="mod">
+    <h3>The VAT return, every three months <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What it does</p>
+      <p>Every invoice and bill writes a tax record with its own tax date, its rate and its taxable
+      base. The quarterly return is produced from those records, not re-calculated from the ledger —
+      so it can be reproduced exactly, months later, as it was filed.</p></div>
+    <div class="beat"><p class="beat-label">Two protections</p>
+      <ul>
+        <li>Once a tax record is included in a filed return, <strong>it can never be picked up by
+        another return.</strong> Anything that arrives late appears as a clear adjustment instead of
+        quietly counting twice or disappearing</li>
+        <li>Filing the return <strong>locks that quarter automatically</strong>, so nobody can post
+        into a period you have already declared</li>
+      </ul></div>
+    <div class="beat"><p class="beat-label">Built for a rate that changes</p>
+      <p>The rate, the filing deadline and which purchases you may reclaim are all
+      <strong>settings with dates</strong>, never fixed in the programme. Lebanon has changed these
+      several times in recent years — for example the filing deadline moved from twenty days to one
+      month after the quarter, and VAT on electricity, water, telephone, internet and fuel is no
+      longer reclaimable. When the next change comes, it is a setting, not a new version.</p></div>
+    <div class="beat"><p class="beat-label">For companies not registered for VAT</p>
+      <p>The whole tax side switches off cleanly — no tax columns, no return, nothing on the
+      invoice. And it can be switched on later without changing anything already posted.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Closing and opening the year <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Why this matters for you especially</p>
+      <p>You are moving on the first day of a financial year. That means <strong>your very first
+      year end arrives on the year you just moved</strong> — so closing and opening cannot be
+      something added later. It works from day one.</p></div>
+    <div class="beat"><p class="beat-label">Periods</p>
+      <p>Every month has a state: open, closed, or locked. A closed month can still be posted into
+      by an accountant with a reason that is recorded. A locked month cannot be posted into by
+      anyone. Reopening a locked period needs a separate permission, a reason and a different person
+      to approve it — and it appears on a report, because reopening a closed period should never be
+      quiet.</p></div>
+    <div class="beat"><p class="beat-label">The year-end checklist</p>
+      <p>Before you close, the system shows what is not ready — unposted drafts, unallocated
+      payments, anything sitting in suspense, whether the revaluation has been run, whether the VAT
+      return is filed — and each line takes you to the screen that fixes it.</p></div>
+    <div class="beat"><p class="beat-label">Opening balances</p>
+      <p>Carried forward automatically. Profit for the year rolls into retained earnings, and the
+      new year opens with clean balances. If your accountant prefers a formal closing entry to be
+      posted, the system can do that instead — you choose once, per company.</p></div>
+  </div>
+</section>
+
+<section id="s19">
+  <h2><span class="num">Section 19</span>The rest of the accounting <span class="tag new">New</span></h2>
+  <p class="lede">You said accounting is the most important part, so we went back through it a
+  second time and asked what a Lebanese trading company's books actually need — not what a demo
+  needs. Ten things were missing. They are all designed now, and here they are in plain words.</p>
+
+  <div class="mod">
+    <h3>Opening balances — the day the new system starts <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Why this gets its own screen</p>
+      <p>You said it yourself: <em>“at the end of the year we need closing and opening balances.”</em>
+      We had the closing half. This is the other half, and it is the single riskiest thing in the
+      whole project. Most ERP changeovers fail here, not in the software.</p></div>
+    <div class="beat"><p class="beat-label">What goes in</p>
+      <div class="tw"><table>
+        <thead><tr><th>Block</th><th>How it goes in</th></tr></thead>
+        <tbody>
+          <tr><td>Your ledger balances</td><td>From your old trial balance</td></tr>
+          <tr><td>What each customer owes</td><td><strong>Invoice by invoice</strong>, with its date, due date and payment term</td></tr>
+          <tr><td>What you owe each supplier</td><td><strong>Bill by bill</strong></td></tr>
+          <tr><td>Stock</td><td>Quantity and cost, per warehouse, from the count on 31 December</td></tr>
+          <tr><td>Fixed assets</td><td>Cost <em>and</em> the depreciation already taken</td></tr>
+          <tr><td>Cheques in hand</td><td>Each one, with its due date and the invoice it pays</td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">Three checks before anyone can write an invoice</p>
+      <p>The opening entry must balance in every currency separately. Each control account must
+      equal the sum of its customers or suppliers — if the list adds to 214,880 the account must
+      say 214,880, not a round number. And stock value must equal quantity times cost, warehouse by
+      warehouse. Until all three pass, the system will not let the new year start.</p></div>
+    <div class="beat"><p class="beat-label">The reason for invoice by invoice</p>
+      <p>A lump sum per customer gives you a balance and nothing else. Invoice by invoice gives you
+      a truthful ageing report, a due-date calendar, a collection list and a statement — from day
+      one, not from the first new invoice.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>The day book and the general ledger <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What they are</p>
+      <p>The day book is every entry in date order. The general ledger is every account with every
+      movement behind it. Both printable, both numbered without gaps, both impossible to edit after
+      posting.</p></div>
+    <div class="beat"><p class="beat-label">Why they are not optional in Lebanon</p>
+      <p>The Code of Commerce expects a journal and an inventory book kept in order and retained for
+      ten years. Your accountant and any auditor will ask for these by name. They also give you a
+      third way to check the books: the day book, the general ledger and the trial balance must all
+      agree, and if they ever do not, you hear about it the same night.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Collections and follow-up <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">You asked for this in one line</p>
+      <p><em>“Check system and collection on due date — all are existing in Lebanon.”</em> We had
+      the cheques and the ageing report. What was missing was the chasing.</p></div>
+    <div class="beat"><p class="beat-label">A daily call list, in order of risk</p>
+      <p>Not the biggest balance first — the riskiest first. Who is overdue, by how many days, who
+      promised what and whether he kept his last three promises. A customer who has kept eleven
+      promises out of eleven is a different conversation from one who has kept one out of four, and
+      the screen tells you which is which before you dial.</p></div>
+    <div class="beat"><p class="beat-label">A ladder that runs by itself</p>
+      <div class="tw"><table>
+        <thead><tr><th>When</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td>3 days before due</td><td>A friendly reminder on WhatsApp with the statement</td></tr>
+          <tr><td>3 days overdue</td><td>A message, and a task for the salesman who sold it</td></tr>
+          <tr><td>15 days overdue</td><td>A call, and new orders start needing approval</td></tr>
+          <tr><td>45 days overdue</td><td>Credit blocked, a letter printed, you approve it</td></tr>
+          <tr><td>90 days overdue</td><td>Moved to doubtful clients, with a provision suggested</td></tr>
+        </tbody>
+      </table></div></div>
+  </div>
+
+  <div class="mod">
+    <h3>Entries that repeat every month <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Rent, insurance, depreciation, the exchange revaluation, the salary accrual</p>
+      <p>Written once, posted on time, every month, whether or not anybody remembers. A month that
+      is missed is not a small thing — it quietly moves profit from one month into another, and
+      nobody notices until the year end.</p></div>
+    <div class="beat"><p class="beat-label">The ones that reverse themselves</p>
+      <p>August used the shop even though the rent bill has not come. So on 31 August the system
+      posts the cost, and on 1 September it reverses it — then the real bill posts normally. The
+      month that used the shop is the month that paid for it.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Budgets, and sharing costs between branches <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">A budget is what makes a report say something</p>
+      <p>Without one, a transport bill of 420 dollars is just a number. With one, it is sixty-eight
+      per cent over and about to run out two months early. Per account, per cost centre, with a
+      warning when actual passes a percentage you choose.</p></div>
+    <div class="beat"><p class="beat-label">Sharing what does not belong to one branch</p>
+      <p>Rent, electricity, the owner's own salary, the delivery van. Split by floor area, by sales
+      value, by headcount, by machine hours or by deliveries made — by a rule, once a month, not by
+      hand. Without this, the Beirut shop looks brilliant because its share of the rent is sitting
+      in a head-office account, and the branch profit you asked for is fiction.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Your eight companies, together — consolidation <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">When one of your companies sells to another</p>
+      <p>It posts on both sides at once, with the same reference, so matching them at month end is
+      a click rather than an afternoon.</p></div>
+    <div class="beat"><p class="beat-label">And when you want to see the group</p>
+      <p>One page: all the companies added together, in one currency, with the sales between them
+      taken back out — including any profit still sitting in stock that has not left the group yet.
+      Everything removed is shown line by line, and anything that does not match is listed before
+      the report is produced, never quietly netted off.</p></div>
+    <div class="beat"><p class="beat-label">Why you specifically need this</p>
+      <p>You have eight companies. The moment one sells to another, the group profit is overstated
+      until that sale is taken out again. Doing it by hand once a year is where a week disappears.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Two smaller ones, and one switched off</h3>
+    <div class="beat"><p class="beat-label">Selling or scrapping an asset</p>
+      <p>Previously an asset could be created but never leave. Now it depreciates up to the day it
+      goes, the cost and the accumulated depreciation come off together, and the gain or loss posts
+      where it belongs.</p></div>
+    <div class="beat"><p class="beat-label">Withholding tax — built, and left switched off</p>
+      <p>Lebanon withholds tax on some payments — services from abroad, professional fees, rent to
+      an individual. It is designed as rules you switch on per supplier or per expense, and it
+      ships <strong>off</strong>, because the scope and the rates move with each budget law. That is
+      your accountant's call for the filing year, not ours to guess.</p></div>
+  </div>
+
+  <div class="note">
+    <span class="lbl">Two positions we have taken, and why</span>
+    <p><strong>Money accounts move with the rate. Stock and fixed assets do not.</strong> Cash,
+    banks, what customers owe you and what you owe suppliers are restated at the closing rate every
+    month end, and the entry reverses itself on the first of the next month. Stock and fixed assets
+    stay at the rate on the day you bought them. Revaluing stock every month is how a business
+    appears to make a profit purely because the rate moved — it is a common mistake in the
+    Lebanese market and it is decided once, on the account, so it is never argued about again.</p>
+    <p style="margin-top:10px"><strong>Nothing posted is ever edited.</strong> Not by a manager, not
+    by an owner, not by us. A wrong entry is reversed and a new one is posted, both dated. That is
+    what makes last month's report still say the same thing next year.</p>
+  </div>
+
+  <div class="ask"><span class="lbl">For your accountant, not for you</span>
+    <p>Four things we deliberately have not guessed: the exact account numbers you already file
+    with — particularly the two VAT accounts, where Lebanese practice splits between two
+    conventions; whether any of the eight companies files on anything other than the normal basis;
+    whether the group is ever consolidated for a bank or an auditor; and the withholding scope for
+    the filing year. None of these change the software — they are settings — but all four are
+    quicker to confirm than to correct.</p></div>
+</section>
+
+<section id="s20">
+  <h2><span class="num">Section 20</span>Reports and dashboards</h2>
+
+  <div class="mod">
+    <h3>Reports are built, not written into the programme <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What that means</p>
+      <p>A report is made of rows (which accounts, or a calculation using other rows) and columns
+      (which period, comparison with last year, which currency). Your profit and loss, balance sheet
+      and trial balance are all just definitions.</p>
+      <p>So when a customer wants their statement laid out differently, that is an afternoon's
+      setup — not a new version of the software. For a system you are going to sell, this matters.</p></div>
+    <div class="beat"><p class="beat-label">The reports included</p>
+      <div class="tw"><table>
+        <thead><tr><th>Report</th><th>Notes</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Trial balance</td><td>Opening, movement and closing, per branch, in either currency</td><td>You have</td></tr>
+          <tr><td>Profit and loss</td><td>With comparison to last year</td><td><strong>New</strong></td></tr>
+          <tr><td>Balance sheet</td><td>—</td><td><strong>New</strong></td></tr>
+          <tr><td>Account statement</td><td>—</td><td>You have</td></tr>
+          <tr><td>Customer and supplier ageing</td><td>Your own buckets, by due date or document date</td><td>You have</td></tr>
+          <tr><td>Difference of exchange</td><td>Realised and unrealised, per customer and supplier</td><td><strong>New</strong></td></tr>
+          <tr><td>VAT return</td><td>Quarterly</td><td><strong>New</strong></td></tr>
+          <tr><td>Stock on hand and stock ledger</td><td>By warehouse, with value</td><td>You have</td></tr>
+          <tr><td>Item movement</td><td>—</td><td>You have</td></tr>
+          <tr><td>Sales analysis</td><td>By customer, item, salesman, region, branch, cost centre</td><td>Improved</td></tr>
+          <tr><td>Profit report</td><td>By invoice, item, customer and salesman</td><td>You have</td></tr>
+          <tr><td>Cash flow</td><td>—</td><td>You have</td></tr>
+          <tr><td>Cheques due</td><td>Incoming and outgoing, by date</td><td><strong>New</strong></td></tr>
+          <tr><td>Production reports</td><td>Raw material used, cost per order, yield</td><td><strong>New</strong></td></tr>
+          <tr><td>Fixed asset register and depreciation</td><td>—</td><td><strong>New</strong></td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">Every report</p>
+      <p>Runs per branch or for the whole company · in pounds, dollars or both · prints with your
+      own layout · exports to <strong>Excel, Word, PDF and CSV</strong> · and every figure can be
+      clicked to see the entries behind it.</p></div>
+    <div class="beat"><p class="beat-label">One quiet protection worth knowing about</p>
+      <p>Before a profit and loss is shown, the system checks whether any account had movement this
+      period but appears in no row of the report — and warns you. This is how a newly created
+      account silently disappears from the P&amp;L in most systems while the balance sheet still
+      balances, so nobody notices for months.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>The three dashboards <span class="tag new">New</span></h3>
+    <div class="beat">
+      <div class="grid g3" style="margin-bottom:0">
+        <div class="card"><span class="k">Sales</span><p>Today, this month, against last year. Best customers, best items, by salesman and branch. Orders not yet delivered.</p></div>
+        <div class="card"><span class="k">Inventory</span><p>Value by warehouse, items below minimum, expiring soon, slow movers, stock that has not moved at all.</p></div>
+        <div class="card"><span class="k">Profit &amp; key numbers</span><p>Gross margin, cash position, money owed to you and by you, cheques due, and what the exchange rate has done to your balances.</p></div>
+      </div>
+      <p style="margin-top:16px"><strong>Every number on every dashboard is calculated from the
+      ledger at the moment you look at it.</strong> Nothing keeps its own running total, because
+      separate totals always drift, and then nobody trusts either number.</p></div>
+  </div>
+</section>
+
+<section id="s21">
+  <h2><span class="num">Section 21</span>Companies, branches and cost centres</h2>
+
+  <figure>
+    <svg viewBox="0 0 860 300" role="img" aria-label="Diagram showing the system holding many companies, each company holding branches and warehouses, with cost centres cutting across all of them as a separate way of grouping">
+      <g color="var(--ink-3)">
+        <rect x="20" y="20" width="820" height="180" rx="9" fill="none" stroke="var(--rule-2)" stroke-width="1.25" stroke-dasharray="6 5"/>
+        <text class="svg-t-s" x="36" y="42">THE SYSTEM · ONE INSTALLATION</text>
+
+        <rect class="svg-box-a" x="42" y="56" width="380" height="128" rx="7"/>
+        <text class="svg-t-a" x="62" y="80">Company 1</text>
+        <rect class="svg-box" x="62" y="94" width="164" height="72" rx="6"/>
+        <text class="svg-t" x="144" y="120" text-anchor="middle">Branch — Zahle</text>
+        <text class="svg-t-s" x="144" y="142" text-anchor="middle">2 WAREHOUSES</text>
+        <rect class="svg-box" x="238" y="94" width="164" height="72" rx="6"/>
+        <text class="svg-t" x="320" y="120" text-anchor="middle">Branch — Beirut</text>
+        <text class="svg-t-s" x="320" y="142" text-anchor="middle">1 WAREHOUSE</text>
+
+        <rect class="svg-box" x="442" y="56" width="180" height="128" rx="7"/>
+        <text class="svg-t-b" x="532" y="80" text-anchor="middle">Company 2</text>
+        <text class="svg-t-s" x="532" y="126" text-anchor="middle">OWN ACCOUNTS</text>
+        <text class="svg-t-s" x="532" y="146" text-anchor="middle">OWN YEAR END</text>
+
+        <rect class="svg-box" x="638" y="56" width="180" height="128" rx="7"/>
+        <text class="svg-t-b" x="728" y="80" text-anchor="middle">Company 3 … 8</text>
+        <text class="svg-t-s" x="728" y="126" text-anchor="middle">MIGRATED ONE</text>
+        <text class="svg-t-s" x="728" y="146" text-anchor="middle">AT A TIME</text>
+
+        <rect x="20" y="220" width="820" height="58" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>
+        <text class="svg-t-a" x="40" y="244">Cost centres cut across everything</text>
+        <text class="svg-t" x="40" y="266">a department, a production line, a vehicle, a project — tagged on every entry, in any company or branch</text>
+      </g>
+    </svg>
+    <figcaption>Companies are separate sets of books. Branches sit inside a company. Cost centres
+    are a different thing entirely — a second label on every entry, so you can group your figures a
+    second way.</figcaption>
+  </figure>
+
+  <div class="mod">
+    <h3>Cost centres <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What they are</p>
+      <p>A second way of labelling every entry. Where the account says <em>what kind</em> of money
+      it is, the cost centre says <em>which part of the business</em> it belongs to.</p>
+      <p>They flow through everything — sales, purchases, stock movements, payroll, depreciation and
+      production — so you can ask “what did this line, this department, this vehicle actually cost
+      and earn?”</p></div>
+    <div class="beat"><p class="beat-label">Why we must know about them before we start</p>
+      <p>A cost centre is a column on every single accounting entry. Put in at the beginning, it
+      costs almost nothing. Added after the system is built, it means going back through everything.
+      <strong>So this is one of the very first things we need to settle.</strong></p></div>
+    <div class="ask"><span class="lbl">Question for you</span>
+      <p>What are your cost centres — branches, departments, production lines, vehicles, projects?
+      And do you want <strong>profit</strong> per cost centre, or a full <strong>balance sheet</strong>
+      per cost centre as well? The second is a bigger job, so it is better decided now than later.</p></div>
+  </div>
+</section>
+
+<section id="s22">
+  <h2><span class="num">Section 22</span>Users and permissions</h2>
+
+  <div class="mod">
+    <h3>Who can do what <span class="tag have">Improved</span></h3>
+    <div class="beat"><p class="beat-label">How it works</p>
+      <p>Permissions are grouped into roles — Cashier, Salesman, Storekeeper, Accountant, Manager —
+      and a user gets one or more roles. On top of that, each user is limited to the warehouses and
+      branches he is allowed to see, exactly as your system does today.</p></div>
+    <div class="beat"><p class="beat-label">Sensitive actions are always separate</p>
+      <p>Some things are never bundled into a general role, and always ask for a reason that is
+      recorded: reopening a closed period, reversing a posted entry, overriding a price or discount,
+      releasing a customer from a credit hold, entering an exchange rate, changing a costing method,
+      restoring a backup.</p></div>
+    <div class="beat"><p class="beat-label">Jobs that should not be done by the same person</p>
+      <p>The system knows which pairs of permissions should not sit with one person — for example
+      creating a supplier and approving payments to him, or entering a journal and posting it. It
+      warns when a role is assigned that breaks one of these pairs. Your auditor will ask about
+      this.</p></div>
+    <div class="beat"><p class="beat-label">The audit record</p>
+      <p>Every posting and every sensitive action records who did it, from which device, at what
+      moment, what it looked like before and after, and why. The record is sealed in a way that
+      makes tampering detectable — and there is a report that verifies it and tells you the exact
+      point where anything was disturbed. This is the sort of thing an auditor asks for and almost
+      no small system can produce.</p></div>
+  </div>
+</section>
+
+<section id="s23">
+  <h2><span class="num">Section 23</span>Notifications <span class="tag new">New</span></h2>
+  <p class="lede">You asked for notifications on expiry, minimum quantity and payments due. We are
+  building a rule engine rather than three fixed alerts, so you can add more without us.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Notification</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td>Item expiring</td><td>Within a number of days you choose, per item group</td></tr>
+      <tr><td>Stock below minimum</td><td>The moment it drops, per warehouse</td></tr>
+      <tr><td>Payment due</td><td>Before the due date and again when late</td></tr>
+      <tr><td>Cheque due for deposit</td><td>Before the date on the cheque</td></tr>
+      <tr><td>Credit limit reached</td><td>When an order would cross it</td></tr>
+      <tr><td>Unusual cash difference at a till</td><td>Above a limit you set</td></tr>
+      <tr><td>Backup failed</td><td>Immediately</td></tr>
+      <tr><td>Licence expiring</td><td>For a business you have sold the system to</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>Notifications reach people inside the system, by email — and, because it is how business is
+  actually done in Lebanon, <strong>by WhatsApp</strong>. A payment reminder that arrives on
+  WhatsApp is read. An email often is not.</p>
+</section>
+
+<section id="s24">
+  <h2><span class="num">Section 24</span>Two languages, built in from day one</h2>
+  <p class="lede">The system is multilingual from the first screen we write — not English with
+  Arabic added on afterwards. That is a deliberate decision and it is worth explaining why.</p>
+
+  <div class="mod">
+    <h3>Why it cannot be left until later</h3>
+    <div class="beat">
+      <p>Arabic is not only translated words. It reads right to left, so <strong>every screen has to
+      mirror</strong> — the menu moves to the other side, tables reverse, buttons swap sides,
+      numbers and dates align differently, and printed documents are laid out the other way round.</p>
+      <p>In most systems this is discovered at the end. Half the screens break, and fixing them is
+      not a translation job — it is going back through every screen that was ever built.</p>
+      <p><strong>So we do not build an English system and translate it. We build a system that
+      speaks two languages, and fill in the words.</strong></p></div>
+  </div>
+
+  <div class="mod">
+    <h3>What that means in practice</h3>
+    <div class="beat"><p class="beat-label">From the very first screen</p>
+      <ul>
+        <li><strong>A language switch</strong> in the system, per user — one person works in Arabic
+        while the person beside him works in English, at the same time, on the same data</li>
+        <li><strong>Right-to-left is a setting</strong>, never built into a layout. Every screen is
+        checked in both directions as it is built, not at the end</li>
+        <li><strong>No text is written inside the programme.</strong> Every word comes from a
+        language file, so adding or correcting a word never needs a new version</li>
+        <li><strong>Arabic and English names on your records</strong> — accounts, items, customers,
+        units, categories. Both stored, both printable</li>
+        <li><strong>Printed documents in either language</strong> — invoice, statement, receipt,
+        voucher — with the layout adjusting, not just the words</li>
+        <li><strong>Arabic fonts included</strong>, so printing looks right on your own printers</li>
+      </ul></div>
+    <div class="beat"><p class="beat-label">Your head start</p>
+      <p>Your current system already carries around 336 Arabic phrases with the Cairo fonts. That
+      vocabulary is yours and your staff already know it, so the Arabic starts from your own words
+      rather than from a dictionary.</p></div>
+    <div class="beat"><p class="beat-label">And it matters for selling the system</p>
+      <p>You are going to sell this to other businesses in Lebanon and the region. For many of them
+      Arabic is not a preference — it is the only way their staff will use it. A system that can
+      switch language on the day it is installed is a different product from one that needs a
+      project first.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>What we still need for the Arabic side</h3>
+    <div class="beat">
+      <p>The machinery is ours to build. The <strong>words</strong> are a decision for you: whether
+      we reuse and extend the Arabic already in your current system, or whether you want a
+      translator to review the accounting terms — because accounting vocabulary in Arabic has to
+      match what your accountant and the authorities use, and that is not something to guess at.</p>
+      <p>Either way it does not hold anything up. The screens work in both languages from the start;
+      the Arabic wording is filled in and improved as we go.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Formats, not just words <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">A language is more than a translation</p>
+      <div class="tw"><table>
+        <thead><tr><th>Setting</th><th>What it decides</th></tr></thead>
+        <tbody>
+          <tr><td>Date format</td><td>dd/mm/yyyy as you use it — on screens, on printouts and in exports</td></tr>
+          <tr><td>Number format</td><td>Where the comma and the point go</td></tr>
+          <tr><td>Decimals shown</td><td>Two for money, three for quantity — and each currency carries its own, so the Jordanian dinar shows three and the lira shows none</td></tr>
+          <tr><td>Rounding</td><td>Lira prices round to the nearest thousand, not to the cent</td></tr>
+          <tr><td>Which side the currency symbol goes</td><td>A printed invoice looks wrong if it is on the wrong side</td></tr>
+          <tr><td>Amount in words</td><td>On cheques and invoices, in English and in Arabic</td></tr>
+          <tr><td>First day of the week</td><td>Calendars and weekly reports</td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">A third language later costs a translation, not a version</p>
+      <p>Every label in the system lives in one file. Adding French or Turkish for a customer abroad
+      means copying that file and translating it — the programme itself does not change.</p></div>
+  </div>
+</section>
+
+<section id="s25">
+  <h2><span class="num">Section 25</span>Working without internet</h2>
+  <p class="lede">You described three situations: businesses with no reliable connection at all,
+  salesmen selling in the market, and normal users who lose the line sometimes. All three are
+  covered, and each one honestly.</p>
+
+  <figure>
+    <svg viewBox="0 0 860 300" role="img" aria-label="Diagram showing work saved to a local queue while offline, sent in order when the internet returns, checked and posted by the server, with anything that cannot be posted going to a conflict list for a person to decide">
+      <defs>
+        <marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g color="var(--ink-3)">
+        <rect class="svg-box" x="20" y="34" width="188" height="72" rx="7"/>
+        <text class="svg-t-b" x="114" y="64" text-anchor="middle">You keep working</text>
+        <text class="svg-t-s" x="114" y="86" text-anchor="middle">NO INTERNET</text>
+
+        <path class="svg-line" marker-end="url(#ar5)" d="M208 70 L242 70"/>
+
+        <rect class="svg-box" x="246" y="34" width="188" height="72" rx="7"/>
+        <text class="svg-t-b" x="340" y="64" text-anchor="middle">Saved in a queue</text>
+        <text class="svg-t-s" x="340" y="86" text-anchor="middle">ON THE DEVICE, IN ORDER</text>
+
+        <path class="svg-line-a" marker-end="url(#ar5)" d="M434 70 L468 70"/>
+        <text class="svg-t-s" x="452" y="120" text-anchor="middle">INTERNET</text>
+        <text class="svg-t-s" x="452" y="136" text-anchor="middle">RETURNS</text>
+
+        <rect class="svg-box-a" x="472" y="34" width="188" height="72" rx="7"/>
+        <text class="svg-t-a" x="566" y="64" text-anchor="middle">Server checks it</text>
+        <text class="svg-t-s" x="566" y="86" text-anchor="middle">AND POSTS IT</text>
+
+        <path class="svg-line" marker-end="url(#ar5)" d="M660 70 L694 70"/>
+
+        <rect class="svg-box" x="698" y="34" width="142" height="72" rx="7"/>
+        <text class="svg-t-b" x="769" y="64" text-anchor="middle">Confirmed</text>
+        <text class="svg-t-s" x="769" y="86" text-anchor="middle">NOW IT IS REAL</text>
+
+        <path class="svg-line" marker-end="url(#ar5)" d="M566 106 L566 176"/>
+        <text class="svg-t-s" x="580" y="146">IF SOMETHING IS WRONG</text>
+
+        <rect x="392" y="180" width="348" height="66" rx="7" fill="var(--warn-bg)" stroke="var(--warn-rule)" stroke-width="1.5"/>
+        <text class="svg-t-b" x="566" y="206" text-anchor="middle">It goes to your conflict list</text>
+        <text class="svg-t-s" x="566" y="228" text-anchor="middle">A PERSON DECIDES — NOTHING IS LOST OR OVERWRITTEN</text>
+
+        <text class="svg-t-s" x="20" y="278">UNTIL THE SERVER CONFIRMS IT, THE DOCUMENT IS MARKED AS NOT YET POSTED — YOU CAN ALWAYS SEE WHICH IS WHICH</text>
+      </g>
+    </svg>
+    <figcaption>Work is captured offline and posted by the server later. If two devices disagree —
+    the price changed, the period closed, the stock is gone — the system never guesses. It asks.</figcaption>
+  </figure>
+
+  <div class="mod">
+    <h3>What a device can and cannot do offline</h3>
+    <div class="beat">
+      <div class="tw"><table>
+        <thead><tr><th>Works offline</th><th>Needs the internet</th></tr></thead>
+        <tbody>
+          <tr><td>Cash sales and printing</td><td>Card payment through the bank terminal</td></tr>
+          <tr><td>Scanning items by barcode</td><td>Searching customers or items by name</td></tr>
+          <tr><td>Writing invoices and delivery notes</td><td>Seeing live stock in other warehouses</td></tr>
+          <tr><td>Taking orders and collecting cash</td><td>Anything that must be checked centrally</td></tr>
+          <tr><td>Stock counts</td><td>—</td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">A promise we make</p>
+      <p><strong>The system will never reject a cash sale that already happened.</strong> If a till
+      sold the last piece while offline, the stock may go negative and it is reconciled afterwards —
+      because refusing a sale the customer has already walked away with is not an option.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Salesmen selling in the market <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">How it works</p>
+      <p>A salesman's van is treated as a small warehouse on wheels:</p>
+      <ul>
+        <li><strong>Loading</strong> the van is a stock transfer, so every existing stock report
+        works without change</li>
+        <li><strong>Selling</strong> takes from the van's own stock, with his own invoice numbers so
+        two salesmen can never produce the same number</li>
+        <li><strong>Cash collected</strong> is held against that salesman</li>
+        <li><strong>Settlement</strong> when he comes back: goods out, less goods sold, less goods
+        returned, must equal what is left in the van — and cash collected must equal cash handed in.
+        Any difference is posted openly, not adjusted away</li>
+      </ul></div>
+    <div class="ask"><span class="lbl">Question for you</span>
+      <p>What will the salesmen carry — a laptop, a tablet, or a phone? And do they take stock with
+      them and sell from the van, or only write orders that are delivered afterwards? Both work
+      well, but they are built differently.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Document numbers when offline</h3>
+    <div class="beat">
+      <p>Each device is given a block of numbers in advance — for example
+      <code>INV-2027-D07-000001</code> to <code>000500</code>. It uses them in order, offline, and
+      no two devices can ever produce the same number. An auditor sees a complete, unbroken sequence
+      within each device's range, and the sequence is documented.</p>
+      <p>Numbers are given at the moment of posting, not when a draft is created — so a cancelled
+      draft never burns a number. And <strong>a number is never changed afterwards</strong>: if it
+      is printed on a delivery note in a customer's hand, it is final.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>The sync report <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">You should never have to trust that it worked</p>
+      <p>Every sync is written down — when, which device, who was using it, how many documents went
+      each way, how long it took, and whether anything failed. Kept as history, not just as a last
+      state, so months later you can still see exactly what happened.</p></div>
+    <div class="beat"><p class="beat-label">A one-page report for you, not for a technician</p>
+      <div class="tw"><table>
+        <thead><tr><th>Question it answers</th><th>Where you look</th></tr></thead>
+        <tbody>
+          <tr><td>Is anything being lost?</td><td>“Failed permanently” — <strong>it must be zero every week</strong></td></tr>
+          <tr><td>Is a salesman going dark too long?</td><td>Which devices did not sync at all, day by day</td></tr>
+          <tr><td>Was Wednesday's sales figure complete when I read it?</td><td>The longest delay that day. Six hours means it was not, until the evening</td></tr>
+          <tr><td>Which route needs a better data plan?</td><td>Average delay per device</td></tr>
+          <tr><td>Did anyone overrule the system?</td><td>Conflicts, and who decided each one</td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">It settles arguments</p>
+      <p>When a salesman says “I made that invoice on Tuesday”, this shows that he did, at 14:40,
+      and that it reached the office on Thursday at 09:58 when he came back into signal. Ten
+      seconds, and nobody has to take anybody's word for it.</p></div>
+    <div class="beat"><p class="beat-label">And it acts on its own</p>
+      <p>Three days without syncing and you get a warning. Seven days and the device goes read-only
+      until it connects. More than fifty documents waiting and you are told. A tablet that has been
+      out of touch for a fortnight is a tablet that is about to cause an argument.</p></div>
+  </div>
+</section>
+
+<section id="s26">
+  <h2><span class="num">Section 26</span>Selling the system to other businesses</h2>
+  <p class="lede">This is the part that turns a system you use into a product you sell. You told us
+  you will manage the licences yourself, so what we build is the tooling for you to do that.</p>
+
+  <div class="mod">
+    <h3>Every business is separate, inside one system <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What it means</p>
+      <p>Each business you sell to is completely separated from every other — not by trusting the
+      programme to filter correctly, but <strong>inside the database itself</strong>. Even if
+      someone later wrote a careless query, one customer could not see another customer's books.</p>
+      <p>For a product you sell, that is the difference between a bug and a disaster you never
+      recover from.</p></div>
+    <div class="beat"><p class="beat-label">Setting up a new customer</p>
+      <p>One process: create the company, load a chart of accounts from a template, set up tax
+      codes, currencies, units and periods, create the first branch and warehouse, issue the licence.
+      Minutes, not a day of manual work.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Licences <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What a licence carries</p>
+      <p>Which business it belongs to, how many users and devices, which companies, <strong>which
+      modules are switched on</strong>, and when it expires.</p>
+      <p>Modules being part of the licence is what lets you sell packages — a small customer gets
+      accounting and stock, a bigger one adds production and payroll — <strong>without a different
+      version of the software.</strong> You change what he bought, not what he installed.</p></div>
+    <div class="beat"><p class="beat-label">It works offline too</p>
+      <p>The licence is checked on the machine itself, so a customer with no internet is not locked
+      out. It refreshes quietly in the background when there is a connection.</p></div>
+    <div class="beat"><p class="beat-label">When a licence expires</p>
+      <p>Never a sudden lock. First a quiet period, then a notice in the corner, then a message on
+      opening — and only at the very end does the system become <strong>read only</strong>, where the
+      customer can still open, print and export everything he owns. He simply cannot post new
+      entries.</p>
+      <p>This is deliberate, and it protects you as much as him: a business that cannot invoice
+      becomes an emergency at two in the morning, and a business that cannot get its own data back
+      becomes a legal problem.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Subscriptions <span class="tag new">New</span></h3>
+    <div class="beat">
+      <p>Monthly, quarterly, half-yearly or yearly, as you asked. Each customer has a state —
+      trial, active, overdue, suspended — and each state decides what is switched on. Renewal
+      reminders go out before expiry, to you and to the customer.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Support without seeing their books <span class="tag new">New</span></h3>
+    <div class="beat">
+      <p>When you need to look at a customer's system to help him, you open a support session
+      instead of using his password. It carries both names — his and yours — expires after an hour,
+      needs a reason, and is read-only unless he allows more. Sensitive figures are hidden. And
+      <strong>the customer can see the record of every time you entered his system.</strong></p>
+      <p>Customers ask about this when they are deciding whether to buy. Being able to show it is
+      worth more than promising it.</p></div>
+  </div>
+</section>
+
+<section id="s27">
+  <h2><span class="num">Section 27</span>Your own control panel <span class="tag new">New</span></h2>
+  <p class="lede">You are two different people in this system. Most days you are a business running
+  eight companies. Some days you are a software company with customers of your own. Those two jobs
+  need two different screens, and mixing them is a mistake that is expensive to undo later.</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <span class="k">Front door one</span>
+      <h4>The business application</h4>
+      <p>Around a hundred and twenty screens. Used every day by your staff and by every business
+      you sell to. Lives at each customer's own address.</p>
+    </div>
+    <div class="card">
+      <span class="k">Front door two</span>
+      <h4>The owner console</h4>
+      <p>About ten screens. Used by you and perhaps one other person. Lives only at your own
+      address, and never appears on a customer's.</p>
+    </div>
+  </div>
+
+  <div class="mod">
+    <h3>What is on the console</h3>
+    <div class="beat"><p class="beat-label">Fourteen screens, and what each is for</p>
+      <div class="tw"><table>
+        <thead><tr><th>Screen</th><th>What you do there</th></tr></thead>
+        <tbody>
+          <tr><td>Subscribers</td><td>Every business running your software, with its plan, its size, its version and whether its backups ran last night</td></tr>
+          <tr><td><strong>Subscriber account</strong></td><td><strong>One page per customer</strong> — nine tabs covering his companies, his users, his web address, his licence, his billing, his data, his tickets and everything you have ever done to his account</td></tr>
+          <tr><td>Trials and sign-ups</td><td>Who is trying it, and exactly which step each one got stuck on</td></tr>
+          <tr><td>Licences and subscriptions</td><td>What each customer bought, when it expires, and the renewal ladder</td></tr>
+          <tr><td>Usage and billing</td><td>What each customer uses, what he pays, and what he costs you to serve</td></tr>
+          <tr><td>Currency catalogue</td><td>Every currency the platform knows — you add them once, customers switch on what they trade in</td></tr>
+          <tr><td>Branding and domains</td><td>His name or yours, and his own web address</td></tr>
+          <tr><td>Announcements</td><td>A message inside every customer's software — or just one of them</td></tr>
+          <tr><td>Versions and rollout</td><td>One build released in waves, so a bad week never reaches everybody</td></tr>
+          <tr><td>Support</td><td>Every question, with the customer's version and system health already attached</td></tr>
+          <tr><td>Service status</td><td>Uptime, backups and the nightly checks across every customer</td></tr>
+          <tr><td>Console team and access</td><td>Who on your side can reach this panel, and what each of them may do</td></tr>
+          <tr><td>Owner audit log</td><td>Every action anyone on your side has taken, on any customer</td></tr>
+          <tr><td>Platform settings</td><td>What a brand-new customer starts with</td></tr>
+        </tbody>
+      </table></div></div>
+  </div>
+
+  <div class="mod">
+    <h3>One page per customer <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Nine tabs, so you never hunt across five screens to answer one question</p>
+      <div class="tw"><table>
+        <thead><tr><th>Tab</th><th>What is on it</th></tr></thead>
+        <tbody>
+          <tr><td>Overview</td><td>Who he is, his plan, his health, and what he is using against what he is allowed — with the upsell conversations sitting there in plain sight</td></tr>
+          <tr><td>Companies and branches</td><td>How many he has and how to raise the limit. No figures from his books</td></tr>
+          <tr><td>Users</td><td>His staff, their roles, when they last signed in. You can reset a password or unlock an account. You cannot change what they are allowed to do</td></tr>
+          <tr><td>Domain and email</td><td>His address, and the exact DNS records he still owes, with a button to check them and one to email him the four lines</td></tr>
+          <tr><td>Licence and limits</td><td>His plan, every module as a switch, every limit as a number, and issue him a new licence file</td></tr>
+          <tr><td>Billing</td><td>His subscription invoices, what he has paid, what the next renewal comes to</td></tr>
+          <tr><td>Data and backups</td><td>Sizes, dates and whether each backup verified — never a customer name, never an invoice</td></tr>
+          <tr><td>Support</td><td>His tickets, and assisted access</td></tr>
+          <tr><td>Activity</td><td>Everything you have ever done to his account, with the reason you gave</td></tr>
+        </tbody>
+      </table></div></div>
+  </div>
+
+  <div class="mod">
+    <h3>Assisted access — the honest way to help <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">You told his customers you cannot read his books. This is the one exception, and he controls it</p>
+      <div class="tw"><table>
+        <thead><tr><th>Step</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>You ask from his account page, saying in plain words why and for how long</td></tr>
+          <tr><td>2</td><td>He sees that request in his own software, and accepts or refuses</td></tr>
+          <tr><td>3</td><td>You get in for the time he allowed — read-only unless he agreed otherwise</td></tr>
+          <tr><td>4</td><td>A banner sits at the top of his screen the whole time saying you are in</td></tr>
+          <tr><td>5</td><td>Everything you touch is written to his audit log and to yours</td></tr>
+          <tr><td>6</td><td>It ends by itself. There is no way to extend it quietly</td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">Why it is built this way</p>
+      <p>Support without access is useless, and access without permission is the thing every customer
+      quietly worries about. This is the only door, it only opens from his side, and both of you have
+      a record of every time it was used — including the times he said no.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Who on your side can reach the console <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Three roles, and two-factor is not optional</p>
+      <div class="tw"><table>
+        <thead><tr><th>Role</th><th>Can do</th><th>Cannot do</th></tr></thead>
+        <tbody>
+          <tr><td>Owner</td><td>Everything on the console</td><td>Still cannot read a customer's books without his permission</td></tr>
+          <tr><td>Billing</td><td>Licences, plans, invoices, renewals</td><td>Cannot assist, cannot change platform settings</td></tr>
+          <tr><td>Support</td><td>Tickets, health, versions, ask to assist</td><td>Cannot change a licence, a price or a plan</td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">And an owner audit log beside it</p>
+      <p>Every action anyone on your side takes, on any customer, with the reason given. It exists so
+      that if you ever hire a second person — or hand support to someone while you travel — the
+      question “who changed this and why” always has an answer.</p></div>
+  </div>
+</div>
+  </div>
+
+  <div class="mod">
+    <h3>Any currency, for any customer <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">You own the list, they choose from it</p>
+      <p>You add a currency once — its code, its symbol, which side the symbol goes, and two things
+      most systems get wrong: <strong>how many decimals it has</strong> and <strong>what it rounds
+      to</strong>. The Jordanian dinar has three decimals; a two-decimal system loses money on every
+      single line. Lira prices round to the nearest thousand, not to the cent.</p></div>
+    <div class="beat"><p class="beat-label">Why the list is yours and not theirs</p>
+      <p>If every business types its own, within a year you have USD, US$, Dollar and Usd sitting in
+      four different databases and no group report can ever add them up. One list, defined once, is
+      part of what makes this a product rather than a folder of copies.</p></div>
+    <div class="beat"><p class="beat-label">Then each customer sets his own</p>
+      <p>Which currency his books are kept in, which one he reads his reports in, which rate a sale
+      uses and which a purchase uses. A customer in Jordan keeps his books in dinars and reads his
+      reports in dollars, on the same software you sell in Lebanon.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Each customer on his own web address <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Live in a minute, his own name later</p>
+      <p>The day you create him he is working at <em>his-name.ctop.app</em> — no waiting for
+      anything. When he wants <em>erp.hiscompany.com</em>, he adds two records at whoever sold him
+      the domain, the security certificate issues itself, and the old address keeps working so
+      nobody is locked out halfway through the change.</p></div>
+    <div class="beat"><p class="beat-label">His invoices come from his own address too</p>
+      <p>Statements and reminders sent from his own domain arrive; sent from a shared one they land
+      in spam. A statement in a spam folder is a collection problem, not an email problem. Until he
+      verifies his domain we send from ours, which always works — just with our name on it.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>What you can and cannot do to a customer's data</h3>
+    <div class="beat"><p class="beat-label">This will be asked, so the answer has to be true</p>
+      <p>You run trading businesses yourself. Sooner or later you will sell this to somebody who
+      competes with one of your own companies, and he will ask whether you can see his prices. The
+      answer has to be no — and it has to be no in the database, not in a policy document.</p>
+      <div class="tw"><table>
+        <thead><tr><th>Can you…</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Extend, renew or resize his licence</td><td><strong>Yes</strong></td></tr>
+          <tr><td>Switch a module on or off for him</td><td><strong>Yes</strong></td></tr>
+          <tr><td>Suspend him for not paying</td><td><strong>Yes</strong> — it stops new work</td></tr>
+          <tr><td>See his health, his version, his usage</td><td><strong>Yes</strong></td></tr>
+          <tr><td>Read his invoices, his customers, his prices</td><td><strong>No</strong></td></tr>
+          <tr><td>Change anything in his ledger</td><td><strong>No</strong> — not even with his password</td></tr>
+          <tr><td>Delete or hold his data</td><td><strong>No</strong> — the software cannot do it</td></tr>
+          <tr><td>Stop him exporting his own data</td><td><strong>No</strong> — export works even after expiry. It is his data</td></tr>
+        </tbody>
+      </table></div></div>
+  </div>
+
+  <div class="note">
+    <span class="lbl">Why we recommend two separate programmes, not one with a hidden menu</span>
+    <p>The console is the one place that can reach across every customer. If it ships inside the
+    same programme as the ERP, then every customer's computer has already been sent that code, and
+    one mistake in one permission check exposes everybody. Built separately, a customer's browser
+    never receives it at all — the code to reach other businesses is simply not there.</p>
+    <p style="margin-top:10px">It is also the practical choice. You can change a price, add a plan
+    or set up a new customer on a Sunday afternoon without releasing anything to a single business
+    that is using the system. And underneath, it is not a second product: one database, one
+    sign-in, one set of rules. Only the front door is different.</p>
+  </div>
+
+  <div class="mod">
+    <h3>One build, released in waves</h3>
+    <div class="beat"><p class="beat-label">Your own companies go first, every time</p>
+      <p>A new version reaches your eight companies on the day it is built. A week later, after your
+      own month end has closed on it, it reaches two friendly customers. A week after that,
+      everybody else — and never on a Friday, and never in the last three days of a month.</p></div>
+    <div class="beat"><p class="beat-label">The advantage almost no small software company has</p>
+      <p>You are your own first customer, on real books, with real money. You will find the problem
+      before the people paying you do.</p></div>
+  </div>
+
+  <div class="ask"><span class="lbl">Question for you</span>
+    <p>Do you want the console built in the first phase alongside the ERP, or after the first
+    company is live? It is cheaper now than retrofitted later — but it is not needed on the day
+    your own first company starts, so it is a real choice about where the early weeks go.</p></div>
+
+  <div class="mod">
+    <h3>And what the subscriber sees of it <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Every customer has his own subscription screen, inside his own software</p>
+      <p>He cannot open your control panel — that screen does not exist in his copy. But he does not
+      need to ask you when his subscription ends or what he is paying, because it is on a page of
+      his own, under Settings, called <strong>My subscription</strong>.</p>
+      <div class="tw"><table>
+        <thead><tr><th>What he sees</th><th>What is on it</th></tr></thead>
+        <tbody>
+          <tr><td>Overview</td><td>His plan, when it started, when it renews, how many days are left, what the next payment is and when. And a table of what he is using against what his plan allows — users, companies, branches, warehouses, offline devices, storage</td></tr>
+          <tr><td>What is included</td><td>Every module, with a clear yes or no. The ones he does not have say “not in your plan” with a way to ask about them</td></tr>
+          <tr><td>Invoices and payments</td><td>Every subscription invoice he has ever had, downloadable, with how he pays and when the next one is due</td></tr>
+          <tr><td>Change my plan</td><td>The plans side by side, and a form to ask for more users, another device or another module</td></tr>
+          <tr><td>My data</td><td>Export everything, see his backups, and a plain table of what you can and cannot do to his records</td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">Why it is worth building rather than answering by phone</p>
+      <p>Half the questions a software customer asks are “when does mine expire”, “how many users do
+      I have”, “can I get last year’s invoice”. Every one of those is a WhatsApp message on your
+      Sunday. On this page they answer themselves — and the customer who is quietly using six users
+      on a plan for five finds out from the screen, politely, without anyone being locked out and
+      without you having to raise it.</p></div>
+    <div class="beat"><p class="beat-label">It also answers the awkward question before it is asked</p>
+      <p>The last tab tells him in plain words that you cannot read his invoices, cannot change his
+      ledger, cannot delete or hold his data, and cannot stop him exporting it — even after he stops
+      paying. Written on his own screen, by the software, not in a contract he will not read.</p></div>
+  </div>
+</section>
+
+<section id="s28">
+  <h2><span class="num">Section 28</span>Backup and safety</h2>
+
+  <div class="mod">
+    <div class="beat"><p class="beat-label">Automatic backup <span class="tag have">You have this</span></p>
+      <p>Your system already does a daily backup — we keep that and add continuous protection, so
+      the system can be restored not just to last night but to <strong>any moment</strong>.</p></div>
+    <div class="beat"><p class="beat-label">Restoring one business, not everything</p>
+      <p>Being able to restore the whole server does not answer “put this one customer back to
+      yesterday”. So there is a separate per-business export and restore, and
+      <strong>we practise it every month and record the result.</strong> A backup that has never
+      been restored is not a backup.</p></div>
+    <div class="beat"><p class="beat-label">Your data is always yours</p>
+      <p>Any business can export everything — documents, ledger, attachments, the audit record — in
+      a readable form, at any time. When you are selling this system, being able to say “your data
+      is never locked in” is a selling point, not a risk.</p></div>
+    <div class="beat"><p class="beat-label">On the desktop</p>
+      <p>The local copy on each machine is encrypted, so a stolen laptop is not a leak of a
+      customer's accounts.</p></div>
+  </div>
+</section>
+
+<section id="s29">
+  <h2><span class="num">Section 29</span>Moving from your old system</h2>
+  <p class="lede">You said it best: “No need to import all old transactions, we can keep old
+  version, but we can import items and customers and accounts” — and “every database I can close it
+  without complication, not all at the same time.” That is exactly the plan.</p>
+
+  <figure>
+    <svg viewBox="0 0 860 300" role="img" aria-label="Diagram showing accounts, customers, items and opening balances moving from the old system to the new one, while historical transactions stay behind in the old system which is kept available read only">
+      <defs>
+        <marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g color="var(--ink-3)">
+        <rect class="svg-box" x="20" y="26" width="240" height="200" rx="8"/>
+        <text class="svg-t-b" x="140" y="54" text-anchor="middle">Your current system</text>
+        <line x1="40" y1="68" x2="240" y2="68" stroke="var(--rule)" stroke-width="1"/>
+        <text class="svg-t" x="40" y="94">Chart of accounts</text>
+        <text class="svg-t" x="40" y="118">Customers &amp; suppliers</text>
+        <text class="svg-t" x="40" y="142">Items &amp; packaging</text>
+        <text class="svg-t" x="40" y="166">Balances at cut-over</text>
+        <text class="svg-t-s" x="40" y="196">YEARS OF OLD DOCUMENTS</text>
+
+        <path class="svg-line-a" marker-end="url(#ar6)" d="M262 118 L336 118"/>
+        <text class="svg-t-a" x="299" y="106" text-anchor="middle">moves</text>
+
+        <path class="svg-dash" marker-end="url(#ar6)" d="M140 226 L140 258"/>
+        <text class="svg-t-s" x="156" y="248">STAYS</text>
+
+        <rect class="svg-box-a" x="340" y="26" width="240" height="200" rx="8"/>
+        <text class="svg-t-a" x="460" y="54" text-anchor="middle">The new system</text>
+        <line x1="360" y1="68" x2="560" y2="68" stroke="var(--accent)" stroke-width="1" opacity=".4"/>
+        <text class="svg-t" x="360" y="94">Same accounts</text>
+        <text class="svg-t" x="360" y="118">Same customers</text>
+        <text class="svg-t" x="360" y="142">Same items and boxes</text>
+        <text class="svg-t" x="360" y="166">Clean opening balances</text>
+        <text class="svg-t-s" x="360" y="196">FROM 1 JANUARY, EVERYTHING NEW</text>
+
+        <path class="svg-line" marker-end="url(#ar6)" d="M582 118 L642 118"/>
+
+        <rect class="svg-box" x="646" y="26" width="194" height="200" rx="8"/>
+        <text class="svg-t-b" x="743" y="54" text-anchor="middle">One company</text>
+        <text class="svg-t-b" x="743" y="74" text-anchor="middle">at a time</text>
+        <line x1="666" y1="90" x2="820" y2="90" stroke="var(--rule)" stroke-width="1"/>
+        <text class="svg-t" x="666" y="116">1 · the simplest</text>
+        <text class="svg-t" x="666" y="140">2 · watch it work</text>
+        <text class="svg-t" x="666" y="164">3 · then the rest</text>
+        <text class="svg-t-s" x="666" y="196">A PROBLEM IS ONE COMPANY,</text>
+        <text class="svg-t-s" x="666" y="212">FOR ONE WEEK — NOT EIGHT</text>
+
+        <rect x="20" y="262" width="240" height="32" rx="6" fill="var(--paper-3)" stroke="var(--rule-2)" stroke-width="1.25" stroke-dasharray="5 4"/>
+        <text class="svg-t" x="140" y="283" text-anchor="middle">Kept open, read only</text>
+      </g>
+    </svg>
+    <figcaption>Only what you need moves. Your history stays where it is, still readable, so
+    nothing is ever lost — and each company moves on its own week.</figcaption>
+  </figure>
+
+  <div class="mod">
+    <h3>What moves, and how we prove it is right</h3>
+    <div class="beat"><p class="beat-label">Moving</p>
+      <p>Chart of accounts · customers and suppliers · items with their packaging levels, barcodes
+      and prices · warehouses · salesmen, regions and districts · currencies · and the
+      <strong>opening balances</strong> — what each customer owes, what you owe each supplier, what
+      stock you hold and what it is worth, and your cash and bank balances.</p>
+      <p>Open invoices come across <strong>one by one</strong>, not as one lump — so your ageing
+      report is truthful from the very first day.</p></div>
+    <div class="beat"><p class="beat-label">Staying</p>
+      <p>Years of old invoices and journals. The old system stays installed and readable, so history
+      is one click away without dragging a decade of documents into a new system.</p></div>
+    <div class="beat"><p class="beat-label">How we prove it</p>
+      <p>The import produces a <strong>reconciliation report</strong>: your old system's balance
+      beside the new system's balance, account by account, with the difference. <strong>The move is
+      not finished until every line is zero</strong> or your accountant has signed off why it is
+      not.</p>
+      <p>For a customer list, 95% accuracy is fine. For a ledger it is not — you do not sample
+      financial records, you reconcile them.</p></div>
+    <div class="beat"><p class="beat-label">One thing to expect, so it is not a surprise</p>
+      <p>Your current system stores money in a way that loses tiny fractions on each calculation.
+      When we convert to exact numbers, some balances will differ by very small amounts that have
+      been building up quietly for years. <strong>This is normal and we will show you every one of
+      them</strong> rather than hiding them — your accountant confirms them once and they are
+      closed.</p></div>
+    <div class="beat"><p class="beat-label">And we start early</p>
+      <p>We run the import against a copy of your real data <strong>months before the move</strong>,
+      not in the last week. Data problems take weeks to resolve with an accountant, not days — and
+      we would rather find them in good time.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>The move itself, for each company</h3>
+    <div class="beat">
+      <div class="tw"><table>
+        <thead><tr><th>When</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td>Two weeks before</td><td>Final practice run; the reconciliation is signed by your accountant</td></tr>
+          <tr><td>One week before</td><td>Users created, permissions set, training done</td></tr>
+          <tr><td>Two days before</td><td>Number blocks issued to devices; printers and tills set up</td></tr>
+          <tr><td>The day before</td><td>Old system set to read only; physical stock count</td></tr>
+          <tr><td>The day</td><td>Final balances brought across, reconciled, and a clear go or no-go decision</td></tr>
+          <tr><td>The first day live</td><td>Someone available all day, just for you</td></tr>
+          <tr><td>After one week</td><td>Everything reconciled — then the next company begins</td></tr>
+        </tbody>
+      </table></div></div>
+  </div>
+</section>
+
+<section id="s30">
+  <h2><span class="num">Section 30</span>You can click through it today <span class="tag new">New</span></h2>
+  <p class="lede">Reading about a system is not the same as seeing one. The working prototype is now
+  clickable in a browser and its record-edit flow has been verified in both English and Arabic — including
+  list → detail → edit → save → detail → list.</p>
+
+  <div class="mod">
+    <h3>What is in it</h3>
+    <div class="beat"><p class="beat-label">The whole shape of the system, clickable</p>
+      <div class="tw"><table>
+        <tbody>
+          <tr><td>Every menu and sub-menu</td><td>Around a hundred and twenty screens across thirteen groups</td></tr>
+          <tr><td>Every “Add” button</td><td>Opens the real form, with the real fields — not a placeholder</td></tr>
+          <tr><td>Record editing</td><td>Mapped changes persist in the prototype's list and detail views, in English and Arabic</td></tr>
+          <tr><td>Safe field identity</td><td>Edit fields use stable column indexes; if binding counts disagree, saving is refused</td></tr>
+          <tr><td>Unmapped checkboxes</td><td>Active and other checkbox controls do not write to Status or another invented column</td></tr>
+          <tr><td>The tabs work</td><td>The five tills, the restaurant's hall, terrace, delivery and takeaway, the account tabs, the six user roles</td></tr>
+          <tr><td>Both languages</td><td>Press عربي and the whole screen mirrors, right to left; editing and saving are verified too</td></tr>
+          <tr><td>Both front doors</td><td>A switch at the top moves between the business application and your owner console</td></tr>
+        </tbody>
+      </table></div></div>
+    <div class="beat"><p class="beat-label">What it does and does not do</p>
+      <p>It is still a prototype: it does not perform the production accounting calculations or send
+      transactions to an external accounting system. However, mapped record edits are real prototype
+      state — changes appear in the list and detail views. Reloading restores the original example data.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>P3.1 verification — record editing <span class="tag have">Verified</span></h3>
+    <div class="beat"><p class="beat-label">What was fixed</p>
+      <p>The edit flow previously used the rendered <code>&lt;label&gt;</code> as field identity. That
+      failed in Arabic because the label is translated. The verified implementation records the target
+      column index in form render order and stamps it onto each editable field when the modal opens.
+      Saving uses that index directly.</p></div>
+    <div class="beat"><p class="beat-label">Fail-safe binding</p>
+      <p>If the number of rendered editable fields does not match the recorded column list, the prototype
+      refuses to bind and writes nothing. This is deliberate: refusing to save is safer than guessing.</p></div>
+    <div class="beat"><p class="beat-label">Checkbox decision</p>
+      <p>Checkboxes such as <strong>Active</strong> are currently unmapped. The datasets use multi-state
+      status values rather than a boolean Active column, so the prototype does not invent a conversion.
+      They remain non-writing until the business meaning is defined.</p></div>
+    <div class="beat"><p class="beat-label">Regression result</p>
+      <div class="tw"><table>
+        <tbody>
+          <tr><td>Languages</td><td>English and Arabic</td></tr>
+          <tr><td>Verified records</td><td>Customer C-0101 · Supplier S-0301 · Item IT-0919 · Employee Position</td></tr>
+          <tr><td>Record flow</td><td>List → detail → edit → save → detail → list</td></tr>
+          <tr><td>Safety</td><td>Disabled-field typing stored nothing; blanking a mapped field left the stored value unchanged</td></tr>
+          <tr><td>Regression matrix</td><td>24 / 24 clean</td></tr>
+          <tr><td>Console errors</td><td>0</td></tr>
+          <tr><td>Overflow</td><td>0</td></tr>
+          <tr><td>Listener accumulation</td><td>None across 60 repaints and 25 edit cycles</td></tr>
+          <tr><td>Geometry diff</td><td>0 changed elements across 64,742 English and 63,982 Arabic elements</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <span class="lbl">The best use of it</span>
+    <p>Open it beside your current system and go screen by screen. The fastest way to find the
+    thing we have missed is for you to look for the screen you use every day and not find it. That
+    is worth more to this project than any question we could write.</p>
+  </div>
+</section>
+
+<section id="s31">
+  <h2><span class="num">Section 31</span>How we build it</h2>
+  <p class="lede">You asked us to decide the order and choose what works best. This is that
+  decision, and the reason behind it.</p>
+
+  <h3>We build the foundation first, then the rooms</h3>
+  <p>An ERP is not built module by module in the order you use them. It is built like a
+  building — the accounting floor first, because everything else stands on it. Build the ledger
+  last and every module already written has to be opened up again.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Stage</th><th>What is built</th><th>What you see at the end</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1</strong></td><td>Companies, branches, users, permissions, your chart of accounts, the linked accounts screen, currencies and rates</td><td>Your seven classes loaded, your sub-accounts, both rates set</td></tr>
+      <tr><td><strong>2</strong></td><td>The ledger, journal vouchers, periods and locking, the audit record</td><td><strong>Your chart of accounts, the ledger underneath it, and a trial balance that balances</strong></td></tr>
+      <tr><td><strong>3</strong></td><td>Customers, suppliers, items, packaging, barcodes, warehouses, price lists — and the first import from your real data</td><td>Your own data, on screen, in the new system</td></tr>
+      <tr><td><strong>4</strong></td><td>Purchases, goods receipt, stock movements, the three costing methods</td><td>A purchase that moves stock and posts to the accounts, agreeing exactly</td></tr>
+      <tr><td><strong>5</strong></td><td>Sales, deliveries, returns, prices, customer and supplier balances, instalments, ageing, cheques</td><td>A full sale-to-cash cycle, including a customer paying in three instalments at three different rates</td></tr>
+      <tr><td><strong>6</strong></td><td>VAT, the report engine, profit and loss, balance sheet, revaluation and the exchange difference report</td><td>A VAT quarter, and a balance sheet in both currencies</td></tr>
+      <tr><td><strong>7</strong></td><td>Year end, fixed assets, dashboards, printing and export</td><td>A year closed and a new one opened with clean balances</td></tr>
+      <tr><td><strong>8</strong></td><td>The desktop application, offline working, the tills, salesmen in the field</td><td>A till selling and printing with the cable pulled out, then syncing</td></tr>
+      <tr><td><strong>9</strong></td><td>Simple payroll, the migration of the first company, training and going live</td><td>Live</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span class="lbl">Two decisions inside that order</span>
+    <p><strong>Offline work starts at stage 4, not stage 8.</strong> It is the hardest part of the
+    whole system, so it is built alongside everything else and tested by every document as it is
+    written — rather than added at the end and discovering a problem too late.</p>
+    <p style="margin-top:10px"><strong>The import starts at stage 3, not stage 9.</strong> Real data
+    always has surprises in it, and we want months to fix them, not days.</p>
+  </div>
+
+  <h3>You see working software at every stage</h3>
+  <p>Not a progress report — the actual system, running, with your data in it. If something is
+  wrong at stage 2 you say so at stage 2, when changing it is cheap. That is why the accounting
+  comes first: it is the part you can judge better than anyone.</p>
+
+  <h3>How we know it is right</h3>
+  <div class="grid g2">
+    <div class="card">
+      <span class="k">Before any code</span>
+      <h4>Every posting is written down first</h4>
+      <p>Every kind of document, in every situation — cash and credit, taxable and exempt, dollars
+      and pounds, with discount, with a return — with the exact debits and credits it produces.
+      <strong>Your accountant reads and approves that document before we build it.</strong></p>
+    </div>
+    <div class="card">
+      <span class="k">Then, forever</span>
+      <h4>Every rule becomes an automatic test</h4>
+      <p>Each of those rules becomes a test that runs every time anything changes. If a change ever
+      breaks a posting rule, we know within minutes — not when you notice a wrong balance in
+      March.</p>
+    </div>
+    <div class="card">
+      <span class="k">Every day</span>
+      <h4>The system checks itself</h4>
+      <p>Balances are re-calculated from the ledger in the background and compared with what is
+      displayed. If anything has drifted even slightly, the system stops trusting the fast version
+      and goes back to the ledger — and tells us.</p>
+    </div>
+    <div class="card">
+      <span class="k">Before you accept</span>
+      <h4>Your accountant runs the tests</h4>
+      <p>Each part comes with a plain-language script — do this, then this, and the number should be
+      exactly that. A part is not finished because we say so. It is finished because your accountant
+      followed the script and the numbers were right.</p>
+    </div>
+  </div>
+
+  <h3>What you decide, and when</h3>
+  <p>Once we begin, anything new you think of is written down, priced honestly, and
+  <strong>you decide</strong> whether it goes in now or after go-live. Nothing is refused and
+  nothing is slipped in quietly. You always know what a change costs before you choose it.</p>
+  <p>The schedule and the commercial arrangement are agreed separately from this document.</p>
+</section>
+
+<section id="s32">
+  <h2><span class="num">Section 32</span>What we still need from you</h2>
+  <p class="lede">Six things. The first two change how the database is built, so they are the
+  urgent ones.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>#</th><th>What we need</th><th>Why it matters</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td><strong>What are your cost centres</strong> — branches, departments, production lines, vehicles? And do you want profit per cost centre, or a full balance sheet per cost centre?</td><td>A cost centre is a column on every entry. Decided now it costs almost nothing; decided later it means rebuilding</td></tr>
+      <tr><td class="num">2</td><td><strong>What do the salesmen carry</strong> — laptop, tablet or phone? And do they carry stock, or only take orders?</td><td>Selling from a van and taking orders are built differently. And a phone would be a new kind of application</td></tr>
+      <tr><td class="num">3</td><td><strong>Your official chart of accounts</strong> from your accountant — the full list with the code numbers</td><td>So the template is correct for every business you later sell to, not only for yours</td></tr>
+      <tr><td class="num">4</td><td><strong>Which business needs the restaurant screen</strong>, and is it needed at the start or later?</td><td>It is a second application sharing the same accounting, so it is planned separately</td></tr>
+      <tr><td class="num">5</td><td><strong>How you handle cheques today</strong> — do you sometimes pass a customer's cheque to a supplier, and what happens in your books when one bounces?</td><td>So we build it the way you actually work, not the way a textbook says</td></tr>
+      <tr><td class="num">6</td><td><strong>What goes on a payslip</strong> in your companies — and do you need attendance and leave, or only the salary calculation?</td><td>“Simple payroll” means different things to different people</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span class="lbl">And one to confirm</span>
+    <p>When you said “start from normal serial” — did you mean start in the normal order and let us
+    decide the sequence? Or that document numbers should start from a fresh series when we go live?
+    Both are fine, we only want to be sure we understood you.</p>
+  </div>
+</section>
+
+<section id="s33">
+  <h2><span class="num">Section 33</span>Words explained</h2>
+  <p class="lede">A few terms used in this document, in plain language.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Word</th><th>What it means here</th></tr></thead>
+    <tbody>
+      <tr><td class="field">Posting</td><td>Making a document final. Before posting it is a draft you can change; after posting it is in the accounts and can only be reversed</td></tr>
+      <tr><td class="field">The ledger</td><td>The list of every debit and every credit the system has ever made. Everything else is calculated from it</td></tr>
+      <tr><td class="field">Realised difference</td><td>The exchange gain or loss when a customer actually pays at a different rate from the invoice</td></tr>
+      <tr><td class="field">Unrealised difference</td><td>The exchange gain or loss on money still owed, when the rate has moved but nobody has paid yet</td></tr>
+      <tr><td class="field">Revaluation</td><td>The month-end run that recalculates what your foreign-currency balances are worth in pounds</td></tr>
+      <tr><td class="field">Control account</td><td>The account in the chart holding the total for all customers or all suppliers. You never post to it directly — it always equals the sum of the individual balances</td></tr>
+      <tr><td class="field">Cost layer</td><td>A record of one delivery of stock at the price you paid for it. Keeping these is what makes FIFO and true profit possible</td></tr>
+      <tr><td class="field">Landed cost</td><td>Freight, duty and clearing added to the cost of goods, so you know what they really cost you</td></tr>
+      <tr><td class="field">Cost centre</td><td>A second label on every entry — a department, a line, a vehicle — so you can group your figures a second way</td></tr>
+      <tr><td class="field">Sync</td><td>A device sending the work it did offline up to the server, and receiving the latest information back</td></tr>
+      <tr><td class="field">Conflict</td><td>When something done offline can no longer be posted — the price changed, the period closed. The system asks a person instead of guessing</td></tr>
+      <tr><td class="field">Z report</td><td>The end-of-day report at a till. It closes the day, cannot be repeated, and cannot be deleted</td></tr>
+      <tr><td class="field">Audit trail</td><td>The record of who did what, when, and why — sealed so that any tampering can be detected</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+</article>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Revision 1.2 · 30 August 2026</strong> — Expanded after P3.1 verification:
+    Arabic record editing is verified, field identity is column-index based and fail-closed,
+    and checkbox controls remain intentionally unmapped until their data-model meaning is decided. Added a quick-reading guide, system map, product-at-a-glance table, lifecycle view and blueprint usage rules.</p>
+    <p><strong>ERP Suite Blueprint · Version 1.2 · 30 August 2026</strong></p>
+    <p>Prepared for Yorgo by Abdullah Al Mamun. This document describes what will be built and how
+    it will work. Anything you want changed, added or removed — tell us, and this document changes
+    with it. It is meant to be argued with.</p>
+  </div>
+</footer>
+
+</body>
+</html>
