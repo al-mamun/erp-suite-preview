@@ -11208,5 +11208,183 @@ Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
 buildTree(); paint();
 </script>
 
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   CR-004 — SALES MANAGER
+
+   The client: "we have sales manager in some companies".
+
+   A level above salesman. The manager has a team, sees what his team sells,
+   and earns an override on it. "Some companies" is the important word — a
+   salesman may report to nobody, and the shop counter does, so the hierarchy
+   is optional rather than imposed.
+
+   This reuses the commission engine built for CR-005 rather than adding a
+   second one: the team's own commission is still calculated line by line at
+   the category rate. The override is the one new idea, and it is a flat rate
+   on what the team sold, which is how an override normally works.
+   ═══════════════════════════════════════════════════════════════════════ */
+(function(){
+ const d = L.sman;
+ if(!d || d.cols.some(c => c && c.h === 'Role')) return;         /* only once */
+
+ /* the three new columns go in front of the row-action column */
+ const at = d.cols.length - 1;
+ d.cols.splice(at, 0, C('Role'), C('Reports to'), n('Override on team %'));
+ const add = (row, role, reportsTo, override) => { row.splice(at, 0, role, reportsTo, override); };
+
+ d.rows.forEach(r => {
+  const name = cellText(r[colIdx('sman','Name')]);
+  if(name === 'Direct business') add(r, 'Salesman', '<span class="mu">—</span>', '<span class="mu">—</span>');
+  else add(r, 'Salesman', 'Sami Rizk', '<span class="mu">—</span>');
+ });
+
+ /* the manager himself — a salesman record with a role, not a new kind of thing */
+ const mgr = [];
+ d.cols.forEach(c => mgr.push(''));
+ const set = (h, v) => { const i = colIdx('sman', h); if(i >= 0) mgr[i] = v; };
+ set('Code','SM-00'); set('Name','Sami Rizk'); set('Arabic name','سامي رزق');
+ set('Phone','+961 3 118 442'); set('Areas','Bekaa · Beirut');
+ set('Commission %','1.00'); set('On','Invoice value'); set('Max discount','8%');
+ set('Van warehouse','<span class="mu">—</span>');
+ set('Sales this month','0.00'); set('Collected','0.00');
+ set('Role','<span class="pill in">Sales manager</span>');
+ set('Reports to','<span class="mu">—</span>'); set('Override on team %','0.50');
+ set('Status','<span class="pill ok">Active</span>');
+ mgr[mgr.length - 1] = del();
+ d.rows.unshift(mgr);
+})();
+
+/* who reports to whom */
+function smanRow(name){
+ return (L.sman.rows || []).find(r => cellText(r[colIdx('sman','Name')]) === name) || null;
+}
+function smanField(name, header){
+ const r = smanRow(name); if(!r) return '';
+ const i = colIdx('sman', header); return i < 0 ? '' : cellText(r[i]);
+}
+function teamOf(manager){
+ return (L.sman.rows || [])
+  .filter(r => cellText(r[colIdx('sman','Reports to')]) === manager)
+  .map(r => cellText(r[colIdx('sman','Name')]));
+}
+function managers(){
+ return (L.sman.rows || [])
+  .filter(r => /manager/i.test(cellText(r[colIdx('sman','Role')])))
+  .map(r => cellText(r[colIdx('sman','Name')]));
+}
+
+/* ── Commission due gains the manager roll-up. The per-line engine is the
+      one built for CR-005 — nothing about it changes. ── */
+S.commd = (orig => function(){
+ let html = orig();
+ const f2 = v => v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const mgrs = managers();
+ if(!mgrs.length) return html;
+
+ let rows = [], grand = 0;
+ mgrs.forEach(m => {
+  const team = teamOf(m);
+  const on = smanField(m, 'On');
+  const ov = parseFloat(smanField(m, 'Override on team %')) || 0;
+  let teamValue = 0, teamCollected = 0;
+  team.forEach(t => {
+   COMMLINES.filter(l => l.s === t).forEach(l => { teamValue += l.value; teamCollected += l.collected; });
+  });
+  const base = /collected/i.test(on) ? teamCollected : teamValue;
+  const com = Math.round(base * ov) / 100;
+  grand += com;
+  team.forEach(t => {
+   const v = COMMLINES.filter(l => l.s === t).reduce((a,l) => a + l.value, 0);
+   const c = COMMLINES.filter(l => l.s === t).reduce((a,l) => a + l.collected, 0);
+   rows.push(['<b>' + esc(m) + '</b>', esc(t), f2(v), f2(c),
+     '<span class="mu">' + tr('in his team') + '</span>', '', '']);
+  });
+  rows.push(['<b>' + esc(m) + ' — ' + tr('override') + '</b>',
+    '<span class="mu">' + team.length + ' ' + tr(team.length === 1 ? 'salesman' : 'salesmen') + '</span>',
+    '<b>' + f2(teamValue) + '</b>', '<b>' + f2(teamCollected) + '</b>',
+    '<span class="mu">' + esc(on) + '</span>', f2(ov) + '%', '<b>' + f2(com) + '</b>']);
+ });
+ rows.push(['<b>' + tr('All managers') + '</b>','','','','','','<b>' + f2(grand) + '</b>']);
+
+ const block = pane(tr('Managers — override on what their team sold'),
+   tbl([C('Manager'),C('Salesman'),n('Team sales'),n('Team collected'),
+        C('Calculated on'),n('Override'),n('Commission')], rows, { min:980 }) +
+   note(tr('An override is a flat rate on the team, not a second category calculation.'),
+     'The team’s own commission above is still worked out line by line at the rate for each category. The manager earns his override on the total his team brought in. If a manager also sells himself, those sales are rated exactly like any salesman’s.'));
+
+ /* directly after the line-by-line pane. The markers are language-independent:
+    .dsst is the not-on-commission empty state, .note is the closing note. */
+ let ins = -1;
+ const ds = html.indexOf('<div class="dsst"');
+ if(ds > 0) ins = html.lastIndexOf('<div class="pane">', ds);
+ if(ins < 0) ins = html.lastIndexOf('<div class="note">');
+ return ins < 0 ? html + block : html.slice(0, ins) + block + html.slice(ins);
+})(S.commd);
+
+/* the manager total belongs in the headline figure too */
+S.commd = (orig => function(){
+ let html = orig();
+ const f2 = v => v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+ let mgrTotal = 0;
+ managers().forEach(m => {
+  const on = smanField(m,'On'), ov = parseFloat(smanField(m,'Override on team %')) || 0;
+  let v = 0, c = 0;
+  teamOf(m).forEach(t => COMMLINES.filter(l => l.s === t).forEach(l => { v += l.value; c += l.collected; }));
+  mgrTotal += Math.round((/collected/i.test(on) ? c : v) * ov) / 100;
+ });
+ if(!mgrTotal) return html;
+ return html.replace(/(<div class="kpi"><div class="k">[^<]*<\/div><div class="v">US\$ )([\d,\.]+)/,
+   (m0, pre, num) => pre + f2(parseFloat(num.replace(/,/g,'')) + mgrTotal))
+  .replace(/across (\d+) salesmen/, 'across $1 salesmen and ' + managers().length + ' manager');
+})(S.commd);
+
+/* the team, on the salesmen screen */
+S.sman = (orig => function(){
+ let html = orig();
+ const mgrs = managers();
+ if(!mgrs.length) return html;
+ const rows = [];
+ mgrs.forEach(m => {
+  const team = teamOf(m);
+  rows.push(['<b>' + esc(m) + '</b>', '<span class="pill in">' + tr('Sales manager') + '</span>',
+    esc(smanField(m,'Areas')), '<b>' + team.length + '</b>']);
+  team.forEach(t => rows.push(['<span class="mu">↳</span> ' + esc(t),
+    '<span class="mu">' + tr('Salesman') + '</span>', esc(smanField(t,'Areas')), '']));
+ });
+ const loose = (L.sman.rows || [])
+   .filter(r => cellText(r[colIdx('sman','Reports to')]) === '—' && !/manager/i.test(cellText(r[colIdx('sman','Role')])))
+   .map(r => cellText(r[colIdx('sman','Name')]));
+ loose.forEach(t => rows.push([esc(t), '<span class="mu">' + tr('Salesman') + '</span>',
+   esc(smanField(t,'Areas')), '<span class="mu">' + tr('reports to nobody') + '</span>']));
+ return html + pane(tr('The sales team'),
+   tbl([C('Name'),C('Role'),C('Areas'),C('Team')], rows, { min:640 }) +
+   note(tr('A manager is optional.'),
+     'Some of your companies have one and some do not, so a salesman may report to nobody. The shop counter usually does.'));
+})(S.sman);
+
+/* the salesman form learns the two new fields */
+(function(){
+ const f = F.sman; if(!f || f.__mgr) return; f.__mgr = 1;
+ const sec = f.s && f.s[0];
+ if(sec && sec.f) sec.f.push(
+   { l:'Role', t:'sel', o:['Salesman','Sales manager'] },
+   { l:'Reports to', t:'sel', o:['Nobody','Sami Rizk'] },
+   { l:'Override on team %', t:'num', hint:'Only for a manager — the flat rate he earns on what his team sells.' });
+})();
+
+Object.assign(AR, { 'Sales manager':'مدير مبيعات', 'Salesman':'مندوب', 'Reports to':'يتبع',
+ 'Override on team %':'نسبة الإشراف على الفريق %', 'The sales team':'فريق المبيعات',
+ 'Managers — override on what their team sold':'المدراء — نسبة الإشراف على ما باعه فريقهم',
+ 'in his team':'ضمن فريقه', 'override':'الإشراف', 'All managers':'كل المدراء',
+ 'Team sales':'مبيعات الفريق', 'Team collected':'محصّل الفريق', 'Override':'الإشراف',
+ 'salesman':'مندوب', 'salesmen':'مندوبين', 'Team':'الفريق', 'Role':'الدور',
+ 'reports to nobody':'لا يتبع أحداً', 'A manager is optional.':'وجود المدير اختياري.',
+ 'An override is a flat rate on the team, not a second category calculation.':
+   'نسبة الإشراف نسبة ثابتة على الفريق، وليست حساباً ثانياً حسب الفئة.' });
+Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
+buildTree(); paint();
+</script>
+
 </body>
 </html>

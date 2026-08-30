@@ -484,6 +484,7 @@ footer p{max-width:64ch}
       <tr><td><a href="#s8">Cash boxes and banks</a></td><td>Safes tied to accounts, transfers, and bank reconciliation</td><td>Included</td></tr>
       <tr><td><a href="#s13">Salesmen and commission</a></td><td>By salesman, region and district, calculated from invoices</td><td>Included</td></tr>
       <tr><td><a href="#s13">Commission by category</a></td><td>Rates per category and sub category, calculated line by line</td><td>New</td></tr>
+      <tr><td><a href="#s13">Sales manager and team</a></td><td>An optional level above the salesman, with an override on what his team sells</td><td>New</td></tr>
     </tbody>
   </table></div>
 
@@ -1390,6 +1391,20 @@ footer p{max-width:64ch}
       single flat rate would have paid, side by side, so the difference is visible.</p>
       <p>A salesman with no “On” setting — the shop counter, direct business — earns nothing and
       is listed separately rather than silently left out.</p></div>
+    <div class="beat"><p class="beat-label">A level above the salesman <span class="tag new">New</span></p>
+      <p>You said you have a <strong>sales manager in some companies</strong>, and "some" is the part
+      that shapes it. A salesman record now carries a <strong>role</strong> and who he
+      <strong>reports to</strong>, so a manager has a team — and a salesman who reports to nobody,
+      like the shop counter, stays exactly as he is. Nothing is forced on a company that does not
+      work that way.</p>
+      <p>The manager sees his team on the salesmen screen, and earns an <strong>override</strong>:
+      a flat rate on what his team sold, calculated on invoice value or on money collected, the
+      same choice every salesman already has. It is deliberately not a second category
+      calculation — an override is a share of the team's result, and the team's own commission is
+      already rated line by line above it. If a manager also sells himself, those sales are rated
+      exactly like anyone else's.</p>
+      <p>The <strong>Commission due</strong> report shows the team, the manager's override beneath
+      it, and one figure for everything owed.</p></div>
   </div>
 
   <div class="mod">
