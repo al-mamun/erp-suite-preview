@@ -10778,5 +10778,277 @@ buildTree(); paint();
 .relnote svg{flex:0 0 auto;margin-top:1px;color:var(--c-warning)}
 </style>
 
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   TRIAL BALANCE + BALANCE SHEET — one dataset, two views, totals computed.
+
+   Raised by the client: "trial balance on prototype is not clear."
+   He was right, and it was worse than unclear. The old screen showed seven
+   headings whose columns did not add up (opening out by 558,200; movement by
+   106,160; closing by 452,040) under a green "Balanced" pill that simply
+   printed the debit figure twice. The balance sheet had the same defect.
+
+   Both screens now read ONE set of figures, and every total — including the
+   balance check — is computed from the rows at render time, so the screen can
+   no longer claim to balance when it does not.
+
+   The figures are anchored on what the prototype already shows elsewhere:
+   the dashboard's cash, customers, suppliers and stock, and the Profit & loss
+   screen, which was already correct. Two figures had to be solved for, the way
+   a real ledger does it: retained earnings brought forward (447,490) and the
+   bank loan that funded the stock (134,947.20).
+   ═══════════════════════════════════════════════════════════════════════ */
+const TBROWS=[
+ {c:'101',n:"Share capital",o:-120000,k:-120000},
+ {c:'106',n:"Legal reserve",o:-44000,k:-44000},
+ {c:'111',n:"Brought forward from last year",o:-447490,k:-447490},
+ {c:'164',n:"Bank loans",o:0,k:-134947.20},
+ {c:'213',n:"Buildings and fittings",o:12400,k:12400},
+ {c:'215',n:"Machines and equipment",o:7000,k:9800},
+ {c:'218',n:"Vehicles and other",o:11000,k:18000},
+ {c:'28',n:"Accumulated depreciation",o:-9910,k:-10760},
+ {c:'3011',n:"Stock — main warehouses",o:360000,k:409600},
+ {c:'3012',n:"Stock — vans",o:32000,k:41700},
+ {c:'3015',n:"Stock in transit",o:20000,k:35000},
+ {c:'4011',n:"Local suppliers",o:-48200,k:-44120},
+ {c:'4012',n:"Foreign suppliers",o:0,k:-12000},
+ {c:'41111',n:"Ordinary clients",o:188000,k:176000},
+ {c:'4115',n:"Doubtful clients",o:0,k:2880},
+ {c:'4118',n:"Instalment customers",o:0,k:38900},
+ {c:'4119',n:"Discounts and allowances",o:0,k:-2900},
+ {c:'413',n:"Notes receivable",o:8200,k:12400},
+ {c:'419',n:"Advances received from customers",o:-900,k:-1200},
+ {c:'4211',n:"Salaries payable",o:-4100,k:-4880},
+ {c:'4425',n:"VAT on sales — output",o:-18400,k:-23636.80},
+ {c:'4426',n:"VAT on purchases — input",o:16400,k:20724},
+ {c:'5113',n:"Cheques received from customers",o:0,k:12400},
+ {c:'5121',n:"Bank USD",o:30000,k:44120},
+ {c:'5310',n:"Main cash box",o:8000,k:8120},
+ {c:'5311',n:"Till 2 — shop",o:0,k:1240},
+ {c:'5312',n:"Van — Elie",o:0,k:940},
+ {c:'6011',n:"Cost of goods sold",o:0,k:93020},
+ {c:'61',n:"External services and rent",o:0,k:12400},
+ {c:'64',n:"Staff costs",o:0,k:18900},
+ {c:'6661',n:"Exchange loss — realised",o:0,k:1240},
+ {c:'6811',n:"Depreciation",o:0,k:850},
+ {c:'7011',n:"Sales — goods",o:0,k:-122340},
+ {c:'7012',n:"Sales — services",o:0,k:-1880},
+ {c:'7092',n:"Discounts allowed to customers",o:0,k:1660},
+ {c:'7661',n:"Exchange gain — realised",o:0,k:-2140}
+];
+
+let TBLEVEL = 'all', TBHIDEZERO = 1;
+function setTbLevel(v){ TBLEVEL = v; paint(); }
+function setTbZero(v){ TBHIDEZERO = v ? 1 : 0; paint(); }
+
+const tbAmt = v => v ? Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '';
+function tbClassName(d){
+ const r = (typeof CHART !== 'undefined') ? CHART.find(x => String(x[0]) === d) : null;
+ return r ? r[1] : d;
+}
+function tbGroupName(code){
+ const r = (typeof CHART !== 'undefined') ? CHART.find(x => String(x[0]) === code) : null;
+ return r ? r[1] : code;
+}
+/* roll the accounts up to the requested level; 'all' keeps them as they are */
+function tbAggregate(level){
+ if(level === 'all') return TBROWS.map(r => ({ c:r.c, n:r.n, o:r.o, k:r.k }));
+ const width = +level, by = {};
+ TBROWS.forEach(r => {
+  const key = String(r.c).slice(0, width);
+  if(!by[key]) by[key] = { c:key, n:(width === 1 ? tbClassName(key) : tbGroupName(key)), o:0, k:0 };
+  by[key].o += r.o; by[key].k += r.k;
+ });
+ return Object.keys(by).sort().map(k => by[k]);
+}
+S.tb = function(){
+ const rows = tbAggregate(TBLEVEL);
+ const shown = rows.filter(r => !(TBHIDEZERO && r.o === 0 && r.k === 0));
+ const T = { od:0, oc:0, md:0, mc:0, cd:0, cc:0 };
+ const body = shown.map(r => {
+  const m = r.k - r.o;
+  const od = r.o > 0 ? r.o : 0, oc = r.o < 0 ? -r.o : 0;
+  const md = m > 0 ? m : 0,     mc = m < 0 ? -m : 0;
+  const cd = r.k > 0 ? r.k : 0, cc = r.k < 0 ? -r.k : 0;
+  T.od += od; T.oc += oc; T.md += md; T.mc += mc; T.cd += cd; T.cc += cc;
+  return ['<span class="ds-code">' + esc(r.c) + '</span>', esc(r.n),
+    tbAmt(od), tbAmt(oc), tbAmt(md), tbAmt(mc), tbAmt(cd), tbAmt(cc)];
+ });
+ const f2 = v => v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+ body.push(['<b>' + tr('Total') + '</b>','',
+   '<b>'+f2(T.od)+'</b>','<b>'+f2(T.oc)+'</b>','<b>'+f2(T.md)+'</b>','<b>'+f2(T.mc)+'</b>',
+   '<b>'+f2(T.cd)+'</b>','<b>'+f2(T.cc)+'</b>']);
+
+ /* the check is computed, never asserted */
+ const gap = Math.round((T.cd - T.cc) * 100) / 100;
+ const ok = gap === 0;
+ const openGap = Math.round((T.od - T.oc) * 100) / 100;
+ const mvGap   = Math.round((T.md - T.mc) * 100) / 100;
+ const line = (label, dr, cr, g) =>
+  '<span class="s' + (g === 0 ? ' on' : '') + '">' + esc(label) + ' ' + f2(dr) + '</span>' +
+  '<span class="ar">' + (g === 0 ? '=' : '≠') + '</span>' +
+  '<span class="s' + (g === 0 ? ' on' : '') + '">' + f2(cr) + '</span>' +
+  '<span class="ar">·</span><span class="s">' +
+  (g === 0 ? pill('ok', tr('Balanced')) : pill('bad', tr('Out by') + ' ' + f2(Math.abs(g)))) + '</span>';
+
+ const lvl = (v,t) => '<option value="' + v + '"' + (TBLEVEL === v ? ' selected' : '') + '>' + esc(t) + '</option>';
+
+ return head('Trial balance','The whole ledger on one page — every total worked out from the lines below',
+   [btn('USD','p'),btn('LBP'),btn('Both'),btn('Print'),btn('Excel'),btn('PDF')]) +
+  pane(tr('Filter'),
+   '<div class="fs f4">' +
+    '<div class="fw"><label>' + tr('From') + '</label><input class="in" value="01/01/2026"></div>' +
+    '<div class="fw"><label>' + tr('To') + '</label><input class="in" value="29/08/2026"></div>' +
+    '<div class="fw"><label>' + tr('Level') + '</label><select class="in" onchange="setTbLevel(this.value)">' +
+      lvl('1','Level 1 — classes') + lvl('2','Level 2 — groups') + lvl('3','Level 3') +
+      lvl('all','All accounts') + '</select></div>' +
+    '<div class="fw"><label>' + tr('Cost centre') + '</label><select class="in"><option>All</option>' +
+      '<option>Zahle branch</option><option>Beirut branch</option></select></div>' +
+    '<div class="chk"><input type="checkbox" ' + (TBHIDEZERO ? 'checked' : '') +
+      ' onchange="setTbZero(this.checked)"><span>' + tr('Hide zero balances') + '</span></div>' +
+   '</div>') +
+  pane('', tbl([C('Code'),C('Account'),n('Opening debit'),n('Opening credit'),
+    n('Movement debit'),n('Movement credit'),n('Closing debit'),n('Closing credit')], body, { min:1180 }),
+   pill('mu', shown.length + ' ' + tr(shown.length === 1 ? 'account' : 'accounts'))) +
+  pane(tr('Check'),
+   '<div class="flow">' + line(tr('Opening debit'), T.od, T.oc, openGap) + '</div>' +
+   '<div class="flow" style="margin-top:8px">' + line(tr('Movement debit'), T.md, T.mc, mvGap) + '</div>' +
+   '<div class="flow" style="margin-top:8px">' + line(tr('Closing debit'), T.cd, T.cc, gap) + '</div>' +
+   note(ok ? tr('The ledger balances.') : tr('The ledger does not balance.'),
+     ok ? 'Every column is added from the lines above — nothing here is written by hand, so this screen cannot tell you it balances when it does not.'
+        : 'The difference is shown so it can be found. A trial balance that does not balance is the report doing its job.'));
+};
+
+/* ── the balance sheet reads the same rows, so the two can never disagree ── */
+S.bs = function(){
+ const bsRows = TBROWS.filter(r => !/^[67]/.test(r.c));      /* profit & loss closes to the result */
+ const pl = TBROWS.filter(r => /^[67]/.test(r.c)).reduce((a,r) => a + r.k, 0);
+ const f2 = v => v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const pick = (codes) => bsRows.filter(r => codes.some(c => String(r.c).indexOf(c) === 0));
+ const sum = (rows, key) => rows.reduce((a,r) => a + r[key], 0);
+
+ const assetGroups = [
+  ['Fixed assets — cost', ['21','213','215','218']], ['Accumulated depreciation', ['28']],
+  ['Stock', ['30']], ['Customers', ['411']], ['Notes receivable', ['413']],
+  ['Cheques under collection', ['511']], ['VAT recoverable', ['4426']],
+  ['Banks', ['512']], ['Cash', ['53']]
+ ];
+ const liabGroups = [
+  ['Capital', ['101']], ['Reserves', ['106']], ['Retained earnings', ['111']],
+  ['Bank loan', ['164']], ['Suppliers', ['401']],
+  ['Advances received from customers', ['419']], ['Staff payable', ['421']],
+  ['VAT payable', ['4425']]
+ ];
+ const build = (groups, sign) => {
+  let tot = 0;
+  const out = groups.map(g => {
+   const rs = pick(g[1]);
+   const v = sign * sum(rs, 'k'); tot += v;
+   return [esc(tr(g[0])), (v < 0 ? '−' : '') + f2(Math.abs(v))];
+  });
+  return { out, tot };
+ };
+ const A = build(assetGroups, 1);
+ const L = build(liabGroups, -1);
+ L.out.push([esc(tr('Result for the year')), ((-pl) < 0 ? '−' : '') + f2(Math.abs(-pl))]);
+ L.tot += -pl;
+ A.out.push(['<b>' + tr('Total assets') + '</b>', '<b>' + f2(A.tot) + '</b>']);
+ L.out.push(['<b>' + tr('Total liabilities & equity') + '</b>', '<b>' + f2(L.tot) + '</b>']);
+ const gap = Math.round((A.tot - L.tot) * 100) / 100;
+
+ return head('Balance sheet','At a date, in either currency — both sides added from the ledger',
+   [btn('Print'),btn('Excel'),btn('PDF')]) +
+  '<div class="g g2">' +
+   pane(tr('Assets'), tbl([C('Line'), n('29/08/2026')], A.out, { min:420 })) +
+   pane(tr('Liabilities & equity'), tbl([C('Line'), n('29/08/2026')], L.out, { min:420 })) +
+  '</div>' +
+  pane(tr('Check'),
+   '<div class="flow"><span class="s' + (gap === 0 ? ' on' : '') + '">' + tr('Assets') + ' ' + f2(A.tot) + '</span>' +
+   '<span class="ar">' + (gap === 0 ? '=' : '≠') + '</span>' +
+   '<span class="s' + (gap === 0 ? ' on' : '') + '">' + tr('Liabilities & equity') + ' ' + f2(L.tot) + '</span>' +
+   '<span class="ar">·</span><span class="s">' +
+   (gap === 0 ? pill('ok', tr('Balanced')) : pill('bad', tr('Out by') + ' ' + f2(Math.abs(gap)))) +
+   '</span></div>');
+};
+/* the Save-this-report button these two screens already carried */
+S.tb=(orig=>function(){ return orig().replace('<div class="tools">','<div class="tools">'+addBtn('Save this report','rptf')); })(S.tb);
+S.bs=(orig=>function(){ return orig().replace('<div class="tools">','<div class="tools">'+addBtn('Save this report','rptf')); })(S.bs);
+
+Object.assign(AR, { 'Balanced':'متوازن', 'Out by':'الفرق', 'Total':'المجموع',
+ 'The ledger balances.':'الدفتر متوازن.', 'The ledger does not balance.':'الدفتر غير متوازن.',
+ 'account':'حساب', 'accounts':'حساب', 'Level':'المستوى', 'Check':'التحقق',
+ 'Retained earnings':'الأرباح المدورة', 'Bank loan':'قرض مصرفي', 'Notes receivable':'أوراق قبض',
+ 'Result for the year':'نتيجة السنة', 'Total assets':'مجموع الأصول',
+ 'Total liabilities & equity':'مجموع الخصوم وحقوق الملكية' });
+Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
+paint();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   CASH FLOW ON THE DASHBOARD
+
+   Raised by the client: "cash flow should appear on dashboard."
+   The Cash flow report already existed under Reporting and was good — it was
+   simply buried. The dashboard only showed where the money is *now*.
+   This puts the next three weeks on the Overview, reading the same L.cflow
+   rows the report reads. No new figures.
+   ═══════════════════════════════════════════════════════════════════════ */
+S.dash = (orig => function(){
+ let html = orig();
+ const d = (typeof L !== 'undefined') ? L.cflow : null;
+ if(!d || !d.rows || !d.rows.length) return html;
+
+ const idx = h => d.cols.findIndex(c => c && c.h === h);
+ const iWeek = idx('Week'), iIn = idx('Customer collections'), iChq = idx('Cheques clearing'),
+       iSup = idx('Supplier payments'), iSal = idx('Salaries'), iExp = idx('Expenses'),
+       iClose = idx('Closing cash'), iRisk = idx('Risk');
+ const num = s => { s = String(cellText(s)).replace(/[,\s]/g,'').replace(/−/g,'-');
+                    return s === '' ? 0 : parseFloat(s) || 0; };
+
+ /* the tightest week is the one worth surfacing on a dashboard */
+ let low = null;
+ d.rows.forEach(r => { const c = num(r[iClose]); if(low === null || c < low.v) low = { v:c, w:cellText(r[iWeek]) }; });
+
+ const body = d.rows.map(r => {
+  const money = num(r[iIn]) + num(r[iChq]);
+  const out   = num(r[iSup]) + num(r[iSal]) + num(r[iExp]);
+  const f2 = v => Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  return ['<b>' + esc(cellText(r[iWeek])) + '</b>',
+          f2(money), '−' + f2(out), f2(num(r[iClose])), r[iRisk]];
+ });
+
+ const pane2 =
+  '<div class="pane">' +
+   '<div class="ph"><h2>' + ic('trendUp','ic-14') + tr('Cash flow — next three weeks') + '</h2>' +
+     '<div class="r">' + btn(tr('Open the full report'))
+        .replace('<button', '<button onclick="openTab(\'cflow\',\'Cash flow\',\'التدفق النقدي\')"') + '</div></div>' +
+   '<div class="pb f">' +
+    tbl([C('Week'), n('Money coming in'), n('Money going out'), n('Cash at the end'), C('')], body, { min:640 }) +
+    note(low && low.v < 5000
+      ? tr('Tightest week') + ': ' + low.w
+      : tr('No week falls short over the next three weeks.'),
+      low && low.v < 5000
+        ? 'Cash drops to ' + low.v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) +
+          ' that week. It is built from real due dates on invoices, cheques and salaries — not a projection.'
+        : 'Built from real due dates on invoices, cheques and salaries — not a projection.') +
+   '</div></div>';
+
+ /* place it directly after the money position, before Recent activity */
+ const marker = '<div class="pane">\n   <div class="ph"><h2>';
+ const at = html.indexOf('Recent activity');
+ if(at < 0) return html + pane2;
+ const paneStart = html.lastIndexOf('<div class="pane"', at);
+ return paneStart < 0 ? html + pane2 : html.slice(0, paneStart) + pane2 + html.slice(paneStart);
+})(S.dash);
+
+Object.assign(AR, { 'Cash flow — next three weeks':'التدفق النقدي — الأسابيع الثلاثة القادمة',
+ 'Open the full report':'فتح التقرير الكامل', 'Money coming in':'الداخل', 'Money going out':'الخارج',
+ 'Cash at the end':'النقد في النهاية', 'Tightest week':'أضيق أسبوع',
+ 'No week falls short over the next three weeks.':'لا يوجد أسبوع ناقص خلال الأسابيع الثلاثة القادمة.' });
+Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
+paint();
+</script>
+
 </body>
 </html>
