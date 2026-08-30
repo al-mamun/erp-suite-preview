@@ -11552,14 +11552,19 @@ buildTree(); paint();
 /* ── CR-009 — the currency level his example describes ── */
 (function(){
  if(typeof CHART === 'undefined') return;
- if(CHART.some(r => String(r[0]) === '41110001')) return;
+ if(CHART.some(r => String(r[0]) === '4111101')) return;
  const at = CHART.findIndex(r => String(r[0]) === '41111');
  if(at < 0) return;
- /* 41111 becomes a heading; the currency accounts beneath it are what you post to */
+ /* The last two digits are the currency, in his numbering:
+      01 pounds · 02 dollars · 03 euro
+    His live chart is longer than this demo one, so there the same account
+    reads 41110001 / 41110002 / 41110003. The rule is the currency suffix,
+    not the number of digits. 41111 becomes the heading; these are what a
+    voucher posts to. */
  CHART.splice(at + 1, 0,
-   ['41110001','Ordinary clients — USD','زبائن عاديون — دولار','120,400.00'],
-   ['41110002','Ordinary clients — LBP','زبائن عاديون — ليرة','55,600.00'],
-   ['41110003','Ordinary clients — EUR','زبائن عاديون — يورو','0.00']);
+   ['4111101','Ordinary clients — LBP','زبائن عاديون — ليرة','55,600.00'],
+   ['4111102','Ordinary clients — USD','زبائن عاديون — دولار','120,400.00'],
+   ['4111103','Ordinary clients — EUR','زبائن عاديون — يورو','0.00']);
 })();
 
 /* an account is mature when nothing sits beneath it */
@@ -11589,7 +11594,7 @@ Object.defineProperty(F, 'jvline', { configurable:true, get(){
   { l:'Rate', t:'num', v:'90000',
     hint:'Each line carries its own rate. The voucher balances in pounds, so lines in different currencies may sit on the same voucher.' },
   { l:'Cost centre', t:'sel', o:['Zahle branch','Beirut branch','Sales'] },
-  { t:'note', k:'wa', v:'<b>A heading is not an account you can post to.</b> In your chart the last two digits are the currency — <span class="ds-code">4111</span> is the heading, <span class="ds-code">41110001</span> is the dollar account beneath it. Only the second one appears in this list.' }
+  { t:'note', k:'wa', v:'<b>A heading is not an account you can post to.</b> The last two digits are the currency — <b>01</b> pounds, <b>02</b> dollars, <b>03</b> euro. So <span class="ds-code">41111</span> is the heading and <span class="ds-code">4111101</span> is the pounds account beneath it. Only accounts with nothing under them appear in this list.' }
  ]}]};
 }});
 

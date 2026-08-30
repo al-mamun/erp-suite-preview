@@ -911,9 +911,13 @@ footer p{max-width:64ch}
   <div class="mod">
         <div class="beat"><p class="beat-label">A voucher may only post to a mature account <span class="tag new">New</span></p>
       <p>An account with other accounts beneath it is a <strong>heading</strong>. It totals what
-      sits under it and cannot be posted to. In your chart the last segment is the currency, so
-      <span class="ds-code">4111</span> is the heading and <span class="ds-code">41110001</span> —
-      the dollar account beneath it — is what a voucher writes to.</p>
+      sits under it and cannot be posted to. In your chart the last two digits are the
+      <strong>currency</strong> — <strong>01</strong> pounds, <strong>02</strong> dollars,
+      <strong>03</strong> euro — so <span class="ds-code">411100</span> is the heading and
+      <span class="ds-code">41110001</span>, the pounds account beneath it, is what a voucher
+      writes to. The prototype's demo chart is shorter than your live one, so there the same
+      account reads <span class="ds-code">4111101</span>; the rule is the currency suffix, not
+      the number of digits.</p>
       <p>The account list on a voucher line offers only mature accounts. If a heading reaches the
       line another way, the voucher is refused and told which heading it is and how many accounts
       sit under it. This is the rule that keeps a balance meaningful: a total that has been posted
