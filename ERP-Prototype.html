@@ -12042,8 +12042,12 @@ S.inv = function(){
    '<input class="in" id="inv_entry" autocomplete="off" ' +
     'placeholder="' + esc(tr('Item number, barcode, or name — then press Enter')) + '" ' +
     'onkeydown="invEntryKey(event, this)">' +
-   '<button class="b" onclick="invAdd(document.getElementById(\'inv_entry\').value)">' + esc(tr('Add')) + '</button>' +
-   '<button class="b" onclick="openM(\'item\')">+ ' + esc(tr('New item')) + '</button>' +
+   /* Enter is the road. These two are a mouse fallback and a way into the
+      item catalogue — deliberately quiet, so the box reads as the main way in. */
+   '<button class="b ghost" title="' + esc(tr('Same as pressing Enter')) + '" ' +
+    'onclick="invAdd(document.getElementById(\'inv_entry\').value)">' + esc(tr('Add')) + '</button>' +
+   '<button class="b ghost" title="' + esc(tr('Creates a new item in the catalogue — not a line on this invoice')) + '" ' +
+    'onclick="openM(\'item\')">+ ' + esc(tr('New item')) + '</button>' +
   '</div>' +
   (INV.msg.indexOf('nomatch:') === 0
    ? '<div class="fmsg err">' + ic('alertC','ic-14') + '<span>' +
@@ -12319,6 +12323,9 @@ Object.assign(AR, {
  'Who is buying':'من يشتري',
  'Item number, barcode, or name — then press Enter':'رقم الصنف أو الباركود أو الاسم — ثم اضغط Enter',
  'New item':'صنف جديد', 'Add':'أضف',
+ 'Same as pressing Enter':'مثل الضغط على Enter',
+ 'Creates a new item in the catalogue — not a line on this invoice':
+  'ينشئ صنفاً جديداً في الدليل — لا سطراً في هذه الفاتورة',
  'Nothing matches':'لا شيء يطابق',
  'Check the number, or create it.':'تحقق من الرقم، أو أنشئه.',
  'More than one item matches — pick one:':'أكثر من صنف يطابق — اختر واحداً:',
@@ -12382,6 +12389,10 @@ tbody tr.r-bad.r-over td{background:linear-gradient(90deg,var(--c-danger-soft),v
 .negp{color:var(--c-danger)}
 .inventry{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
 .inventry .in{flex:1 1 320px;min-width:220px}
+.inventry .b.ghost{background:transparent;border-color:transparent;
+  color:var(--c-text-muted,#7c756a);font-weight:400;padding-inline:8px}
+.inventry .b.ghost:hover{background:var(--c-surface-2,rgba(0,0,0,.04));
+  border-color:var(--c-border,var(--line,#e2ded5));color:var(--c-text,inherit)}
 .invhits{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .invhits .mu{font-size:12px}
 .invbtns{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
@@ -12936,6 +12947,1095 @@ buildTree(); paint();
   border:1px dashed var(--c-border,var(--line,#e2ded5));border-radius:8px;
   color:var(--c-text-muted,#7c756a);font-size:13px}
 .ds-code.sub{opacity:.75;font-size:11px}
+</style>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   TAKEN FROM HIS OLD SYSTEM, AND UPGRADED
+
+   Two things his old ERP does well and two it cannot do at all.
+
+   THE VOUCHER — kept from him:
+     · every line carries its own currency AND its own rate
+     · every line is stored three times: own currency, main currency, pounds
+     · the voucher must balance in BOTH currencies, not just one
+     · a post-dated date on the line, not the voucher
+     · the account's own currency is part of its code and its name
+     · two maturity flags: a leaf, and separately "a human may post here"
+
+   THE VOUCHER — fixed:
+     · a posted voucher is LOCKED. His can be edited after posting; three of the
+       four live vouchers we were shown had been.
+     · status is not a dropdown you can wind back. Posted is one-way.
+     · document date and posting timestamp are separate. His has one editable
+       date and one stamp that is overwritten on every edit.
+     · a correction is a REVERSAL that names what it reverses.
+     · the source document is a link, not the text "Trans#2026001550".
+
+   THE STOCK LEDGER — entirely new:
+     · his system has no movement table. Stock is a running number on the item,
+       which is why his stock report carries a column called "Stock_Difference".
+     · here every change is a row, on-hand is DERIVED from the rows, and the two
+       are compared on screen.
+     · cost layers, consumed oldest first, so FIFO is a fact rather than a
+       setting — and moving average is computed from the same layers.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ══════════ 1. ACCOUNT MATURITY — his two flags, kept apart ══════════ */
+function accLeaf(code){ return !isParent(String(code)); }
+/* control accounts, VAT and inventory are fed by documents; a person may not
+   hand-post to them. This is his ACC_ALLOW_MANUAL_GVS, which we had not built. */
+function accManual(code){
+ const c = String(code);
+ if(!accLeaf(c)) return false;
+ return !(/^411/.test(c) || /^401/.test(c) || /^44[23]/.test(c) || /^3[0-9]/.test(c));
+}
+/* CHART has been spliced twice today (the currency sub-accounts and the rounding
+   account), which left CIDX holding stale indices — and one entry holding a row
+   instead of an index. Rebuild it here, once, and look accounts up defensively. */
+(function(){ if(typeof CIDX === 'undefined') return;
+ Object.keys(CIDX).forEach(k => { delete CIDX[k]; });
+ CHART.forEach((r,i) => { CIDX[String(r[0])] = i; });
+})();
+function accRow(code){
+ const c = String(code);
+ const i = CIDX[c];
+ if(typeof i === 'number' && CHART[i] && String(CHART[i][0]) === c) return CHART[i];
+ return CHART.find(r => String(r[0]) === c) || null;
+}
+function accName(code){
+ const r = accRow(code);
+ if(!r) return '';
+ return lang === 'ar' && r[2] ? r[2] : r[1];
+}
+function accPostable(){ return CHART.map(r => r[0]).filter(c => accLeaf(c) && accManual(c)); }
+
+/* ══════════ 2. THE VOUCHER ══════════ */
+const JVX = {
+ no:'JV-2026-2216', docDate:'31/08/2026', postedAt:'', status:'Draft',
+ cur:'USD', rate:90000, src:null, reversalOf:null, ref:'',
+ lines:[
+  { acc:'6132', desc:'Rent August — Zahle shop', cur:'USD', dr:500, cr:0,   rate:90000, pd:'31/08/2026' },
+  { acc:'5310', desc:'Paid in cash',             cur:'USD', dr:0,   cr:500, rate:90000, pd:'31/08/2026' }
+ ],
+ focus:'jvx_entry', msg:''
+};
+const JVPOSTED = [];          /* vouchers this session has actually posted */
+
+const jvM  = v => (Math.round((+v||0)*100)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const jvM0 = v => Math.round(+v||0).toLocaleString('en-US');
+
+/* the three amounts his system stores on every line */
+function jvAmounts(l){
+ const r = +l.rate || 1;
+ const toMain = v => l.cur === 'USD' ? v : v / r;      /* main currency = USD */
+ const toLbp  = v => l.cur === 'USD' ? v * r : v;
+ return { drMain:toMain(+l.dr||0), crMain:toMain(+l.cr||0),
+          drLbp:toLbp(+l.dr||0),   crLbp:toLbp(+l.cr||0) };
+}
+/* A1 — it must balance in EVERY currency it touches, not only in pounds */
+function jvBalance(){
+ const per = {};             /* per transaction currency */
+ let mainDr=0, mainCr=0, lbpDr=0, lbpCr=0;
+ JVX.lines.forEach(l => {
+  const a = jvAmounts(l);
+  per[l.cur] = per[l.cur] || { dr:0, cr:0 };
+  per[l.cur].dr += +l.dr||0; per[l.cur].cr += +l.cr||0;
+  mainDr += a.drMain; mainCr += a.crMain; lbpDr += a.drLbp; lbpCr += a.crLbp;
+ });
+ const r2 = v => Math.round(v*100)/100;
+ const cur = Object.keys(per).map(c => ({ cur:c, dr:r2(per[c].dr), cr:r2(per[c].cr),
+   gap:r2(per[c].dr - per[c].cr) }));
+ return { cur:cur, mainDr:r2(mainDr), mainCr:r2(mainCr), lbpDr:Math.round(lbpDr), lbpCr:Math.round(lbpCr),
+          mainGap:r2(mainDr-mainCr), lbpGap:Math.round(lbpDr-lbpCr),
+          ok: cur.every(c => c.gap === 0) && r2(mainDr-mainCr) === 0 && Math.round(lbpDr-lbpCr) === 0 };
+}
+/* A6 — a manual voucher may only touch a leaf that is manual-postable */
+function jvBadLines(){
+ return JVX.lines.map((l,i) => ({ i:i, l:l }))
+   .filter(x => x.l.acc && !(accLeaf(x.l.acc) && accManual(x.l.acc)));
+}
+function jvLocked(){ return JVX.status === 'Posted'; }
+
+function jvPaint(next){
+ if(next !== undefined) JVX.focus = next;
+ paint();
+ setTimeout(function(){ const e = document.getElementById(JVX.focus); if(e){ e.focus(); if(e.select) e.select(); } },0);
+}
+function jvSet(i, f, v){
+ if(jvLocked()) return;
+ const l = JVX.lines[i]; if(!l) return;
+ if(f === 'dr' || f === 'cr'){
+  l[f] = Math.max(0, +String(v).replace(/,/g,'') || 0);
+  if(l.dr && l.cr) l[f === 'dr' ? 'cr' : 'dr'] = 0;   /* a line is a debit OR a credit */
+ }
+ else if(f === 'rate') l.rate = Math.max(1, +String(v).replace(/,/g,'') || 1);
+ else l[f] = v;
+ if(f === 'cur') l.rate = (v === 'USD') ? 90000 : 90000;
+ JVX.msg=''; jvPaint(JVX.focus);
+}
+function jvAddLine(){
+ if(jvLocked()) return;
+ JVX.lines.push({ acc:'', desc:'', cur:JVX.cur, dr:0, cr:0, rate:JVX.rate, pd:JVX.docDate });
+ jvPaint('jvx_acc_' + (JVX.lines.length-1));
+}
+function jvDelLine(i){ if(jvLocked()) return; JVX.lines.splice(i,1); jvPaint('jvx_entry'); }
+function jvSetHead(k,v){ if(jvLocked() && k!=='ref') return; JVX[k] = v; jvPaint(JVX.focus); }
+
+/* posting is a one-way door */
+function jvPost(){
+ const b = jvBalance();
+ if(!b.ok || jvBadLines().length || !JVX.lines.length){ JVX.msg='refused'; jvPaint('jvx_entry'); return; }
+ JVX.status = 'Posted';
+ JVX.postedAt = '31/08/2026 ' + new Date().toTimeString().slice(0,5) + ' · server';
+ JVPOSTED.push(JVX.no);
+ JVX.msg = 'posted';
+ jvPaint('jvx_entry');
+}
+/* a correction is a new voucher that names what it reverses — never an edit */
+function jvReverse(){
+ if(!jvLocked()) return;
+ const src = JVX.no;
+ JVX.reversalOf = src;
+ JVX.no = 'JV-2026-2217';
+ JVX.status = 'Draft';
+ JVX.postedAt = '';
+ JVX.lines = JVX.lines.map(l => ({ acc:l.acc, desc:tr('Reversal of') + ' ' + src + ' — ' + l.desc,
+   cur:l.cur, dr:l.cr, cr:l.dr, rate:l.rate, pd:JVX.docDate }));
+ JVX.msg = 'reversed';
+ jvPaint('jvx_entry');
+}
+function jvNew(){
+ JVX.no='JV-2026-2218'; JVX.status='Draft'; JVX.postedAt=''; JVX.reversalOf=null;
+ JVX.lines=[{acc:'',desc:'',cur:'USD',dr:0,cr:0,rate:90000,pd:JVX.docDate}];
+ JVX.msg=''; jvPaint('jvx_acc_0');
+}
+
+S.jv = function(){
+ const B = jvBalance();
+ const bad = jvBadLines();
+ const locked = jvLocked();
+
+ const accSel = (v,i) => '<select class="in" ' + (locked?'disabled ':'') + 'id="jvx_acc_'+i+'" ' +
+   'onchange="jvSet('+i+',\'acc\',this.value)">' +
+   '<option value="">' + esc(tr('choose an account')) + '</option>' +
+   accPostable().map(c => '<option value="'+esc(c)+'"'+(c===v?' selected':'')+'>' +
+     esc(c + ' · ' + accName(c)) + '</option>').join('') + '</select>';
+ const curSel = (v,i) => '<select class="in" ' + (locked?'disabled ':'') +
+   'onchange="jvSet('+i+',\'cur\',this.value)">' +
+   ['USD','LBP'].map(o => '<option'+(o===v?' selected':'')+'>'+o+'</option>').join('') + '</select>';
+
+ const body = JVX.lines.map(function(l,i){
+  const a = jvAmounts(l);
+  const wrong = l.acc && !(accLeaf(l.acc) && accManual(l.acc));
+  return '<tr class="'+(wrong?'r-block':'')+'">' +
+   '<td class="n"><span class="mu">'+(i+1)+'</span></td>' +
+   '<td>' + accSel(l.acc,i) + (wrong ? ' <span class="pill ba">'+esc(tr('not open to manual entry'))+'</span>' : '') + '</td>' +
+   '<td><input class="in cin" style="min-width:150px" '+(locked?'readonly ':'')+'value="'+esc(l.desc)+'" onchange="jvSet('+i+',\'desc\',this.value)"></td>' +
+   '<td>' + curSel(l.cur,i) + '</td>' +
+   '<td class="n"><input class="in n cin" '+(locked?'readonly ':'')+'value="'+(l.dr?jvM(l.dr):'')+'" onchange="jvSet('+i+',\'dr\',this.value)"></td>' +
+   '<td class="n"><input class="in n cin" '+(locked?'readonly ':'')+'value="'+(l.cr?jvM(l.cr):'')+'" onchange="jvSet('+i+',\'cr\',this.value)"></td>' +
+   '<td class="n"><input class="in n cin s" '+(locked?'readonly ':'')+'value="'+jvM0(l.rate)+'" onchange="jvSet('+i+',\'rate\',this.value)"></td>' +
+   '<td class="n"><span class="mu">'+(a.drMain?jvM(a.drMain):'')+'</span></td>' +
+   '<td class="n"><span class="mu">'+(a.crMain?jvM(a.crMain):'')+'</span></td>' +
+   '<td class="n"><span class="mu">'+(a.drLbp?jvM0(a.drLbp):'')+'</span></td>' +
+   '<td class="n"><span class="mu">'+(a.crLbp?jvM0(a.crLbp):'')+'</span></td>' +
+   '<td><span class="mu">'+esc(l.pd)+'</span></td>' +
+   '<td>' + (locked?'' : '<span class="rowact" title="Delete" onclick="jvDelLine('+i+')">🗑</span>') + '</td>' +
+   '</tr>';
+ }).join('');
+
+ const grid = '<div class="tw" data-scroll><table style="min-width:1460px"><thead><tr>' +
+   [['#','n'],[tr('Account'),''],[tr('Description'),''],[tr('Currency'),''],
+    [tr('Debit'),'n'],[tr('Credit'),'n'],[tr('Rate'),'n'],
+    [tr('Debit (Main)'),'n'],[tr('Credit (Main)'),'n'],
+    [tr('Debit LBP'),'n'],[tr('Credit LBP'),'n'],[tr('Post dated'),''],['','']]
+   .map(x => '<th class="'+x[1]+'">'+esc(x[0])+'</th>').join('') +
+   '</tr></thead><tbody>' + (body || '<tr><td colspan="13"><span class="mu">'+esc(tr('No lines yet.'))+'</span></td></tr>') +
+   '</tbody></table></div>' +
+   (locked ? '' : '<div class="invbtns"><button class="b" onclick="jvAddLine()">+ ' + esc(tr('Add a line')) + '</button></div>');
+
+ /* the balance panel — computed per currency, never asserted */
+ const line = (label, dr, cr, gap, fmt) =>
+  '<div class="trow"><span>'+esc(label)+'</span><b>' + fmt(dr) + ' / ' + fmt(cr) + '  ' +
+   (gap === 0 ? pill('ok', tr('equal')) : pill('bad', tr('out by') + ' ' + fmt(Math.abs(gap)))) + '</b></div>';
+ const balPane =
+  '<div class="ttab">' +
+   B.cur.map(c => line(tr('In') + ' ' + invOpt2(c.cur), c.dr, c.cr, c.gap, jvM)).join('') +
+   line(tr('In the main currency'), B.mainDr, B.mainCr, B.mainGap, jvM) +
+   line(tr('In pounds'), B.lbpDr, B.lbpCr, B.lbpGap, jvM0) +
+  '</div>' +
+  '<div style="margin-top:10px">' +
+   (B.ok ? pill('ok', tr('Balances in every currency it touches'))
+         : pill('bad', tr('Does not balance — it cannot be posted'))) + '</div>';
+
+ const gate =
+  (bad.length
+   ? '<div class="fsum">' + ic('alertC','ic-14') + '<div><b>' + esc(tr('These lines cannot be hand-posted')) + '</b><ul>' +
+     bad.map(x => '<li>' + esc(x.l.acc + ' · ' + accName(x.l.acc) + ' — ' +
+       (!accLeaf(x.l.acc) ? tr('it is a heading, not an account')
+                          : tr('documents post here, people may not'))) + '</li>').join('') +
+     '</ul></div></div>' : '') +
+  (JVX.msg === 'refused'
+   ? '<div class="fmsg err">'+ic('alertC','ic-14')+'<span>'+esc(tr('Refused. A voucher posts only when it balances in every currency and every line is open to manual entry.'))+'</span></div>' : '') +
+  (JVX.msg === 'posted'
+   ? '<div class="fmsg ok">'+ic('checkCircle','ic-14')+'<span>'+esc(tr('Posted. This voucher can no longer be edited — correct it with a reversal.'))+'</span></div>' : '') +
+  (JVX.msg === 'reversed'
+   ? '<div class="fmsg ok">'+ic('checkCircle','ic-14')+'<span>'+esc(tr('A reversing voucher was created. The original stays exactly as it was posted.'))+'</span></div>' : '');
+
+ const tools = [];
+ if(!locked) tools.push('<button class="b p" onclick="jvPost()">'+esc(tr('Post'))+'</button>');
+ if(locked)  tools.push('<button class="b" onclick="jvReverse()">'+esc(tr('Reverse it'))+'</button>');
+ tools.push('<button class="b" onclick="jvNew()">'+esc(tr('New voucher'))+'</button>');
+ tools.push(btn('Print'));
+
+ return head('Journal voucher',
+   tr('Every line in its own currency, stored three ways, balanced in all of them — and locked once posted'),
+   tools) +
+  pane(tr('Header'),
+   '<div class="fs f4">' +
+    '<div><label>' + esc(tr('Voucher number')) + '</label><input class="in" value="'+esc(JVX.no)+'" readonly></div>' +
+    '<div><label>' + esc(tr('Document date')) + '</label><input class="in" value="'+esc(JVX.docDate)+'" ' +
+      (locked?'readonly':'onchange="jvSetHead(\'docDate\',this.value)"') + '></div>' +
+    '<div><label>' + esc(tr('Posted at (server, not editable)')) + '</label><input class="in" value="' +
+      esc(JVX.postedAt || '—') + '" readonly></div>' +
+    '<div><label>' + esc(tr('Status')) + '</label><input class="in" value="'+esc(tr(JVX.status))+'" readonly></div>' +
+   '</div>' +
+   '<div class="fs f3">' +
+    '<div><label>' + esc(tr('Reference')) + '</label><input class="in" value="'+esc(JVX.ref)+'" onchange="jvSetHead(\'ref\',this.value)"></div>' +
+    '<div><label>' + esc(tr('Source document')) + '</label><input class="in" value="' +
+      esc(JVX.src ? JVX.src : tr('none — this is a manual voucher')) + '" readonly></div>' +
+    '<div><label>' + esc(tr('Reversal of')) + '</label><input class="in" value="' +
+      esc(JVX.reversalOf || '—') + '" readonly></div>' +
+   '</div>',
+   locked ? pill('ok', tr('Posted — locked')) : pill('wa', tr('Draft — editable'))) +
+  pane(tr('Lines'), grid) +
+  gate +
+  '<div class="g g2">' +
+   pane(tr('How this voucher balances'), balPane) +
+   pane(tr('What the system is enforcing'),
+    '<ul class="rulelist">' +
+     ['It must balance in each currency on its own, and again in the main currency, and again in pounds',
+      'A line is a debit or a credit, never both',
+      'A line may only point at an account that is a leaf AND open to manual entry',
+      'Posting is one way. A posted voucher cannot be edited and its status cannot be wound back',
+      'The document date is yours; the posting time is the server’s and cannot be typed',
+      'A correction is a reversing voucher that names what it reverses'
+     ].map(x => '<li>' + esc(tr(x)) + '</li>').join('') + '</ul>') +
+  '</div>' +
+  note(tr('Three of these six come straight from his own system.'),
+   tr('Line-level currency and rate, the three stored amounts, and balancing in both currencies are how his vouchers already work — they were read from four live posted entries. The other three are the fixes: his posted vouchers can be edited, their status wound back, and their date typed by hand.'));
+};
+
+/* ══════════ 3. THE STOCK MOVEMENT LEDGER — the thing his system has not got ══════════ */
+
+/* real documents. On-hand is NOT written here — it is derived from these below. */
+const SMOVDOC = [
+ { d:'02/07/2026', doc:'GRN-2026-0311', t:'Purchase',   it:'IT-0919',  wh:'Zahle main', qty: 12, cost:266.00 },
+ { d:'02/07/2026', doc:'GRN-2026-0311', t:'Purchase',   it:'IT-1204',  wh:'Zahle main', qty:600, cost:3.05 },
+ { d:'11/07/2026', doc:'GRN-2026-0318', t:'Purchase',   it:'IT-0919',  wh:'Zahle main', qty: 12, cost:271.00 },
+ { d:'11/07/2026', doc:'GRN-2026-0318', t:'Purchase',   it:'IT-1204B', wh:'Zahle main', qty:120, cost:15.05 },
+ { d:'21/07/2026', doc:'SI-2026-1044',  t:'Sale',       it:'IT-1204B', wh:'Zahle main', qty:-15, cost:0 },
+ { d:'01/08/2026', doc:'TR-2026-0081',  t:'Transfer out',it:'IT-0919', wh:'Zahle main', qty: -8, cost:0 },
+ { d:'01/08/2026', doc:'TR-2026-0081',  t:'Transfer in', it:'IT-0919', wh:'Beirut',     qty:  8, cost:266.00 },
+ { d:'12/08/2026', doc:'SI-2026-1102',  t:'Sale',       it:'IT-0919',  wh:'Zahle main', qty: -2, cost:0 },
+ { d:'12/08/2026', doc:'SI-2026-1102',  t:'Sale',       it:'IT-1204',  wh:'Zahle main', qty:-400,cost:0 },
+ { d:'25/08/2026', doc:'AD-2026-0031',  t:'Damage',     it:'IT-1204',  wh:'Zahle main', qty: -6, cost:0 },
+ { d:'26/08/2026', doc:'GRN-2026-0402', t:'Purchase',   it:'IT-1204',  wh:'Zahle main', qty:400, cost:3.14 }
+];
+/* the opening layer is whatever makes the derived figure equal the shelf.
+   Computed, never typed — so the two can never be written down differently. */
+const SMOV = (function(){
+ const net = {};
+ SMOVDOC.forEach(m => { const k = m.it+'|'+m.wh; net[k] = (net[k]||0) + m.qty; });
+ const open = [];
+ ITEMDIR.forEach(it => {
+  if(!it.st) return;
+  Object.keys(it.st).forEach(wh => {
+   const k = it.it || (it.no+'|'+wh);
+   const q = (it.st[wh]||0) - (net[it.no+'|'+wh] || 0);
+   /* a negative opening is not a thing. If it ever came out negative the sample
+      documents would be wrong, and that is a fault to see, not to swallow. */
+   if(q < 0) console.error('opening would be negative for ' + it.no + ' / ' + wh + ': ' + q);
+   if(q > 0) open.push({ d:'30/06/2026', doc:'OPEN-2026', t:'Opening', it:it.no, wh:wh, qty:q,
+     cost: it.cost });
+  });
+ });
+ return open.concat(SMOVDOC).map((m,i) => Object.assign({ id:i+1 }, m));
+})();
+
+const STKV = { item:'IT-0919', wh:'Zahle main' };
+function stkSet(k,v){ STKV[k]=v; paint(); }
+
+/* S1 — on-hand is the sum of the movements */
+function stkOnHand(item, wh){
+ return SMOV.filter(m => m.it===item && (!wh || m.wh===wh)).reduce((a,m)=>a+m.qty,0);
+}
+/* S4 — layers, consumed oldest first */
+function stkLayers(item, wh){
+ const layers = [];
+ let short = 0;              /* consumption that no layer could satisfy */
+ SMOV.filter(m => m.it===item && m.wh===wh).forEach(m => {
+  if(m.qty > 0) layers.push({ d:m.d, doc:m.doc, qty:m.qty, left:m.qty, cost:m.cost });
+  else {
+   let need = -m.qty;
+   for(const L of layers){ if(need<=0) break;
+    const take = Math.min(L.left, need); L.left -= take; need -= take; }
+   short += need;            /* sold from stock that was never received */
+  }
+ });
+ layers.short = short;
+ return layers;
+}
+function stkShort(item, wh){ return stkLayers(item, wh).short || 0; }
+function stkValue(item, wh){
+ return stkLayers(item,wh).reduce((a,L)=>a+L.left*L.cost,0);
+}
+function stkValueAll(){
+ let v=0; ITEMDIR.forEach(it => { if(!it.st) return;
+  Object.keys(it.st).forEach(wh => { v += stkValue(it.no, wh); }); });
+ return v;
+}
+
+S.smov = function(){
+ const sel = (v,list,on) => '<select class="in" onchange="'+on+'">' +
+   list.map(o => '<option value="'+esc(o)+'"'+(o===v?' selected':'')+'>'+esc(invOpt2(o))+'</option>').join('') + '</select>';
+ const rows = SMOV.filter(m => m.it===STKV.item && m.wh===STKV.wh);
+ let run = 0;
+ const body = rows.map(m => { run += m.qty;
+  return [ esc(m.d), '<span class="ds-code">'+esc(m.doc)+'</span>', esc(tr(m.t)),
+    m.qty>0 ? '<b>'+invM0(m.qty)+'</b>' : '', m.qty<0 ? '<b>'+invM0(-m.qty)+'</b>' : '',
+    m.qty>0 ? invM(m.cost) : '<span class="mu">—</span>', '<b>'+invM0(run)+'</b>' ];
+ });
+ const derived = stkOnHand(STKV.item, STKV.wh);
+ const shelf = (invItem(STKV.item).st || {})[STKV.wh];
+ const gap = derived - shelf;
+ return head('Stock movements',
+   tr('Every change to stock is a row. The quantity on hand is worked out from these rows, not stored beside them'),
+   [btn('Print'), btn('Excel')]) +
+  pane(tr('Which item'),
+   '<div class="fs f3">' +
+    '<div><label>'+esc(tr('Item'))+'</label>' +
+      sel(STKV.item, ITEMDIR.filter(i=>i.st).map(i=>i.no), "stkSet('item',this.value)") + '</div>' +
+    '<div><label>'+esc(tr('Warehouse'))+'</label>' +
+      sel(STKV.wh, ['Zahle main','Beirut','Van — Elie'], "stkSet('wh',this.value)") + '</div>' +
+    '<div><label>'+esc(tr('Name'))+'</label><input class="in" value="'+esc(invName(invItem(STKV.item)))+'" readonly></div>' +
+   '</div>') +
+  pane(tr('The movements'),
+   tbl([C('Date'),C('Document'),C('Type'),n('In'),n('Out'),n('Unit cost'),n('Running balance')],
+     body, {min:820})) +
+  pane(tr('The check that his system cannot run'),
+   '<div class="ttab">' +
+    '<div class="trow"><span>'+esc(tr('Added up from the movements'))+'</span><b>'+invM0(derived)+'</b></div>' +
+    '<div class="trow"><span>'+esc(tr('The quantity the system shows on the shelf'))+'</span><b>'+invM0(shelf)+'</b></div>' +
+    '<div class="trow big"><span>'+esc(tr('Difference'))+'</span><b>' +
+      (gap === 0 ? pill('ok', '0 · ' + tr('they agree')) : pill('bad', invM0(gap))) + '</b></div>' +
+   '</div>' +
+   note(tr('This is the whole point.'),
+    tr('In his old system the quantity on hand is a number written on the item and changed in place — there is no list of movements at all, which is why his stock report carries a column called “Stock difference”. Here the quantity is added up from the rows above every time it is asked for, so the two can be compared, and a difference is a fault to investigate rather than a fact to live with.')));
+};
+
+S.slay = function(){
+ const L = stkLayers(STKV.item, STKV.wh);
+ const open = L.filter(x => x.left > 0);
+ const val = stkValue(STKV.item, STKV.wh);
+ const qty = stkOnHand(STKV.item, STKV.wh);
+ const avg = qty > 0 ? val/qty : 0;
+ const all = stkValueAll();
+ return head('Cost layers and valuation',
+   tr('What each delivery cost, what is left of it, and therefore what the stock is worth'),
+   [btn('Print'), btn('Excel')]) +
+  '<div class="g g4">' +
+   kpi(tr('On hand'), invM0(qty), invOpt2(STKV.wh)) +
+   kpi(tr('Value at FIFO'), invM(val), tr('from the layers below')) +
+   kpi(tr('Moving average cost'), invM(avg), tr('the same layers, averaged')) +
+   kpi(tr('Open layers'), open.length, tr('of') + ' ' + L.length) +
+  '</div>' +
+  pane(tr('The layers'),
+   L.length
+    ? tbl([C('Received'),C('Document'),n('Quantity in'),n('Still there'),n('Unit cost'),n('Value left')],
+        L.map(x => [ esc(x.d), '<span class="ds-code">'+esc(x.doc)+'</span>', invM0(x.qty),
+          x.left ? '<b>'+invM0(x.left)+'</b>' : '<span class="mu">0</span>',
+          invM(x.cost), x.left ? invM(x.left*x.cost) : '<span class="mu">—</span>' ]).concat(
+          [['<b>'+esc(tr('Total'))+'</b>','','','<b>'+invM0(qty)+'</b>','','<b>'+invM(val)+'</b>']]), {min:760})
+    : '<span class="mu">'+esc(tr('Nothing in this warehouse.'))+'</span>') +
+  (stkShort(STKV.item, STKV.wh)
+   ? '<div class="fsum">' + ic('alertC','ic-14') + '<div><b>' +
+     esc(tr('Something was sold that was never received')) + '</b><ul><li>' +
+     esc(invM0(stkShort(STKV.item, STKV.wh)) + ' ' + tr('units left no layer to consume — the cost of that sale is unknown')) +
+     '</li></ul></div></div>'
+   : '') +
+  pane(tr('Stock against the ledger'),
+   '<div class="ttab">' +
+    '<div class="trow"><span>'+esc(tr('Value of all stock, from the layers'))+'</span><b>'+invM(all)+'</b></div>' +
+    '<div class="trow"><span>'+esc(tr('Inventory control account 3700'))+'</span><b>'+invM(all)+'</b></div>' +
+    '<div class="trow big"><span>'+esc(tr('Difference'))+'</span><b>'+pill('ok','0.00 · '+tr('they agree'))+'</b></div>' +
+   '</div>' +
+   note(tr('Honest note about this screen.'),
+    tr('In the finished system these are two independent numbers — one added up from the stock layers, the other read from the ledger — and comparing them is one of the checks that runs continuously. In the prototype both come from the same sample data, so the comparison always agrees. What the screen is showing you is the check itself, not proof that it passes.'))) +
+  note(tr('FIFO is a consequence here, not a setting.'),
+   tr('Because every delivery is a layer with its own cost, the oldest is consumed first by construction. Moving average is then worked out from the same layers rather than kept as a second number — so the two methods can never disagree about the same stock, and a backdated cost correction can be replayed through the layers.'));
+};
+
+/* ── menu ── */
+(function(){
+ MENU.forEach(g => {
+  if(g.en !== 'Stocking') return;
+  const i = g.items.findIndex(x => x[0] === 'imov');
+  if(i >= 0 && !g.items.some(x => x[0] === 'smov')){
+   g.items.splice(i + 1, 0, ['smov','Stock movements','حركات المخزون']);
+   g.items.splice(i + 2, 0, ['slay','Cost layers','طبقات الكلفة']);
+  }
+ });
+})();
+
+Object.assign(AR, {
+ 'Every line in its own currency, stored three ways, balanced in all of them — and locked once posted':
+  'كل سطر بعملته، مخزّن بثلاث صيغ، ومتوازن فيها جميعاً — ويُقفل بعد الترحيل',
+ 'choose an account':'اختر حساباً', 'Debit (Main)':'مدين (الأساسية)', 'Credit (Main)':'دائن (الأساسية)',
+ 'Debit LBP':'مدين ليرة', 'Credit LBP':'دائن ليرة', 'Post dated':'تاريخ لاحق',
+ 'not open to manual entry':'غير مفتوح للإدخال اليدوي',
+ 'These lines cannot be hand-posted':'هذه السطور لا يمكن ترحيلها يدوياً',
+ 'it is a heading, not an account':'هذا عنوان، وليس حساباً',
+ 'documents post here, people may not':'المستندات تُرحّل هنا، والأشخاص لا',
+ 'Refused. A voucher posts only when it balances in every currency and every line is open to manual entry.':
+  'مرفوض. لا يُرحّل القيد إلا إذا توازن بكل عملة وكان كل سطر مفتوحاً للإدخال اليدوي.',
+ 'Posted. This voucher can no longer be edited — correct it with a reversal.':
+  'مُرحّل. لا يمكن تعديل هذا القيد — صحّحه بقيد عكسي.',
+ 'A reversing voucher was created. The original stays exactly as it was posted.':
+  'أُنشئ قيد عكسي. يبقى الأصل كما رُحّل تماماً.',
+ 'Reverse it':'اعكسه', 'New voucher':'قيد جديد', 'Reversal of':'عكس القيد',
+ 'Document date':'تاريخ المستند', 'Posted at (server, not editable)':'وقت الترحيل (من الخادم، غير قابل للتعديل)',
+ 'Draft':'مسودة', 'Posted':'مُرحّل', 'Draft — editable':'مسودة — قابلة للتعديل', 'Posted — locked':'مُرحّل — مقفل',
+ 'Source document':'المستند المصدر', 'none — this is a manual voucher':'لا يوجد — هذا قيد يدوي',
+ 'How this voucher balances':'كيف يتوازن هذا القيد', 'In':'بـ', 'In the main currency':'بالعملة الأساسية',
+ 'In pounds':'بالليرة', 'equal':'متساوٍ', 'out by':'فرق',
+ 'Balances in every currency it touches':'متوازن بكل عملة يمسّها',
+ 'Does not balance — it cannot be posted':'غير متوازن — لا يمكن ترحيله',
+ 'What the system is enforcing':'ما يفرضه النظام', 'No lines yet.':'لا سطور بعد.',
+ 'It must balance in each currency on its own, and again in the main currency, and again in pounds':
+  'يجب أن يتوازن بكل عملة على حدة، ثم بالعملة الأساسية، ثم بالليرة',
+ 'A line is a debit or a credit, never both':'السطر مدين أو دائن، لا الاثنان',
+ 'A line may only point at an account that is a leaf AND open to manual entry':
+  'لا يشير السطر إلا إلى حساب نهائي ومفتوح للإدخال اليدوي',
+ 'Posting is one way. A posted voucher cannot be edited and its status cannot be wound back':
+  'الترحيل باتجاه واحد. القيد المُرحّل لا يُعدّل ولا تُعاد حالته',
+ 'The document date is yours; the posting time is the server’s and cannot be typed':
+  'تاريخ المستند لك؛ ووقت الترحيل من الخادم ولا يُكتب',
+ 'A correction is a reversing voucher that names what it reverses':
+  'التصحيح قيد عكسي يذكر ما يعكسه',
+ 'Three of these six come straight from his own system.':'ثلاثة من هذه الستة من نظامه نفسه.',
+ 'Line-level currency and rate, the three stored amounts, and balancing in both currencies are how his vouchers already work — they were read from four live posted entries. The other three are the fixes: his posted vouchers can be edited, their status wound back, and their date typed by hand.':
+  'العملة والسعر على مستوى السطر، والمبالغ الثلاثة المخزّنة، والتوازن بالعملتين — هكذا تعمل قيوده أصلاً، وقد قُرئت من أربعة قيود مُرحّلة حقيقية. والثلاثة الأخرى إصلاحات: قيوده المُرحّلة يمكن تعديلها، وإعادة حالتها، وكتابة تاريخها يدوياً.',
+ 'Stock movements':'حركات المخزون', 'Cost layers':'طبقات الكلفة',
+ 'Every change to stock is a row. The quantity on hand is worked out from these rows, not stored beside them':
+  'كل تغيّر في المخزون سطر. والكمية المتوفرة تُحتسب من هذه السطور، لا تُخزَّن بجانبها',
+ 'Which item':'أي صنف', 'The movements':'الحركات', 'In':'وارد', 'Out':'صادر',
+ 'Unit cost':'كلفة الوحدة', 'Running balance':'الرصيد الجاري',
+ 'Purchase':'شراء', 'Sale':'بيع', 'Transfer out':'تحويل صادر', 'Transfer in':'تحويل وارد',
+ 'Damage':'تلف', 'Opening':'رصيد افتتاحي',
+ 'The check that his system cannot run':'الفحص الذي لا يستطيع نظامه إجراءه',
+ 'Added up from the movements':'مجموع الحركات',
+ 'The quantity the system shows on the shelf':'الكمية التي يعرضها النظام على الرف',
+ 'Difference':'الفرق', 'they agree':'متطابقان', 'This is the whole point.':'هذا هو بيت القصيد.',
+ 'In his old system the quantity on hand is a number written on the item and changed in place — there is no list of movements at all, which is why his stock report carries a column called “Stock difference”. Here the quantity is added up from the rows above every time it is asked for, so the two can be compared, and a difference is a fault to investigate rather than a fact to live with.':
+  'في نظامه القديم الكمية المتوفرة رقم مكتوب على الصنف ويُغيَّر في مكانه — لا توجد لائحة حركات أصلاً، ولهذا يحمل تقرير مخزونه عموداً اسمه «فرق المخزون». هنا تُجمع الكمية من السطور أعلاه في كل مرة تُطلب، فيمكن مقارنة الرقمين، ويصبح الفرق خللاً يُبحث لا واقعاً يُتعايش معه.',
+ 'Cost layers and valuation':'طبقات الكلفة والتقييم',
+ 'What each delivery cost, what is left of it, and therefore what the stock is worth':
+  'كم كلّفت كل إرسالية، وكم بقي منها، وبالتالي كم يساوي المخزون',
+ 'On hand':'المتوفر', 'Value at FIFO':'القيمة بطريقة الوارد أولاً',
+ 'from the layers below':'من الطبقات أدناه', 'Moving average cost':'كلفة المتوسط المتحرك',
+ 'the same layers, averaged':'الطبقات نفسها، بالمتوسط', 'Open layers':'طبقات مفتوحة', 'of':'من',
+ 'The layers':'الطبقات', 'Received':'استُلمت', 'Quantity in':'الكمية الواردة',
+ 'Still there':'المتبقي', 'Value left':'القيمة المتبقية',
+ 'Nothing in this warehouse.':'لا شيء في هذا المستودع.',
+ 'Stock against the ledger':'المخزون مقابل الدفتر',
+ 'Value of all stock, from the layers':'قيمة كل المخزون، من الطبقات',
+ 'Something was sold that was never received':'بيع شيء لم يُستلم قط',
+ 'units left no layer to consume — the cost of that sale is unknown':
+  'وحدة لم تجد طبقة تستهلكها — كلفة هذا البيع مجهولة',
+ 'Inventory control account 3700':'حساب مراقبة المخزون ٣٧٠٠',
+ 'Honest note about this screen.':'ملاحظة صادقة عن هذه الشاشة.',
+ 'In the finished system these are two independent numbers — one added up from the stock layers, the other read from the ledger — and comparing them is one of the checks that runs continuously. In the prototype both come from the same sample data, so the comparison always agrees. What the screen is showing you is the check itself, not proof that it passes.':
+  'في النظام النهائي هذان رقمان مستقلان — أحدهما مجموع طبقات المخزون والآخر مقروء من الدفتر — ومقارنتهما أحد الفحوص التي تعمل باستمرار. في النموذج يأتي الرقمان من البيانات نفسها، فتتطابق المقارنة دائماً. ما تعرضه الشاشة هو الفحص نفسه، لا برهان نجاحه.',
+ 'FIFO is a consequence here, not a setting.':'الوارد أولاً هنا نتيجة، لا إعداد.',
+ 'Because every delivery is a layer with its own cost, the oldest is consumed first by construction. Moving average is then worked out from the same layers rather than kept as a second number — so the two methods can never disagree about the same stock, and a backdated cost correction can be replayed through the layers.':
+  'لأن كل إرسالية طبقة بكلفتها، تُستهلك الأقدم أولاً بحكم البناء. ثم يُحتسب المتوسط المتحرك من الطبقات نفسها بدل حفظه رقماً ثانياً — فلا يمكن أن تختلف الطريقتان على المخزون نفسه، ويمكن إعادة تشغيل تصحيح كلفة بأثر رجعي عبر الطبقات.'
+});
+Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
+buildTree(); paint();
+</script>
+<style>
+.rulelist{margin:0;padding-inline-start:18px;font-size:12.5px;line-height:1.9;color:var(--c-text-muted,#4a453e)}
+.rulelist li{margin-bottom:2px}
+</style>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE CLIENT'S SECOND LIST — CR-050 … CR-062
+
+   CR-050 marketing: birthday / SMS / notifications      → new screen
+   CR-051 POS configured per business sector             → POS profile
+   CR-052 survey system with statistics                  → new screen
+   CR-053 a universal Back button                        → navigation stack
+   CR-054 hide unnecessary invoice columns               → per-user column picker
+   CR-055 invoice rules moved to Settings + privileges   → CORRECTS what we built
+   CR-056 categories and sub categories in the touch area→ POS rail
+   CR-057 item classifications for touch screens         → touch groups
+   CR-058 touch groups and images on items               → tiles with pictures
+   CR-059 "option to control item…"                      → TRUNCATED, not built
+   CR-060 old balance on invoice and receipt             → header + print
+   CR-062 direct AND advanced item search                → search panel
+
+   The distinction that runs through CR-054 and CR-055:
+     a COMPANY RULE lives in Settings and a permission says who may change it;
+     a VIEW PREFERENCE lives on the screen and belongs to the person looking.
+   Which columns you can bear to look at is the second kind.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ══════════ who is looking ══════════ */
+const ME = { name:'Rania Khoury', role:'Accountant' };
+const ROLES = {
+ 'Owner':      { rules:1, cost:1, discount:1, del:1 },
+ 'Accountant': { rules:1, cost:1, discount:1, del:0 },
+ 'Salesman':   { rules:0, cost:0, discount:0, del:0 },
+ 'Cashier':    { rules:0, cost:0, discount:1, del:0 }
+};
+function may(p){ return !!(ROLES[ME.role] || {})[p]; }
+function setRole(r){ ME.role = r; INVSET.seeCost = may('cost'); paint(); }
+
+/* ══════════ CR-053 — a Back button that works everywhere ══════════ */
+const NAVHIST = [];
+openTab = (function(base){
+ return function(id, en, ar){
+  if(typeof active !== 'undefined' && active && active !== id){
+   const t = TABS.find(x => x.id === active);
+   if(t) NAVHIST.push({ id:t.id, en:t.en, ar:t.ar });
+   if(NAVHIST.length > 40) NAVHIST.shift();
+  }
+  return base(id, en, ar);
+ };
+})(openTab);
+function navBack(){
+ const prev = NAVHIST.pop();
+ if(!prev) return;
+ const keep = NAVHIST.slice();       /* going back must not itself be history */
+ openTab(prev.id, prev.en, prev.ar);
+ NAVHIST.length = 0; keep.forEach(x => NAVHIST.push(x));
+}
+enhance = (function(base){
+ return function(root){
+  base(root);
+  const c = document.getElementById('crumb');
+  if(!c) return;
+  let b = document.getElementById('navback');
+  if(!b){
+   b = document.createElement('button');
+   b.id = 'navback'; b.className = 'backbtn'; b.type = 'button';
+   b.setAttribute('onclick','navBack()');
+   c.parentNode.insertBefore(b, c);
+  }
+  b.innerHTML = ic('chevR','ic-14 ic-flip') + '<span>' + esc(tr('Back')) + '</span>';
+  b.title = NAVHIST.length ? tr('Back to') + ' ' + (lang==='ar' ? NAVHIST[NAVHIST.length-1].ar : NAVHIST[NAVHIST.length-1].en) : tr('Nothing to go back to');
+  b.disabled = !NAVHIST.length;
+ };
+})(enhance);
+
+/* ══════════ CR-055 — the rules leave the invoice and become a setting ══════════ */
+S.invrul = function(){
+ const opt = (k,v,t) => '<option value="'+v+'"'+(INVSET[k]===v?' selected':'')+'>'+esc(tr(t))+'</option>';
+ const locked = !may('rules');
+ const dis = locked ? ' disabled' : '';
+ const roleSel = '<select class="in" onchange="setRole(this.value)">' +
+   Object.keys(ROLES).map(r => '<option'+(r===ME.role?' selected':'')+'>'+esc(tr(r))+'</option>').join('') +
+   '</select>';
+ return head('Invoice rules',
+   tr('What the sales invoice allows — set once for the company, not on the invoice itself'),
+   [btn('Print'), btn('Copy to another company')]) +
+  pane(tr('Who is changing this'),
+   '<div class="fs f3">' +
+    '<div><label>'+esc(tr('Signed in as'))+'</label><input class="in" value="'+esc(ME.name)+'" readonly></div>' +
+    '<div><label>'+esc(tr('Role'))+'</label>'+roleSel+'</div>' +
+    '<div><label>'+esc(tr('May change these rules'))+'</label><input class="in" value="' +
+      esc(may('rules') ? tr('Yes') : tr('No')) + '" readonly></div>' +
+   '</div>' +
+   (locked
+    ? '<div class="fmsg warn">'+ic('alertT','ic-14')+'<span>' +
+      esc(tr('Your role may read these rules but not change them. Switch the role above to see the difference.')) + '</span></div>'
+    : '<div class="fmsg hintmsg"><span>' + esc(tr('Changing a rule here changes it for every invoice in this company.')) + '</span></div>'),
+   pill(may('rules')?'ok':'wa', may('rules') ? tr('May edit') : tr('Read only'))) +
+  pane(tr('Selling and stock'),
+   '<div class="fs f2">' +
+    '<div><label>'+esc(tr('Selling below cost'))+'</label>' +
+     '<select class="in"'+dis+' onchange="invOpt(\'belowCost\',this.value)">' +
+      opt('belowCost','allow','Allowed, no warning') + opt('belowCost','warn','Warn — red row, still saveable') +
+      opt('belowCost','block','Blocked — cannot save') + '</select></div>' +
+    '<div><label>'+esc(tr('Quantity over stock'))+'</label>' +
+     '<select class="in"'+dis+' onchange="invOpt(\'overStock\',this.value)">' +
+      opt('overStock','allow','Allowed, no warning') + opt('overStock','warn','Warn — marked row, still saveable') +
+      opt('overStock','block','Blocked — cannot save') + '</select></div>' +
+   '</div>') +
+  pane(tr('Money'),
+   '<div class="fs f2">' +
+    '<div><label>'+esc(tr('Rounding'))+'</label>' +
+     '<select class="in"'+dis+' onchange="invOpt(\'round\',this.value)">' +
+      opt('round','none','No rounding') + opt('round','0.05','To the nearest 0.05') +
+      opt('round','0.25','To the nearest 0.25') + opt('round','1','To the nearest 1') + '</select></div>' +
+    '<div><label>'+esc(tr('Rounding goes to'))+'</label><input class="in" value="'+esc(INVSET.roundAcct)+'" readonly></div>' +
+   '</div>') +
+  pane(tr('What appears on the invoice'),
+   '<div class="fs f3">' +
+    '<div class="chk"><input type="checkbox"'+(INVSET.showAvail?' checked':'')+dis+
+     ' onchange="invOpt(\'showAvail\', this.checked?\'true\':\'false\')"><span>'+esc(tr('Show the available quantity'))+'</span></div>' +
+    '<div class="chk"><input type="checkbox"'+(INVSET.showLast?' checked':'')+dis+
+     ' onchange="invOpt(\'showLast\', this.checked?\'true\':\'false\')"><span>'+esc(tr('Show the last price this customer paid'))+'</span></div>' +
+    '<div class="chk"><input type="checkbox"'+(INVSET.oldBal?' checked':'')+dis+
+     ' onchange="invOpt(\'oldBal\', this.checked?\'true\':\'false\')"><span>'+esc(tr('Show the old balance'))+'</span></div>' +
+   '</div>' +
+   note(tr('Cost and profit are not on this list, on purpose.'),
+    tr('Whether someone may see cost is a permission on their role, not a setting on a screen — otherwise anyone who can reach this page could grant it to themselves. Change the role above and look at the invoice.'))) +
+  note(tr('This is where these rules belong.'),
+   tr('They were on the sales invoice itself, which was wrong: a rule that governs every invoice in the company should not be editable from one invoice by whoever happens to be standing at it. The invoice now shows what applies and sends you here to change it.'));
+};
+
+/* the invoice keeps a read-only summary instead of the editable pane */
+INVSET.oldBal = true;
+const INVCOLS = { avail:1, last:1, pkg:1, dis:1, note:1 };   /* CR-054 — a view preference */
+function invCol(k, on){ INVCOLS[k] = on ? 1 : 0; invPaint(INV.focus); }
+
+S.inv = (orig => function(){
+ let html = orig();
+
+ /* CR-055 — replace the editable rules pane with a read-only summary */
+ const label = { allow:'Allowed', warn:'Warn', block:'Blocked' };
+ const summary =
+  '<div class="fs f4">' +
+   '<div><label>'+esc(tr('Selling below cost'))+'</label><input class="in" value="'+esc(tr(label[INVSET.belowCost]))+'" readonly></div>' +
+   '<div><label>'+esc(tr('Quantity over stock'))+'</label><input class="in" value="'+esc(tr(label[INVSET.overStock]))+'" readonly></div>' +
+   '<div><label>'+esc(tr('Rounding'))+'</label><input class="in" value="'+esc(INVSET.round==='none'?tr('No rounding'):INVSET.round)+'" readonly></div>' +
+   '<div><label>'+esc(tr('Cost and profit'))+'</label><input class="in" value="' +
+     esc(may('cost') ? tr('visible to your role') : tr('hidden from your role')) + '" readonly></div>' +
+  '</div>' +
+  '<div class="invbtns"><button class="b" onclick="openTab(\'invrul\',\'Invoice rules\',\'قواعد الفاتورة\')">' +
+   esc(tr('Change these in Settings')) + '</button></div>';
+ const rulesPane = pane(tr('The rules that apply here'), summary,
+   pill('ok', tr('Set for the whole company')));
+ /* swap the old pane out by its own heading */
+ const marker = '<h2>' + esc(tx('Invoice rules')) + '</h2>';
+ const at = html.indexOf(marker);
+ if(at >= 0){
+  const start = html.lastIndexOf('<div class="pane">', at);
+  let depth = 0, i = start, end = -1;
+  while(i < html.length){
+   const o = html.indexOf('<div', i), c = html.indexOf('</div>', i);
+   if(c < 0) break;
+   if(o >= 0 && o < c){ depth++; i = o + 4; }
+   else { depth--; i = c + 6; if(depth === 0){ end = i; break; } }
+  }
+  if(end > start) html = html.slice(0, start) + rulesPane + html.slice(end);
+ }
+
+ /* CR-054 — the column picker, and CR-060 — the old balance */
+ const c = invCustRec(INV.cust);
+ const T = invTotals();
+ const chk = (k,t) => '<div class="chk"><input type="checkbox"'+(INVCOLS[k]?' checked':'')+
+   ' onchange="invCol(\''+k+'\', this.checked)"><span>'+esc(tr(t))+'</span></div>';
+ const extra =
+  pane(tr('Show me only what I need'),
+   '<div class="fs f5">' + chk('avail','Available') + chk('last','Last price') +
+     chk('pkg','Pkg') + chk('dis','Dis %') + chk('note','Notes') + '</div>' +
+   note(tr('This one is yours, not the company’s.'),
+    tr('Which columns you want in front of you is a preference of the person looking, so it is remembered per user and changes nothing for anyone else. The rules that decide what the invoice allows are a company matter and live in Settings.')),
+   '<span class="mu">' + esc(Object.keys(INVCOLS).filter(k=>INVCOLS[k]).length + ' ' + tr('of') + ' 5') + '</span>') +
+  (INVSET.oldBal ? pane(tr('Where he stood before this invoice'),
+   '<div class="fs f4">' +
+    '<div><label>'+esc(tr('Old balance'))+'</label><input class="in n" value="'+invM(c.bal)+'" readonly></div>' +
+    '<div><label>'+esc(tr('This invoice'))+'</label><input class="in n" value="'+invM(T.total)+'" readonly></div>' +
+    '<div><label>'+esc(tr('New balance'))+'</label><input class="in n" value="'+invM(c.bal + T.due)+'" readonly></div>' +
+    '<div class="chk"><input type="checkbox" checked><span>'+esc(tr('Print it on the invoice too'))+'</span></div>' +
+   '</div>' +
+   note(tr('He asked for this and he already has it.'),
+    tr('His old system carries a setting called DisplayOldBalance. It is the same idea: the customer sees what he owed before, what this invoice adds, and where he stands now — on the screen and on the printed copy.'))) : '');
+
+ /* CR-062 — advanced search beside the direct one */
+ const adv = pane(tr('Find an item — the long way'),
+  '<div class="fs f5">' +
+   '<div><label>'+esc(tr('Category'))+'</label><select class="in"><option>'+esc(tr('All'))+'</option>' +
+     [...new Set(ITEMDIR.map(i=>i.cat))].map(x=>'<option value="'+esc(x)+'">'+esc(tr(x))+'</option>').join('') + '</select></div>' +
+   '<div><label>'+esc(tr('Sub category'))+'</label><select class="in"><option>'+esc(tr('All'))+'</option>' +
+     [...new Set(ITEMDIR.map(i=>i.sub))].map(x=>'<option value="'+esc(x)+'">'+esc(tr(x))+'</option>').join('') + '</select></div>' +
+   '<div><label>'+esc(tr('In stock'))+'</label><select class="in"><option>'+esc(tr('Any'))+'</option><option>'+
+     esc(tr('More than zero'))+'</option><option>'+esc(tr('Below minimum'))+'</option><option>'+esc(tr('Out of stock'))+'</option></select></div>' +
+   '<div><label>'+esc(tr('Price from'))+'</label><input class="in n" placeholder="0.00"></div>' +
+   '<div><label>'+esc(tr('Price to'))+'</label><input class="in n" placeholder="0.00"></div>' +
+  '</div>' +
+  '<div class="invbtns"><button class="b p">'+esc(tr('Search'))+'</button><button class="b">'+esc(tr('Clear'))+'</button></div>' +
+  note(tr('Two ways, because there are two situations.'),
+   tr('At the counter you know the number or you scan it, and the one box at the top of the lines is faster than any form. On the phone, when the customer says “the white one, about forty dollars”, you need this instead.')));
+
+ return html + extra + adv;
+})(S.inv);
+
+/* hide the columns the user turned off, after render */
+enhance = (function(base){
+ return function(root){
+  base(root);
+  if(typeof active === 'undefined' || active !== 'inv') return;
+  const heads = { avail:tr('Available'), last:tr('Last price'), pkg:tr('Pkg'), dis:tr('Dis %'), note:tr('Notes') };
+  const tbl = (root||document).querySelector('.pane table');
+  if(!tbl) return;
+  const ths = [...tbl.querySelectorAll('thead th')];
+  Object.keys(heads).forEach(k => {
+   if(INVCOLS[k]) return;
+   const i = ths.findIndex(t => t.textContent.trim() === heads[k]);
+   if(i < 0) return;
+   ths[i].style.display = 'none';
+   tbl.querySelectorAll('tbody tr').forEach(r => { if(r.children[i]) r.children[i].style.display = 'none'; });
+  });
+ };
+})(enhance);
+
+/* CR-060 on the receipt as well */
+S.rcpt = (orig => function(){
+ const c = invCustRec('C-0101');
+ return orig() + pane(tr('Where he stood before this receipt'),
+  '<div class="fs f4">' +
+   '<div><label>'+esc(tr('Old balance'))+'</label><input class="in n" value="'+invM(c.bal)+'" readonly></div>' +
+   '<div><label>'+esc(tr('This receipt'))+'</label><input class="in n" value="2,000.00" readonly></div>' +
+   '<div><label>'+esc(tr('New balance'))+'</label><input class="in n" value="'+invM(c.bal-2000)+'" readonly></div>' +
+   '<div class="chk"><input type="checkbox" checked><span>'+esc(tr('Print it on the receipt too'))+'</span></div>' +
+  '</div>');
+})(S.rcpt);
+
+/* ══════════ CR-051 / 056 / 057 / 058 — the POS ══════════ */
+const POSPROF = {
+ sector:'Retail',
+ group:'All',
+ sectors:{
+  'Restaurant':  { tables:1, kitchen:1, weigh:0, variants:0, tiles:'large',  note:'Tables, sections and delivery. Orders go to the kitchen printers.' },
+  'Supermarket': { tables:0, kitchen:0, weigh:1, variants:0, tiles:'small',  note:'Scale barcodes, fast scanning, no table plan.' },
+  'Clothing':    { tables:0, kitchen:0, weigh:0, variants:1, tiles:'photo',  note:'Colour and size on the tile, because two variants are two different pieces of stock.' },
+  'Factory':     { tables:0, kitchen:0, weigh:1, variants:0, tiles:'list',   note:'Production issue and receipt rather than a till.' },
+  'Retail':      { tables:0, kitchen:0, weigh:0, variants:0, tiles:'medium', note:'The plain shop counter.' }
+ }
+};
+const TOUCHG = [
+ { g:'Laptops',  sub:['New','Open box'],        colour:'#3E6E8E' },
+ { g:'Solar',    sub:['Panels','Inverters'],    colour:'#2F7A5E' },
+ { g:'Paper',    sub:['A4','Rolls'],            colour:'#8A6D3B' },
+ { g:'Services', sub:['Repair','Installation'], colour:'#6E4A7E' }
+];
+function posSet(k,v){ POSPROF[k]=v; paint(); }
+function posTile(it){
+ const st = it.st ? (it.st['Zahle main']||0) : null;
+ return '<button class="ptile" onclick="invPush(\''+it.no+'\')">' +
+  '<span class="pimg">' + (it.no==='IT-0919' ? '<img src="'+ITEMPHOTO+'" alt="">' : ic('image','ic-14')) + '</span>' +
+  '<span class="pname">' + esc(invName(it)) + '</span>' +
+  '<span class="pprice">' + invM(it.price.Retail) + '</span>' +
+  '<span class="pstock ' + (st===0?'avlow':'') + '">' + (st===null ? '—' : invM0(st) + ' ' + tr('in stock')) + '</span>' +
+  '</button>';
+}
+S.pos = (orig => function(){
+ const P = POSPROF.sectors[POSPROF.sector];
+ const groups = ['All'].concat(TOUCHG.map(g => g.g));
+ const shown = POSPROF.group === 'All' ? ITEMDIR : ITEMDIR.filter(i => i.cat === POSPROF.group);
+ const sub = TOUCHG.find(g => g.g === POSPROF.group);
+ const rail = '<div class="prail">' + groups.map(g =>
+   '<button class="'+(g===POSPROF.group?'on':'')+'" onclick="posSet(\'group\',\''+g+'\')">' +
+   esc(tr(g)) + '</button>').join('') + '</div>';
+ const subrail = sub ? '<div class="psub">' + sub.sub.map(x =>
+   '<button>' + esc(tr(x)) + '</button>').join('') + '</div>' : '';
+ const secSel = '<select class="in" onchange="posSet(\'sector\',this.value)">' +
+   Object.keys(POSPROF.sectors).map(s => '<option'+(s===POSPROF.sector?' selected':'')+'>'+esc(tr(s))+'</option>').join('') +
+   '</select>';
+ const flag = (on,t) => '<span class="pill ' + (on?'ok':'mu') + '">' + esc(tr(t)) + '</span>';
+ return orig() +
+  pane(tr('This till is set up for'),
+   '<div class="fs f3">' +
+    '<div><label>'+esc(tr('Business sector'))+'</label>'+secSel+'</div>' +
+    '<div><label>'+esc(tr('Tile size'))+'</label><input class="in" value="'+esc(tr(P.tiles))+'" readonly></div>' +
+    '<div><label>'+esc(tr('What this sector turns on'))+'</label><div style="padding-top:6px">' +
+      flag(P.tables,'Tables') + ' ' + flag(P.kitchen,'Kitchen printers') + ' ' +
+      flag(P.weigh,'Weighing scale') + ' ' + flag(P.variants,'Colour and size') + '</div></div>' +
+   '</div>' +
+   '<div class="fmsg hintmsg"><span>' + esc(tr(P.note)) + '</span></div>' +
+   note(tr('One till, five shapes.'),
+    tr('His old system already does this — it has a setting called BusinessType, and the copy we read was set to Restaurant. It is the same idea here: a sector is a profile that decides which parts of the till exist, not five different tills to maintain.'))) +
+  pane(tr('The touch area'),
+   rail + subrail +
+   '<div class="ptiles ' + esc(P.tiles) + '">' + shown.map(posTile).join('') + '</div>' +
+   note(tr('Groups, sub groups and a picture.'),
+    tr('The rail on the left is the category, the strip under it the sub category, and every tile carries the item’s photo, its price and what is left on the shelf. A touch group is not the accounting category — an item can sit in several touch groups and still belong to one category in the books.')),
+   '<span class="mu">' + esc(shown.length + ' ' + tr('items')) + '</span>');
+})(S.pos);
+
+/* ══════════ CR-050 — marketing ══════════ */
+const MKT = [
+ ['Birthday greeting','Birthday','On the day, 09:00','WhatsApp','412 customers','<span class="pill ok">Active</span>'],
+ ['Not seen for 60 days','No purchase in 60 days','Weekly, Monday','SMS','38 customers','<span class="pill ok">Active</span>'],
+ ['Statement reminder','Balance over 30 days old','Monthly, 1st','Email','96 customers','<span class="pill wa">Paused</span>'],
+ ['New solar range','Bought solar before','Once, 05/09/2026','WhatsApp','54 customers','<span class="pill mu">Draft</span>']
+];
+S.mktg = function(){
+ return head('Marketing',
+   tr('A message, an audience, and when it goes — birthdays, quiet customers, reminders'),
+   [btn('Print'), addBtn('New campaign','mktgf')]) +
+  '<div class="g g4">' +
+   kpi(tr('Active campaigns'), 2, tr('of') + ' 4') +
+   kpi(tr('Messages this month'), '1,284', tr('across all campaigns')) +
+   kpi(tr('Birthdays this week'), 7, tr('greetings will go automatically')) +
+   kpi(tr('Opted out'), 11, tr('never contacted'), 'w') +
+  '</div>' +
+  pane(tr('Campaigns'),
+   tbl([C('Campaign'),C('Who gets it'),C('When'),C('How'),C('Audience'),C('State')],
+     MKT.map(r => r.map((cell,i) => i === 5 ? cell.replace(/>([^<]+)</, (m,w) => '>'+esc(tr(w))+'<')
+       : (i === 4 ? cell.replace(/([0-9,]+)\s+customers/, (m,n) => n + ' ' + tr('customers'))
+                  : esc(tr(cell))))), {min:860})) +
+  pane(tr('The message'),
+   fgrid([
+    {l:'Campaign', v:'Birthday greeting', ro:1},
+    {l:'Channel', t:'sel', o:['WhatsApp','SMS','Email','In the system'].map(x => tr(x))},
+    {l:'Send at', v:'09:00', hint:tr('Local time. Nothing goes out at night.')},
+    {l:'Text', t:'area', v:'كل عام وأنتم بخير يا {name} — من فريق {company}'}
+   ], 2) +
+   note(tr('Nothing is sent from the prototype.'),
+    tr('The same decision as the statement: WhatsApp can go one customer at a time through a free link, or in bulk through a paid business account with a monthly cost. Until that is chosen, this screen composes and schedules but does not send — and it says so rather than pretending.')),
+   pill('wa', tr('Composes and schedules · does not send'))) +
+  note(tr('A campaign is three things.'),
+   tr('Who gets it — a rule over the customer file, not a list somebody types. When it goes. And through which channel. Everything else is the text. Because the audience is a rule, a customer who stops qualifying stops receiving, without anyone remembering to remove him.'));
+};
+Object.assign(F, { mktgf:{ t:'New campaign', s:[{ h:'The campaign', c:2, f:[
+ { l:'Name', req:1 },
+ { l:'Who gets it', t:'sel', o:['Birthday today','No purchase in 60 days','Balance over 30 days old','Bought a category before','Everyone'], req:1 },
+ { l:'When', t:'sel', o:['On the day','Weekly','Monthly','Once, on a date'], req:1 },
+ { l:'Channel', t:'sel', o:['WhatsApp','SMS','Email','In the system'], req:1 },
+ { l:'Send at', v:'09:00' },
+ { l:'Text', t:'area' },
+ { t:'note', v:'Customers who have opted out are never included, whatever the rule says.' }
+]}]}});
+
+/* ══════════ CR-052 — surveys ══════════ */
+const SRV = [
+ { q:'The new invoice screen is faster than the old one', n:24, avg:4.3, dist:[0,1,3,7,13] },
+ { q:'I can find an item without asking anyone',          n:24, avg:3.9, dist:[1,1,5,9,8] },
+ { q:'The Arabic screens read naturally',                 n:18, avg:4.6, dist:[0,0,2,3,13] },
+ { q:'I know what to do when the internet drops',         n:24, avg:2.8, dist:[3,6,9,4,2] }
+];
+S.srvy = function(){
+ const bar = d => { const t = d.reduce((a,b)=>a+b,0) || 1;
+  return '<div class="sbar">' + d.map((v,i) =>
+   '<span class="s'+(i+1)+'" style="width:'+(v/t*100).toFixed(1)+'%" title="'+(i+1)+' — '+v+'"></span>').join('') + '</div>'; };
+ const worst = SRV.slice().sort((a,b)=>a.avg-b.avg)[0];
+ return head('Surveys',
+   tr('Ask the people who use it, and count the answers'),
+   [btn('Print'), btn('Excel'), addBtn('New survey','srvyf')]) +
+  '<div class="g g4">' +
+   kpi(tr('Surveys running'), 1, tr('“After the first week”')) +
+   kpi(tr('Answered'), '24 ' + tr('of') + ' 31', '77%') +
+   kpi(tr('Average score'), (SRV.reduce((a,s)=>a+s.avg,0)/SRV.length).toFixed(1), tr('out of 5')) +
+   kpi(tr('Lowest scoring question'), worst.avg.toFixed(1), tr('needs attention'), 'w') +
+  '</div>' +
+  pane(tr('Answers'),
+   tbl([C('Question'),n('Answers'),n('Average'),C('How they answered')],
+     SRV.map(s => [ esc(tr(s.q)), invM0(s.n),
+       '<b class="'+(s.avg<3?'avlow':'')+'">'+s.avg.toFixed(1)+'</b>', bar(s.dist) ]), {min:760}) +
+   '<div class="slegend">' + [1,2,3,4,5].map(i =>
+     '<span><i class="s'+i+'"></i>'+i+'</span>').join('') + '</div>') +
+  note(tr('The number that matters is the low one.'),
+   tr('“I know what to do when the internet drops” scores 2.8 out of 5 across twenty-four people. That is not a survey result, it is a training job and possibly a design job — and it is the only reason to run a survey at all. A survey that produces a good average and no action was a waste of everyone’s morning.'));
+};
+Object.assign(F, { srvyf:{ t:'New survey', s:[{ h:'The survey', c:2, f:[
+ { l:'Name', req:1 }, { l:'Who is asked', t:'sel', o:['All staff','One branch','One role','Customers'], req:1 },
+ { l:'Open from', v:'31/08/2026' }, { l:'Open until', v:'07/09/2026' },
+ { l:'Answer type', t:'sel', o:['1 to 5','Yes / No','Free text','Pick one'], req:1 },
+ { l:'Anonymous', t:'chk', v:1, hint:'Answers are counted but not attributed.' }
+]}]}});
+
+/* ── menu ── */
+(function(){
+ const put = (grp, after, entry) => MENU.forEach(g => {
+  if(g.en !== grp) return;
+  const i = g.items.findIndex(x => x[0] === after);
+  if(i >= 0 && !g.items.some(x => x[0] === entry[0])) g.items.splice(i + 1, 0, entry);
+ });
+ put('Settings','numb', ['invrul','Invoice rules','قواعد الفاتورة']);
+ put('Sales','slook',   ['mktg','Marketing','التسويق']);
+ put('Users','audit',   ['srvy','Surveys','الاستبيانات']);
+})();
+
+Object.assign(AR, {
+ 'Back':'رجوع', 'Back to':'الرجوع إلى', 'Nothing to go back to':'لا شيء للرجوع إليه',
+ 'What the sales invoice allows — set once for the company, not on the invoice itself':
+  'ما تسمح به فاتورة المبيعات — يُضبط مرة للشركة، لا على الفاتورة نفسها',
+ 'Who is changing this':'من يغيّر هذا', 'Signed in as':'الدخول باسم', 'Role':'الدور',
+ 'May change these rules':'يمكنه تغيير هذه القواعد', 'Yes':'نعم', 'No':'لا',
+ 'May edit':'يمكنه التعديل', 'Read only':'للقراءة فقط',
+ 'Owner':'المالك', 'Accountant':'المحاسب', 'Salesman':'المندوب', 'Cashier':'أمين الصندوق',
+ 'Your role may read these rules but not change them. Switch the role above to see the difference.':
+  'دورك يسمح بقراءة هذه القواعد لا بتغييرها. بدّل الدور أعلاه لترى الفرق.',
+ 'Changing a rule here changes it for every invoice in this company.':
+  'تغيير قاعدة هنا يغيّرها لكل فاتورة في هذه الشركة.',
+ 'Selling and stock':'البيع والمخزون', 'Money':'المال',
+ 'What appears on the invoice':'ما يظهر على الفاتورة', 'Show the old balance':'إظهار الرصيد السابق',
+ 'Cost and profit are not on this list, on purpose.':'الكلفة والربح ليسا في هذه اللائحة عن قصد.',
+ 'Whether someone may see cost is a permission on their role, not a setting on a screen — otherwise anyone who can reach this page could grant it to themselves. Change the role above and look at the invoice.':
+  'رؤية الكلفة صلاحية على الدور لا إعداد في شاشة — وإلا لاستطاع كل من يصل إلى هذه الصفحة أن يمنحها لنفسه. غيّر الدور أعلاه وانظر إلى الفاتورة.',
+ 'This is where these rules belong.':'هنا مكان هذه القواعد.',
+ 'They were on the sales invoice itself, which was wrong: a rule that governs every invoice in the company should not be editable from one invoice by whoever happens to be standing at it. The invoice now shows what applies and sends you here to change it.':
+  'كانت على فاتورة المبيعات نفسها، وهذا خطأ: القاعدة التي تحكم كل فواتير الشركة لا يجب أن تُعدَّل من فاتورة واحدة على يد من يصادف وقوفه عندها. الفاتورة الآن تعرض ما ينطبق وتحيلك إلى هنا لتغييره.',
+ 'The rules that apply here':'القواعد المطبّقة هنا', 'Set for the whole company':'مضبوطة لكل الشركة',
+ 'Change these in Settings':'غيّرها في الإعدادات', 'Cost and profit':'الكلفة والربح',
+ 'visible to your role':'ظاهرة لدورك', 'hidden from your role':'مخفية عن دورك',
+ 'Allowed':'مسموح', 'Warn':'تنبيه', 'Blocked':'ممنوع',
+ 'Show me only what I need':'أظهر لي ما أحتاجه فقط',
+ 'This one is yours, not the company’s.':'هذا لك، لا للشركة.',
+ 'Which columns you want in front of you is a preference of the person looking, so it is remembered per user and changes nothing for anyone else. The rules that decide what the invoice allows are a company matter and live in Settings.':
+  'الأعمدة التي تريدها أمامك تفضيل شخصي لمن ينظر، فتُحفظ لكل مستخدم ولا تغيّر شيئاً لغيره. أما القواعد التي تقرر ما تسمح به الفاتورة فشأن الشركة ومكانها الإعدادات.',
+ 'Where he stood before this invoice':'أين كان قبل هذه الفاتورة',
+ 'Where he stood before this receipt':'أين كان قبل هذا السند',
+ 'Old balance':'الرصيد السابق', 'This invoice':'هذه الفاتورة', 'This receipt':'هذا السند',
+ 'New balance':'الرصيد الجديد', 'Print it on the invoice too':'اطبعه على الفاتورة أيضاً',
+ 'Print it on the receipt too':'اطبعه على السند أيضاً',
+ 'He asked for this and he already has it.':'طلب هذا وهو موجود لديه أصلاً.',
+ 'His old system carries a setting called DisplayOldBalance. It is the same idea: the customer sees what he owed before, what this invoice adds, and where he stands now — on the screen and on the printed copy.':
+  'نظامه القديم يحمل إعداداً اسمه DisplayOldBalance. الفكرة نفسها: يرى الزبون ما كان عليه، وما تضيفه هذه الفاتورة، وأين صار — على الشاشة وعلى النسخة المطبوعة.',
+ 'Find an item — the long way':'ابحث عن صنف — بالطريقة الطويلة',
+ 'In stock':'في المخزون', 'Any':'أي', 'More than zero':'أكثر من صفر',
+ 'Below minimum':'تحت الحد الأدنى', 'Out of stock':'نفد',
+ 'Price from':'السعر من', 'Price to':'السعر إلى', 'Search':'بحث', 'Clear':'مسح',
+ 'Two ways, because there are two situations.':'طريقتان، لأن هناك حالتين.',
+ 'At the counter you know the number or you scan it, and the one box at the top of the lines is faster than any form. On the phone, when the customer says “the white one, about forty dollars”, you need this instead.':
+  'عند الطاولة تعرف الرقم أو تمسحه، والصندوق الواحد أعلى السطور أسرع من أي نموذج. على الهاتف، حين يقول الزبون «الأبيض، بحدود أربعين دولاراً»، تحتاج هذا بدلاً منه.',
+ 'This till is set up for':'هذه الصندوقة مضبوطة لـ',
+ 'Business sector':'قطاع العمل', 'Tile size':'حجم المربع',
+ 'What this sector turns on':'ما يفعّله هذا القطاع',
+ 'Restaurant':'مطعم', 'Supermarket':'سوبرماركت', 'Clothing':'ألبسة', 'Factory':'مصنع', 'Retail':'مفرق',
+ 'Tables':'الطاولات', 'Kitchen printers':'طابعات المطبخ', 'Weighing scale':'الميزان',
+ 'Colour and size':'اللون والقياس',
+ 'large':'كبير', 'small':'صغير', 'medium':'متوسط', 'photo':'بالصورة', 'list':'لائحة',
+ 'Tables, sections and delivery. Orders go to the kitchen printers.':
+  'طاولات وأقسام وتوصيل. الطلبات تذهب إلى طابعات المطبخ.',
+ 'Scale barcodes, fast scanning, no table plan.':'باركود الميزان، مسح سريع، بلا مخطط طاولات.',
+ 'Colour and size on the tile, because two variants are two different pieces of stock.':
+  'اللون والقياس على المربع، لأن كل تركيبة مخزون مستقل.',
+ 'Production issue and receipt rather than a till.':'صرف واستلام إنتاج بدل الصندوقة.',
+ 'The plain shop counter.':'طاولة المحل العادية.',
+ 'One till, five shapes.':'صندوقة واحدة، خمسة أشكال.',
+ 'His old system already does this — it has a setting called BusinessType, and the copy we read was set to Restaurant. It is the same idea here: a sector is a profile that decides which parts of the till exist, not five different tills to maintain.':
+  'نظامه القديم يفعل هذا أصلاً — فيه إعداد اسمه BusinessType، والنسخة التي قرأناها كانت على «مطعم». الفكرة نفسها هنا: القطاع ملف إعدادات يقرر أي أجزاء الصندوقة موجودة، لا خمس صندوقات تُصان.',
+ 'The touch area':'منطقة اللمس', 'in stock':'في المخزون', 'items':'أصناف',
+ 'Groups, sub groups and a picture.':'مجموعات ومجموعات فرعية وصورة.',
+ 'The rail on the left is the category, the strip under it the sub category, and every tile carries the item’s photo, its price and what is left on the shelf. A touch group is not the accounting category — an item can sit in several touch groups and still belong to one category in the books.':
+  'الشريط الجانبي هو الفئة، والشريط تحته الفئة الفرعية، وكل مربع يحمل صورة الصنف وسعره وما بقي على الرف. مجموعة اللمس ليست الفئة المحاسبية — يمكن للصنف أن يكون في عدة مجموعات لمس ويبقى في فئة واحدة في الدفاتر.',
+ 'Marketing':'التسويق',
+ 'A message, an audience, and when it goes — birthdays, quiet customers, reminders':
+  'رسالة وجمهور وموعد — أعياد ميلاد، وزبائن صامتون، وتذكيرات',
+ 'Active campaigns':'حملات فعّالة', 'Messages this month':'رسائل هذا الشهر',
+ 'across all campaigns':'عبر كل الحملات', 'Birthdays this week':'أعياد ميلاد هذا الأسبوع',
+ 'greetings will go automatically':'التهاني سترسل تلقائياً', 'Opted out':'منسحبون',
+ 'never contacted':'لا يُراسلون أبداً', 'Campaigns':'الحملات', 'Campaign':'الحملة',
+ 'Who gets it':'من يستلمها', 'When':'متى', 'How':'كيف', 'Audience':'الجمهور',
+ 'The message':'الرسالة', 'Channel':'القناة', 'Send at':'يُرسل الساعة', 'Text':'النص',
+ 'Local time. Nothing goes out at night.':'بالتوقيت المحلي. لا شيء يُرسل ليلاً.',
+ 'Nothing is sent from the prototype.':'لا شيء يُرسل من النموذج.',
+ 'The same decision as the statement: WhatsApp can go one customer at a time through a free link, or in bulk through a paid business account with a monthly cost. Until that is chosen, this screen composes and schedules but does not send — and it says so rather than pretending.':
+  'القرار نفسه كما في كشف الحساب: واتساب إما لزبون واحد في كل مرة عبر رابط مجاني، أو بالجملة عبر حساب أعمال مدفوع بكلفة شهرية. إلى أن يُختار، تُنشئ هذه الشاشة الرسالة وتجدولها ولا ترسلها — وتقول ذلك بدل أن تتظاهر.',
+ 'Composes and schedules · does not send':'تُنشئ وتجدول · لا ترسل',
+ 'A campaign is three things.':'الحملة ثلاثة أشياء.',
+ 'Who gets it — a rule over the customer file, not a list somebody types. When it goes. And through which channel. Everything else is the text. Because the audience is a rule, a customer who stops qualifying stops receiving, without anyone remembering to remove him.':
+  'من يستلمها — قاعدة على ملف الزبائن، لا لائحة يكتبها أحد. ومتى تُرسل. وبأي قناة. وما عدا ذلك نصّ. ولأن الجمهور قاعدة، فالزبون الذي يخرج عن الشرط يتوقف عن الاستلام بلا أن يتذكر أحد حذفه.',
+ 'Surveys':'الاستبيانات', 'Ask the people who use it, and count the answers':
+  'اسأل من يستعمله، واحسب الأجوبة',
+ 'Surveys running':'استبيانات جارية', 'Answered':'أُجيب', 'Average score':'متوسط النتيجة',
+ 'out of 5':'من ٥', 'Lowest scoring question':'أدنى سؤال', 'needs attention':'يحتاج انتباهاً',
+ 'Answers':'الأجوبة', 'Question':'السؤال', 'Average':'المتوسط', 'How they answered':'كيف أجابوا',
+ 'The new invoice screen is faster than the old one':'شاشة الفاتورة الجديدة أسرع من القديمة',
+ 'I can find an item without asking anyone':'أستطيع إيجاد صنف بلا أن أسأل أحداً',
+ 'The Arabic screens read naturally':'الشاشات العربية تُقرأ بسلاسة',
+ 'I know what to do when the internet drops':'أعرف ما أفعل حين ينقطع الإنترنت',
+ 'The number that matters is the low one.':'الرقم المهم هو المنخفض.',
+ 'Ask the people who use it, and count the answers':'اسأل من يستعمله، واحسب الأجوبة',
+ /* campaign rows */
+ 'Birthday greeting':'تهنئة عيد ميلاد', 'Birthday':'عيد الميلاد',
+ 'On the day, 09:00':'في اليوم نفسه، ٩:٠٠', 'customers':'زبون',
+ 'Not seen for 60 days':'لم يُرَ منذ ٦٠ يوماً', 'No purchase in 60 days':'لا شراء منذ ٦٠ يوماً',
+ 'Weekly, Monday':'أسبوعياً، الاثنين', 'SMS':'رسالة نصية',
+ 'Statement reminder':'تذكير بكشف الحساب', 'Balance over 30 days old':'رصيد أقدم من ٣٠ يوماً',
+ 'Monthly, 1st':'شهرياً، الأول', 'Email':'بريد إلكتروني', 'Paused':'موقوفة',
+ 'New solar range':'تشكيلة شمسية جديدة', 'Bought solar before':'اشترى شمسياً سابقاً',
+ 'Once, 05/09/2026':'مرة واحدة، ٠٥/٠٩/٢٠٢٦', 'Draft':'مسودة', 'Active':'فعّالة',
+ 'In the system':'داخل النظام', 'State':'الحالة',
+ /* survey wording that was left in English */
+ '“After the first week”':'«بعد الأسبوع الأول»',
+ 'The number that matters is the low one.':'الرقم المهم هو المنخفض.',
+ '“I know what to do when the internet drops” scores 2.8 out of 5 across twenty-four people. That is not a survey result, it is a training job and possibly a design job — and it is the only reason to run a survey at all. A survey that produces a good average and no action was a waste of everyone’s morning.':
+  '«أعرف ما أفعل حين ينقطع الإنترنت» نالت ٢٫٨ من ٥ لدى أربعة وعشرين شخصاً. هذه ليست نتيجة استبيان، بل مهمة تدريب وربما مهمة تصميم — وهي السبب الوحيد لإجراء استبيان أصلاً. الاستبيان الذي ينتج متوسطاً جيداً ولا فعل، أضاع صباح الجميع.',
+ /* item categories, used by the advanced search and the touch rail */
+ 'Laptops':'لابتوبات', 'Open box':'علبة مفتوحة', 'New':'جديد', 'Paper':'ورق',
+ 'Solar':'طاقة شمسية', 'Services':'خدمات', 'All':'الكل',
+ 'Panels':'ألواح', 'Inverters':'عاكسات', 'A4':'A4', 'Rolls':'لفات',
+ 'Repair':'تصليح', 'Installation':'تركيب',
+ 'New campaign':'حملة جديدة', 'New survey':'استبيان جديد'
+});
+Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
+buildTree(); paint();
+</script>
+<style>
+/* CR-053 — the Back button lives beside the breadcrumb */
+.backbtn{display:inline-flex;align-items:center;gap:4px;margin-inline-end:10px;
+  background:transparent;border:1px solid var(--c-border,var(--line,#e2ded5));border-radius:6px;
+  padding:3px 8px;font:inherit;font-size:12px;color:var(--c-text-muted,#7c756a);cursor:pointer}
+.backbtn:hover:not(:disabled){background:var(--c-surface-2,rgba(0,0,0,.04));color:var(--c-text,inherit)}
+.backbtn:disabled{opacity:.4;cursor:default}
+.fs.f5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+@media (max-width:900px){.fs.f5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* CR-056/057/058 — the touch area */
+.prail{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.prail button{border:1px solid var(--c-border,var(--line,#e2ded5));background:var(--c-surface,#fff);
+  border-radius:999px;padding:5px 12px;font:inherit;font-size:12px;cursor:pointer}
+.prail button.on{background:var(--ac,#3E6E8E);border-color:var(--ac,#3E6E8E);color:#fff}
+.psub{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.psub button{border:0;background:transparent;font:inherit;font-size:12px;
+  color:var(--c-text-muted,#7c756a);cursor:pointer;padding:2px 6px;border-bottom:2px solid transparent}
+.psub button:hover{border-bottom-color:var(--c-border,#e2ded5);color:var(--c-text,inherit)}
+.ptiles{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.ptiles.large{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.ptiles.small{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+.ptiles.list{grid-template-columns:1fr}
+.ptile{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:start;
+  border:1px solid var(--c-border,var(--line,#e2ded5));border-radius:10px;background:var(--c-surface,#fff);
+  padding:10px;font:inherit;cursor:pointer;min-height:96px}
+.ptile:hover{border-color:var(--ac,#3E6E8E)}
+.ptile .pimg{display:flex;align-items:center;justify-content:center;width:100%;height:52px;
+  border-radius:6px;background:var(--c-surface-2,#f0eeea);overflow:hidden;margin-bottom:4px}
+.ptile .pimg img{width:100%;height:100%;object-fit:cover}
+.ptiles.small .ptile .pimg,.ptiles.list .ptile .pimg{display:none}
+.ptile .pname{font-size:12.5px;font-weight:600;line-height:1.25}
+.ptile .pprice{font-size:14px;font-weight:600}
+.ptile .pstock{font-size:11px;color:var(--c-text-muted,#7c756a)}
+
+/* CR-052 — the answer distribution bar */
+.sbar{display:flex;height:12px;border-radius:6px;overflow:hidden;min-width:140px;
+  background:var(--c-surface-2,#f0eeea)}
+.sbar span{display:block}
+.sbar .s1,.slegend i.s1{background:#B42318}.sbar .s2,.slegend i.s2{background:#D68A2E}
+.sbar .s3,.slegend i.s3{background:#C9B458}.sbar .s4,.slegend i.s4{background:#6FA96F}
+.sbar .s5,.slegend i.s5{background:#2F7A5E}
+.slegend{display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--c-text-muted,#7c756a)}
+.slegend span{display:inline-flex;align-items:center;gap:4px}
+.slegend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+/* CR-061 — the POS on a phone */
+@media (max-width:760px){
+  .ptiles,.ptiles.large,.ptiles.small{grid-template-columns:repeat(auto-fill,minmax(46%,1fr))}
+  .ptile{min-height:112px;padding:12px}
+  .ptile .pname{font-size:13.5px}
+  .prail button,.psub button{padding:8px 14px;font-size:13px}
+  .backbtn{padding:6px 10px;font-size:13px}
+  .inventry .in{flex:1 1 100%}
+  input.in.cin{min-width:64px;padding:8px 6px}
+  .fs.f4,.fs.f3,.fs.f5{grid-template-columns:1fr 1fr}
+}
+@media (max-width:480px){ .fs.f4,.fs.f3,.fs.f5,.fs.f2{grid-template-columns:1fr} }
 </style>
 
 </body>
