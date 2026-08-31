@@ -1246,7 +1246,7 @@ reord:{t:'Reorder list',sub:'What to buy today — minimum quantity, sales speed
   ['A4 paper 80g','Paper','Beirut','180','200','0','200','410','13','Zahle Paper Co.','2 d','0','<span class="pill ok">On order</span>']]},
 
 /* ── Finance lists ── */
-jvs:{t:'Journal vouchers',sub:'Every posted entry — with both currency columns his old system already kept',
+jvs:{t:'Journal vouchers',sub:'Every posted entry — with both currency columns, the way you keep them today',
  add:'jv',addT:'New voucher',tools:['Print','Excel'],
  cols:[C('Number'),C('Date'),C('Type'),C('Description'),C('Currency'),n('Rate'),n('Debit'),n('Credit'),n('Debit LBP'),n('Credit LBP'),C('Source'),C('User'),C('State'),C('')],
  rows:[['JV-2026-2214','29/08/2026','Sales','Invoice SI-2026-1180 · Karam Trading','USD','90,000','4,573.20','4,573.20','411,588,000','411,588,000','Automatic','system','<span class="pill ok">Posted</span>',''],
@@ -1416,7 +1416,7 @@ init:{t:'Initialization',sub:'What a brand-new company gets on day one — this 
   ['7 · Import items and customers','From Excel, checked before saving','Excel','<span class="pill wa">Waiting</span>',''],
   ['8 · Opening balances','Customers, suppliers, stock, accounts','Excel','<span class="pill mu">Not started</span>',''],
   ['9 · Users and roles','Who may do what','Typed once','<span class="pill mu">Not started</span>',''],
-  ['10 · Licence','Activates the modules the client paid for','Licence file','<span class="pill mu">Not started</span>','']]}
+  ['10 · Licence','Activates the modules that were paid for','Licence file','<span class="pill mu">Not started</span>','']]}
 
 };
 </script>
@@ -1504,7 +1504,7 @@ S.dprofit=()=>head('Profit dashboard','After landed cost, discounts and returns 
   </div>`;
 
 /* ── Sales invoice — his exact field set, modernised ── */
-S.inv=()=>head('Sales invoice','New invoice · Zahle main · everything he has today, plus cost centre, tax group and instalments',
+S.inv=()=>head('Sales invoice','New invoice · Zahle main · everything you have today, plus cost centre, tax group and instalments',
   [btn('Import lines'),btn('Print'),btn('Save'),btn('Save and print','p')])+
  pane('Header',fgrid([
   {l:'Bill number',v:'SI-2026-1181',ro:1},{l:'Date',v:'29/08/2026',req:1},
@@ -1898,7 +1898,7 @@ S.cheq=()=>head('Cheques','Received and issued — with a due-date calendar, bec
 
 S.terms=()=>head('Payment terms','Dynamic — build any term a customer needs and link it to its own account',
   [btn('Print'),addBtn('New payment term','term')])+
- note('This is exactly what he asked for:','“payment term will be dynamic so if a company has special payment term possible to create it and link to an account on chart of account.” Each term carries its own control account, so instalment debt, normal debt and cheque debt never mix on the balance sheet.')+
+ note('A term is more than a number of days:','you can build any term a customer needs and link it to its own account in the chart. Each term carries its own control account, so instalment debt, normal debt and cheque debt never mix on the balance sheet.')+
  pane('',tbl([C('Code'),C('Name'),C('Arabic name'),C('How it works'),n('Days'),C('Instalments'),C('Customer balance goes to'),C('Supplier balance goes to'),C('Money lands in'),n('Early discount'),C('Creates a cheque'),C('Status'),C('')],[
   ['IMM','Immediate','فوري','Paid immediately','0','—','—','—','5310 · Main cash box','—','—','<span class="pill ok">Active</span>',del()],
   ['NET30','Net 30 days','30 يوم','One payment after so many days','30','—','4111 · Trade receivables','4011 · Local suppliers','—','2% in 10 days','—','<span class="pill ok">Active</span>',del()],
@@ -1934,7 +1934,7 @@ S.fx=()=>head('Currencies & rates','Two rates per currency, dated, never overwri
   ['29/08/2026','Closing','90,000','Month-end revaluation and reports','system','Official peg'],
   ['28/08/2026','Closing','90,000','—','system','Official peg'],
   ['31/07/2026','Average','89,880','P&L translation for July','system','Calculated']]))+
- note('Why two rates and not one:','his old system stored one rate per currency and overwrote it. Once it is overwritten, last month’s invoices cannot be re-explained. Here every rate is dated and kept, and the invoice carries the rate it was written at.');
+ note('Why two rates and not one:','your current system stores one rate per currency and overwrites it. Once it is overwritten, last month’s invoices cannot be re-explained. Here every rate is dated and kept, and the invoice carries the rate it was written at.');
 
 S.vat=()=>head('VAT return','Quarterly · Lebanon · 11%',
   [btn('Q3 2026','p'),btn('Print'),btn('Excel'),btn('PDF'),btn('Mark as filed')])+
@@ -1979,7 +1979,7 @@ S.per=()=>head('Periods & year end','Three locks, so a closed month stays closed
   ['5 · Close income and expense','Result moved to retained earnings','<span class="pill mu">Not started</span>'],
   ['6 · Opening balances 2027','Balance sheet accounts carried forward','<span class="pill mu">Not started</span>'],
   ['7 · Lock 2026','Hard lock date set — nobody posts into it again','<span class="pill mu">Not started</span>']]))+
- note('He asked for closing and opening balances:','this is that, as a checklist you can run and re-run. Until step 7 the year can still be reopened by whoever has the permission — and the reopening is written in the audit log.');
+ note('Closing and opening balances:','this is that, as a checklist you can run and re-run. Until step 7 the year can still be reopened by whoever has the permission — and the reopening is written in the audit log.');
 
 S.tb=()=>head('Trial balance','The whole ledger on one page — in either currency',
   [btn('USD','p'),btn('LBP'),btn('Both'),btn('Print'),btn('Excel'),btn('PDF')])+
@@ -2129,7 +2129,7 @@ S.roles=()=>head('Roles & permissions','View, add, change and delete — per scr
   [btn('Print'),btn('Copy a role'),addBtn('New role','role')])+
  `<div class="tabsx"><button class="on">Cashier</button><button>Salesman</button><button>Storekeeper</button>
    <button>Accountant</button><button>Manager</button><button>Owner</button></div>
-  ${pane('Cashier — what he may do',`<div class="matrix">`+tbl([C('Screen'),C('View'),C('Add'),C('Change'),C('Delete'),C('Print'),C('Export')],
+  ${pane('Cashier'+' — '+tr('what this role may do'),`<div class="matrix">`+tbl([C('Screen'),C('View'),C('Add'),C('Change'),C('Delete'),C('Print'),C('Export')],
    [['POS',1,1,1,0,1,0],['Sales invoice',1,1,0,0,1,0],['Return invoice',1,1,0,0,1,0],
     ['Customers',1,1,0,0,0,0],['Items',1,0,0,0,0,0],['Stock on hand',1,0,0,0,0,0],
     ['Cash box',1,0,1,0,1,0],['Receipt voucher',1,1,0,0,1,0],
@@ -2147,7 +2147,7 @@ S.roles=()=>head('Roles & permissions','View, add, change and delete — per scr
    ['Beirut','<span class="pill ok">Yes</span>','<span class="pill ok">Yes</span>','—'],
    ['Van — Elie','—','—','—'],['Till 2 — shop','<span class="pill ok">Yes</span>','<span class="pill ok">Yes</span>','<span class="pill ok">Yes</span>']]))}
   </div>
-  ${note('His old system had this too — we are keeping it and going further:','it already had per-user rights per warehouse and per screen. What is added is the money side: discount ceilings, approvals, and who is allowed to see cost.')}`;
+  ${note('Your current system has this too — we are keeping it and going further:','it already had per-user rights per warehouse and per screen. What is added is the money side: discount ceilings, approvals, and who is allowed to see cost.')}`;
 
 S.comp=()=>head('Company & branches','Eight companies, each with its own books — one login',
   [btn('Print'),addBtn('New branch','branch'),addBtn('New company','comp')])+
@@ -2646,7 +2646,7 @@ S.item1=()=>{
     ['6291041','Piece','Supplier','Printed on the carton',del()],
     ['0194850119', 'Piece','Manufacturer','HP part number',del()],
     ['2000009190004','Piece','Weighed label','Shop scale',del()]]),addBtn('Add a barcode','barc'))+
-   note('One item, three barcodes, three prices:','scanning the box barcode sells twelve pieces at the box price and takes twelve out of stock. This is the part of his old system that was already right, and it is kept exactly.');
+   note('One item, three barcodes, three prices:','scanning the box barcode sells twelve pieces at the box price and takes twelve out of stock. This is the part of your current system that was already right, and it is kept exactly.');
  } else if(v===2){
   body=pane('Selling prices — per package level',tbl([C('Level'),n('Cost'),n('Super wholesale'),n('Wholesale'),n('Retail'),n('Bulk'),n('Minimum allowed'),C('Currency'),C('')],[
     ['Piece','268.00','355.00','380.00','415.00','345.00','330.00','USD',del()],
@@ -2842,7 +2842,7 @@ S.roles=()=>{
    [btn('Print'),btn('Copy this role'),addBtn('New role','role')])+
   xtabs('roletab',keys)+
   note(k+' —',RDESC[k])+
-  pane(k+' · what he may do','<div class="matrix">'+
+  pane(k+' · '+tr('what this role may do'),'<div class="matrix">'+
     tbl([C('Screen'),C('View'),C('Add'),C('Change'),C('Delete'),C('Print'),C('Export')],rows,{min:820})+'</div>')+
   `<div class="g g2">
    ${pane('Money limits for this role',fgrid([{l:'Maximum discount %',t:'num',v:lim[0]},
@@ -2862,7 +2862,7 @@ S.roles=()=>{
       ['Zahle main','<span class="pill ok">Yes</span>','—','—'],
       ['Till 2 — shop','<span class="pill ok">Yes</span>','<span class="pill ok">Yes</span>','<span class="pill ok">Yes</span>']]))}
   </div>
-  ${note('His old system had this too — we are keeping it and going further:','it already had per-user rights per screen and per warehouse. What is added is the money side: discount ceilings, approvals, and who is allowed to see cost.')}`;
+  ${note('Your current system has this too — we are keeping it and going further:','it already had per-user rights per screen and per warehouse. What is added is the money side: discount ceilings, approvals, and who is allowed to see cost.')}`;
 };
 
 /* ─────────── Chart of accounts · the tree is clickable ─────────── */
@@ -4330,7 +4330,7 @@ S.fx=()=>{
     {l:'Which rate a purchase uses',t:'sel',o:['Buy rate','Closing rate'],req:1},
     {l:'Which rate the month end uses',t:'sel',o:['Closing rate'],req:1},
     {l:'Which rate the profit and loss uses',t:'sel',o:['Average rate for the period','Closing rate'],req:1}],4))+
-   note('He said it in one line and it decides a lot:','“system has default currency based on customer use — jvs should be applied on LBP sales or purchase to be able to generate reports on LBP.” Every voucher in the system carries both columns, always. Not a conversion done later — both amounts written at the moment of the sale, at the rate that was true that day.');
+   note('You said it in one line and it decides a lot:','“system has default currency based on customer use — jvs should be applied on LBP sales or purchase to be able to generate reports on LBP.” Every voucher in the system carries both columns, always. Not a conversion done later — both amounts written at the moment of the sale, at the rate that was true that day.');
  } else if(v===1){
   body=scope('ten')+
    pane('Rate history — LBP per USD',tbl([C('Date'),C('Type'),n('Rate'),C('Used for'),C('Source'),C('Set by'),C('Documents written at it')],[
@@ -4347,7 +4347,7 @@ S.fx=()=>{
     ['Closing','Month end, balance sheet, VAT return','Official peg or you'],
     ['Average','Translating a whole month of profit and loss','Calculated from the daily rates'],
     ['Historical','Stock and fixed assets — the rate on the day you bought them','Locked at purchase']]))}
-   ${note('One rate per currency is how his old system loses the past.','It stored a single number and overwrote it. The moment it changed, last month’s invoices could no longer be explained. Here every rate is dated and kept forever, and each document carries the rate it was written at.')}
+   ${note('One rate per currency is how your current system loses the past.','It stores a single number and overwrites it. The moment it changed, last month’s invoices could no longer be explained. Here every rate is dated and kept forever, and each document carries the rate it was written at.')}
    </div>`;
  } else {
   body=scope('ten')+
@@ -11678,7 +11678,7 @@ buildTree(); paint();
 /* ═══════════════════════════════════════════════════════════════════════════
    THE SALES INVOICE — CR-012 … CR-023, CR-029, CR-030, CR-032
 
-   Fourteen of his thirty-eight numbered requirements land on this one screen.
+   Fourteen of the thirty-eight numbered requirements land on this one screen.
    They are built here as ONE job, because done separately they would be
    fourteen reworks of the same screen.
 
@@ -11702,7 +11702,7 @@ buildTree(); paint();
    typed in. Change a quantity and every figure under it moves.
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* ── the item file. Stock is split across his three stores and the splits
+/* ── the item file. Stock is split across the three stores and the splits
       add up to the "On hand" already shown on the Items screen, so the two
       screens cannot disagree. ── */
 const ITEMDIR = [
@@ -11727,7 +11727,7 @@ const ITEMDIR = [
 ];
 
 /* ── the customer file. Phone and MOF are both searchable, because that is
-      how his people actually find someone on the phone. ── */
+      how people actually find someone on the phone. ── */
 const CUSTDIR = [
  {code:'C-0101', en:'Karam Trading',    ar:'كرم للتجارة',       phone:'+961 3 445 112', mof:'1002554', area:'Zahle',
   term:'Net 30 days',      lvl:'Wholesale',       limit:15000, bal:12480.00, acct:'4111', sman:'Elie Haddad'},
@@ -11741,7 +11741,7 @@ const CUSTDIR = [
 
 /* ── what each customer last paid for each item, and when. This is the
       answer to "last transaction price" — it is per customer, not a
-      global last price, because that is what he asked for. ── */
+      global last price, which is the point of it. ── */
 const LASTSALE = {
  'C-0101|IT-0919':{p:378.00, d:'12/08/2026', q:2},
  'C-0101|IT-1204':{p:4.10,   d:'12/08/2026', q:400},
@@ -12026,15 +12026,19 @@ S.inv = function(){
   {l:'Exchange rate', t:'num', v:invM0(INV.rate), req:1,
    hint:tr('Stamped on the invoice — later rate changes never move it')},
   {l:'Reference'}
- ], 3) +
- '<div class="fs f3">' +
-  '<div><label>' + esc(tr('Store')) + '</label>' +
+ ], 3)
+ /* the three dropdowns below need their own onchange, so they are written by
+    hand — but they belong in the SAME grid as the fields above, or the header
+    renders as two stacked grids with different column widths and one orphaned
+    field. That is what it did before this was fixed. */
+ .replace(/<\/div>\s*$/,
+  '<div class="fw"><label>' + esc(tr('Store')) + '</label>' +
    sel(INV.store, ['Zahle main','Beirut','Van — Elie'], 'invSetStore(this.value)') + '</div>' +
-  (SETT_CC_ON() ? '<div><label>' + esc(tr('Cost centre')) + '</label>' +
+  (SETT_CC_ON() ? '<div class="fw"><label>' + esc(tr('Cost centre')) + '</label>' +
    sel('Zahle branch', ['Zahle branch','Beirut branch','Bekaa route'], 'void 0') + '</div>' : '') +
-  '<div><label>' + esc(tr('Tax group')) + '</label>' +
+  '<div class="fw"><label>' + esc(tr('Tax group')) + '</label>' +
    sel('Standard 11%', ['Standard 11%','Exempt','Export 0%'], 'void 0') + '</div>' +
- '</div>';
+  '</div>');
 
  /* ── the entry box ── */
  const entry =
@@ -12128,7 +12132,7 @@ S.inv = function(){
      esc(tr('No lines yet. Type an item number, a barcode or a name in the box above.')) + '</span></td></tr>') +
    '</tbody></table></div>';
 
- /* ── the rules pane, so he can try each setting on the spot ── */
+ /* ── the rules pane, so each setting can be tried on the spot ── */
  const rules =
   '<div class="fs f4">' +
    '<div><label>' + esc(tr('Selling below cost')) + '</label>' +
@@ -12249,11 +12253,11 @@ S.inv = function(){
   : '';
 
  return head('Sales invoice',
-   tr('One entry box, live stock, the price he paid last time, and the profit — if you are allowed to see it'),
+   tr('One entry box, live stock, the price this customer paid last time, and the profit — if you are allowed to see it'),
    [btn('Print'), btn('Send'), blocked.length ? btn('Save') : btn('Save','p')]) +
   pane(tr('Who is buying'), findBox,
     '<button class="b" onclick="invStmt()">' +
-     esc(INV.showStmt ? tr('Hide the statement') : tr('Show his statement')) + '</button>') +
+     esc(INV.showStmt ? tr('Hide the statement') : tr('Show the statement')) + '</button>') +
   stmtPane +
   pane(tr('Header'), header) +
   pane(tr('Lines'), entry + grid,
@@ -12351,7 +12355,7 @@ Object.assign(AR, {
  'Paid':'مدفوع', 'Remaining':'المتبقي', 'Part paid':'مدفوع جزئياً', 'Unpaid':'غير مدفوع',
  'This customer has no credit limit — cash only.':'لا سقف ائتمان لهذا الزبون — نقداً فقط.',
  'Credit limit':'سقف الائتمان', 'already used':'المستعمل', 'this invoice would leave':'هذه الفاتورة تترك',
- 'Statement':'كشف حساب', 'Show his statement':'أظهر كشف حسابه', 'Hide the statement':'أخفِ الكشف',
+ 'Statement':'كشف حساب', 'Show the statement':'أظهر كشف الحساب', 'Hide the statement':'أخفِ الكشف',
  'Open the full statement':'افتح الكشف الكامل',
  'Nothing open for this customer.':'لا شيء مفتوح لهذا الزبون.',
  'This is the short view.':'هذه النظرة المختصرة.',
@@ -12366,7 +12370,7 @@ Object.assign(AR, {
  'Nothing on this screen is typed in.':'لا شيء في هذه الشاشة مكتوب يدوياً.',
  'Every total, every discount, the VAT, the rounding and the profit are worked out from the lines. Change a quantity or a price and watch the whole screen move. The three settings under “Invoice rules” are per company — each of the eight can be stricter or looser than the others.':
   'كل المجاميع والحسومات والضريبة والتقريب والربح تُحتسب من السطور. غيّر كمية أو سعراً وسترى الشاشة كلها تتحرك. الإعدادات الثلاثة تحت «قواعد الفاتورة» لكل شركة — كل واحدة من الثماني يمكن أن تكون أشد أو أخف من غيرها.',
- 'One entry box, live stock, the price he paid last time, and the profit — if you are allowed to see it':
+ 'One entry box, live stock, the price this customer paid last time, and the profit — if you are allowed to see it':
   'صندوق إدخال واحد، مخزون حي، السعر الذي دفعه آخر مرة، والربح — إن كان مسموحاً لك رؤيته',
  'Comes from the customer':'يأتي من الزبون', 'Local customers':'زبائن محليون',
  'lines':'سطور', 'store':'المستودع', 'quantity':'الكمية',
@@ -12952,7 +12956,7 @@ buildTree(); paint();
 /* ═══════════════════════════════════════════════════════════════════════════
    TAKEN FROM HIS OLD SYSTEM, AND UPGRADED
 
-   Two things his old ERP does well and two it cannot do at all.
+   Two things the current ERP does well and two it cannot do at all.
 
    THE VOUCHER — kept from him:
      · every line carries its own currency AND its own rate
@@ -12963,27 +12967,27 @@ buildTree(); paint();
      · two maturity flags: a leaf, and separately "a human may post here"
 
    THE VOUCHER — fixed:
-     · a posted voucher is LOCKED. His can be edited after posting; three of the
-       four live vouchers we were shown had been.
+     · a posted voucher is LOCKED. The current one can be edited after posting;
+       three of the four live vouchers we were shown had been.
      · status is not a dropdown you can wind back. Posted is one-way.
-     · document date and posting timestamp are separate. His has one editable
-       date and one stamp that is overwritten on every edit.
+     · document date and posting timestamp are separate. The current one has a
+       single editable date and a stamp overwritten on every edit.
      · a correction is a REVERSAL that names what it reverses.
      · the source document is a link, not the text "Trans#2026001550".
 
    THE STOCK LEDGER — entirely new:
-     · his system has no movement table. Stock is a running number on the item,
-       which is why his stock report carries a column called "Stock_Difference".
+     · the current system has no movement table. Stock is a running number on the
+       item, which is why its stock report has a column called "Stock_Difference".
      · here every change is a row, on-hand is DERIVED from the rows, and the two
        are compared on screen.
      · cost layers, consumed oldest first, so FIFO is a fact rather than a
        setting — and moving average is computed from the same layers.
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* ══════════ 1. ACCOUNT MATURITY — his two flags, kept apart ══════════ */
+/* ══════════ 1. ACCOUNT MATURITY — the two flags, kept apart ══════════ */
 function accLeaf(code){ return !isParent(String(code)); }
 /* control accounts, VAT and inventory are fed by documents; a person may not
-   hand-post to them. This is his ACC_ALLOW_MANUAL_GVS, which we had not built. */
+   hand-post to them. This is the ACC_ALLOW_MANUAL_GVS flag, which we had not built. */
 function accManual(code){
  const c = String(code);
  if(!accLeaf(c)) return false;
@@ -13024,7 +13028,7 @@ const JVPOSTED = [];          /* vouchers this session has actually posted */
 const jvM  = v => (Math.round((+v||0)*100)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const jvM0 = v => Math.round(+v||0).toLocaleString('en-US');
 
-/* the three amounts his system stores on every line */
+/* the three amounts the current system stores on every line */
 function jvAmounts(l){
  const r = +l.rate || 1;
  const toMain = v => l.cur === 'USD' ? v : v / r;      /* main currency = USD */
@@ -13222,11 +13226,11 @@ S.jv = function(){
       'A correction is a reversing voucher that names what it reverses'
      ].map(x => '<li>' + esc(tr(x)) + '</li>').join('') + '</ul>') +
   '</div>' +
-  note(tr('Three of these six come straight from his own system.'),
-   tr('Line-level currency and rate, the three stored amounts, and balancing in both currencies are how his vouchers already work — they were read from four live posted entries. The other three are the fixes: his posted vouchers can be edited, their status wound back, and their date typed by hand.'));
+  note(tr('Three of these six come straight from your own system.'),
+   tr('Line-level currency and rate, the three stored amounts, and balancing in both currencies are how your vouchers already work — they were read from four of your live posted entries. The other three are the fixes: today a posted voucher can be edited, its status wound back, and its date typed by hand.'));
 };
 
-/* ══════════ 3. THE STOCK MOVEMENT LEDGER — the thing his system has not got ══════════ */
+/* ══════════ 3. THE STOCK MOVEMENT LEDGER — the thing the current system lacks ══════════ */
 
 /* real documents. On-hand is NOT written here — it is derived from these below. */
 const SMOVDOC = [
@@ -13323,7 +13327,7 @@ S.smov = function(){
   pane(tr('The movements'),
    tbl([C('Date'),C('Document'),C('Type'),n('In'),n('Out'),n('Unit cost'),n('Running balance')],
      body, {min:820})) +
-  pane(tr('The check that his system cannot run'),
+  pane(tr('The check your current system cannot run'),
    '<div class="ttab">' +
     '<div class="trow"><span>'+esc(tr('Added up from the movements'))+'</span><b>'+invM0(derived)+'</b></div>' +
     '<div class="trow"><span>'+esc(tr('The quantity the system shows on the shelf'))+'</span><b>'+invM0(shelf)+'</b></div>' +
@@ -13331,7 +13335,7 @@ S.smov = function(){
       (gap === 0 ? pill('ok', '0 · ' + tr('they agree')) : pill('bad', invM0(gap))) + '</b></div>' +
    '</div>' +
    note(tr('This is the whole point.'),
-    tr('In his old system the quantity on hand is a number written on the item and changed in place — there is no list of movements at all, which is why his stock report carries a column called “Stock difference”. Here the quantity is added up from the rows above every time it is asked for, so the two can be compared, and a difference is a fault to investigate rather than a fact to live with.')));
+    tr('In your current system the quantity on hand is a number written on the item and changed in place — there is no list of movements at all, which is why your stock report carries a column called “Stock difference”. Here the quantity is added up from the rows above every time it is asked for, so the two can be compared, and a difference is a fault to investigate rather than a fact to live with.')));
 };
 
 S.slay = function(){
@@ -13423,9 +13427,9 @@ Object.assign(AR, {
   'تاريخ المستند لك؛ ووقت الترحيل من الخادم ولا يُكتب',
  'A correction is a reversing voucher that names what it reverses':
   'التصحيح قيد عكسي يذكر ما يعكسه',
- 'Three of these six come straight from his own system.':'ثلاثة من هذه الستة من نظامه نفسه.',
- 'Line-level currency and rate, the three stored amounts, and balancing in both currencies are how his vouchers already work — they were read from four live posted entries. The other three are the fixes: his posted vouchers can be edited, their status wound back, and their date typed by hand.':
-  'العملة والسعر على مستوى السطر، والمبالغ الثلاثة المخزّنة، والتوازن بالعملتين — هكذا تعمل قيوده أصلاً، وقد قُرئت من أربعة قيود مُرحّلة حقيقية. والثلاثة الأخرى إصلاحات: قيوده المُرحّلة يمكن تعديلها، وإعادة حالتها، وكتابة تاريخها يدوياً.',
+ 'Three of these six come straight from your own system.':'ثلاثة من هذه الستة من نظامك نفسه.',
+ 'Line-level currency and rate, the three stored amounts, and balancing in both currencies are how your vouchers already work — they were read from four of your live posted entries. The other three are the fixes: today a posted voucher can be edited, its status wound back, and its date typed by hand.':
+  'العملة والسعر على مستوى السطر، والمبالغ الثلاثة المخزّنة، والتوازن بالعملتين — هكذا تعمل قيودك أصلاً، وقد قُرئت من أربعة من قيودك المُرحّلة. والثلاثة الأخرى إصلاحات: اليوم يمكن تعديل القيد المُرحّل، وإعادة حالته، وكتابة تاريخه يدوياً.',
  'Stock movements':'حركات المخزون', 'Cost layers':'طبقات الكلفة',
  'Every change to stock is a row. The quantity on hand is worked out from these rows, not stored beside them':
   'كل تغيّر في المخزون سطر. والكمية المتوفرة تُحتسب من هذه السطور، لا تُخزَّن بجانبها',
@@ -13433,12 +13437,12 @@ Object.assign(AR, {
  'Unit cost':'كلفة الوحدة', 'Running balance':'الرصيد الجاري',
  'Purchase':'شراء', 'Sale':'بيع', 'Transfer out':'تحويل صادر', 'Transfer in':'تحويل وارد',
  'Damage':'تلف', 'Opening':'رصيد افتتاحي',
- 'The check that his system cannot run':'الفحص الذي لا يستطيع نظامه إجراءه',
+ 'The check your current system cannot run':'الفحص الذي لا يستطيعه نظامك الحالي',
  'Added up from the movements':'مجموع الحركات',
  'The quantity the system shows on the shelf':'الكمية التي يعرضها النظام على الرف',
  'Difference':'الفرق', 'they agree':'متطابقان', 'This is the whole point.':'هذا هو بيت القصيد.',
- 'In his old system the quantity on hand is a number written on the item and changed in place — there is no list of movements at all, which is why his stock report carries a column called “Stock difference”. Here the quantity is added up from the rows above every time it is asked for, so the two can be compared, and a difference is a fault to investigate rather than a fact to live with.':
-  'في نظامه القديم الكمية المتوفرة رقم مكتوب على الصنف ويُغيَّر في مكانه — لا توجد لائحة حركات أصلاً، ولهذا يحمل تقرير مخزونه عموداً اسمه «فرق المخزون». هنا تُجمع الكمية من السطور أعلاه في كل مرة تُطلب، فيمكن مقارنة الرقمين، ويصبح الفرق خللاً يُبحث لا واقعاً يُتعايش معه.',
+ 'In your current system the quantity on hand is a number written on the item and changed in place — there is no list of movements at all, which is why your stock report carries a column called “Stock difference”. Here the quantity is added up from the rows above every time it is asked for, so the two can be compared, and a difference is a fault to investigate rather than a fact to live with.':
+  'في نظامك الحالي الكمية المتوفرة رقم مكتوب على الصنف ويُغيَّر في مكانه — لا توجد لائحة حركات أصلاً، ولهذا يحمل تقرير مخزونك عموداً اسمه «فرق المخزون». هنا تُجمع الكمية من السطور أعلاه في كل مرة تُطلب، فيمكن مقارنة الرقمين، ويصبح الفرق خللاً يُبحث لا واقعاً يُتعايش معه.',
  'Cost layers and valuation':'طبقات الكلفة والتقييم',
  'What each delivery cost, what is left of it, and therefore what the stock is worth':
   'كم كلّفت كل إرسالية، وكم بقي منها، وبالتالي كم يساوي المخزون',
@@ -13470,7 +13474,7 @@ buildTree(); paint();
 </style>
 <script>
 /* ═══════════════════════════════════════════════════════════════════════════
-   THE CLIENT'S SECOND LIST — CR-050 … CR-062
+   THE SECOND LIST — CR-050 … CR-062
 
    CR-050 marketing: birthday / SMS / notifications      → new screen
    CR-051 POS configured per business sector             → POS profile
@@ -13645,15 +13649,15 @@ S.inv = (orig => function(){
    note(tr('This one is yours, not the company’s.'),
     tr('Which columns you want in front of you is a preference of the person looking, so it is remembered per user and changes nothing for anyone else. The rules that decide what the invoice allows are a company matter and live in Settings.')),
    '<span class="mu">' + esc(Object.keys(INVCOLS).filter(k=>INVCOLS[k]).length + ' ' + tr('of') + ' 5') + '</span>') +
-  (INVSET.oldBal ? pane(tr('Where he stood before this invoice'),
+  (INVSET.oldBal ? pane(tr('Where this customer stood before this invoice'),
    '<div class="fs f4">' +
     '<div><label>'+esc(tr('Old balance'))+'</label><input class="in n" value="'+invM(c.bal)+'" readonly></div>' +
     '<div><label>'+esc(tr('This invoice'))+'</label><input class="in n" value="'+invM(T.total)+'" readonly></div>' +
     '<div><label>'+esc(tr('New balance'))+'</label><input class="in n" value="'+invM(c.bal + T.due)+'" readonly></div>' +
     '<div class="chk"><input type="checkbox" checked><span>'+esc(tr('Print it on the invoice too'))+'</span></div>' +
    '</div>' +
-   note(tr('He asked for this and he already has it.'),
-    tr('His old system carries a setting called DisplayOldBalance. It is the same idea: the customer sees what he owed before, what this invoice adds, and where he stands now — on the screen and on the printed copy.'))) : '');
+   note(tr('You already have this today.'),
+    tr('Your current system carries a setting called DisplayOldBalance. It is the same idea: the customer sees what he owed before, what this invoice adds, and where he stands now — on the screen and on the printed copy.'))) : '');
 
  /* CR-062 — advanced search beside the direct one */
  const adv = pane(tr('Find an item — the long way'),
@@ -13696,7 +13700,7 @@ enhance = (function(base){
 /* CR-060 on the receipt as well */
 S.rcpt = (orig => function(){
  const c = invCustRec('C-0101');
- return orig() + pane(tr('Where he stood before this receipt'),
+ return orig() + pane(tr('Where this customer stood before this receipt'),
   '<div class="fs f4">' +
    '<div><label>'+esc(tr('Old balance'))+'</label><input class="in n" value="'+invM(c.bal)+'" readonly></div>' +
    '<div><label>'+esc(tr('This receipt'))+'</label><input class="in n" value="2,000.00" readonly></div>' +
@@ -13758,7 +13762,7 @@ S.pos = (orig => function(){
    '</div>' +
    '<div class="fmsg hintmsg"><span>' + esc(tr(P.note)) + '</span></div>' +
    note(tr('One till, five shapes.'),
-    tr('His old system already does this — it has a setting called BusinessType, and the copy we read was set to Restaurant. It is the same idea here: a sector is a profile that decides which parts of the till exist, not five different tills to maintain.'))) +
+    tr('Your current system already does this — it has a setting called BusinessType, and the copy we read was set to Restaurant. It is the same idea here: a sector is a profile that decides which parts of the till exist, not five different tills to maintain.'))) +
   pane(tr('The touch area'),
    rail + subrail +
    '<div class="ptiles ' + esc(P.tiles) + '">' + shown.map(posTile).join('') + '</div>' +
@@ -13889,14 +13893,14 @@ Object.assign(AR, {
  'This one is yours, not the company’s.':'هذا لك، لا للشركة.',
  'Which columns you want in front of you is a preference of the person looking, so it is remembered per user and changes nothing for anyone else. The rules that decide what the invoice allows are a company matter and live in Settings.':
   'الأعمدة التي تريدها أمامك تفضيل شخصي لمن ينظر، فتُحفظ لكل مستخدم ولا تغيّر شيئاً لغيره. أما القواعد التي تقرر ما تسمح به الفاتورة فشأن الشركة ومكانها الإعدادات.',
- 'Where he stood before this invoice':'أين كان قبل هذه الفاتورة',
- 'Where he stood before this receipt':'أين كان قبل هذا السند',
+ 'Where this customer stood before this invoice':'أين كان هذا الزبون قبل هذه الفاتورة',
+ 'Where this customer stood before this receipt':'أين كان هذا الزبون قبل هذا السند',
  'Old balance':'الرصيد السابق', 'This invoice':'هذه الفاتورة', 'This receipt':'هذا السند',
  'New balance':'الرصيد الجديد', 'Print it on the invoice too':'اطبعه على الفاتورة أيضاً',
  'Print it on the receipt too':'اطبعه على السند أيضاً',
- 'He asked for this and he already has it.':'طلب هذا وهو موجود لديه أصلاً.',
- 'His old system carries a setting called DisplayOldBalance. It is the same idea: the customer sees what he owed before, what this invoice adds, and where he stands now — on the screen and on the printed copy.':
-  'نظامه القديم يحمل إعداداً اسمه DisplayOldBalance. الفكرة نفسها: يرى الزبون ما كان عليه، وما تضيفه هذه الفاتورة، وأين صار — على الشاشة وعلى النسخة المطبوعة.',
+ 'You already have this today.':'هذا موجود لديك اليوم.',
+ 'Your current system carries a setting called DisplayOldBalance. It is the same idea: the customer sees what he owed before, what this invoice adds, and where he stands now — on the screen and on the printed copy.':
+  'نظامك الحالي يحمل إعداداً اسمه DisplayOldBalance. الفكرة نفسها: يرى الزبون ما كان عليه، وما تضيفه هذه الفاتورة، وأين صار — على الشاشة وعلى النسخة المطبوعة.',
  'Find an item — the long way':'ابحث عن صنف — بالطريقة الطويلة',
  'In stock':'في المخزون', 'Any':'أي', 'More than zero':'أكثر من صفر',
  'Below minimum':'تحت الحد الأدنى', 'Out of stock':'نفد',
@@ -13919,8 +13923,8 @@ Object.assign(AR, {
  'Production issue and receipt rather than a till.':'صرف واستلام إنتاج بدل الصندوقة.',
  'The plain shop counter.':'طاولة المحل العادية.',
  'One till, five shapes.':'صندوقة واحدة، خمسة أشكال.',
- 'His old system already does this — it has a setting called BusinessType, and the copy we read was set to Restaurant. It is the same idea here: a sector is a profile that decides which parts of the till exist, not five different tills to maintain.':
-  'نظامه القديم يفعل هذا أصلاً — فيه إعداد اسمه BusinessType، والنسخة التي قرأناها كانت على «مطعم». الفكرة نفسها هنا: القطاع ملف إعدادات يقرر أي أجزاء الصندوقة موجودة، لا خمس صندوقات تُصان.',
+ 'Your current system already does this — it has a setting called BusinessType, and the copy we read was set to Restaurant. It is the same idea here: a sector is a profile that decides which parts of the till exist, not five different tills to maintain.':
+  'نظامك الحالي يفعل هذا أصلاً — فيه إعداد اسمه BusinessType، والنسخة التي قرأناها كانت على «مطعم». الفكرة نفسها هنا: القطاع ملف إعدادات يقرر أي أجزاء الصندوقة موجودة، لا خمس صندوقات تُصان.',
  'The touch area':'منطقة اللمس', 'in stock':'في المخزون', 'items':'أصناف',
  'Groups, sub groups and a picture.':'مجموعات ومجموعات فرعية وصورة.',
  'The rail on the left is the category, the strip under it the sub category, and every tile carries the item’s photo, its price and what is left on the shelf. A touch group is not the accounting category — an item can sit in several touch groups and still belong to one category in the books.':
@@ -14037,6 +14041,44 @@ buildTree(); paint();
 }
 @media (max-width:480px){ .fs.f4,.fs.f3,.fs.f5,.fs.f2{grid-template-columns:1fr} }
 </style>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE PADDING FAULT — one rule, forty-six screens
+
+   A single global rule set `table{ min-width:520px }`, so EVERY table in the
+   product was forced to be at least 520px wide no matter how narrow the pane
+   holding it was. In a 265px pane the table was 520px: clipped at the edge,
+   pushed onto a sideways scrollbar, with the last columns and the totals cut
+   in half. Measured before this fix: 144 tables across 46 screens were wider
+   than the box they sat in without ever having asked to be.
+
+   Tables that genuinely need room already declare it themselves — the sales
+   invoice asks for 1420px, the voucher 1460px — so the blanket floor never
+   helped those and only ever hurt the narrow ones.
+
+   Column headers keep `white-space:nowrap`, so a table still cannot shrink
+   below what its own titles need; below that the container scrolls, exactly
+   as it did before. Nothing loses data — things stop being cut off.
+   ═══════════════════════════════════════════════════════════════════════ */
+table{min-width:0}
+
+/* the POS receipt column held a five-column receipt and a sixteen-key pad in
+   340px. The receipt needed 520 and lost its Price and Total columns. */
+.pos{grid-template-columns:112px minmax(0,1fr) 400px}
+/* re-assert the original stacking, which this rule would otherwise outrank */
+@media (max-width:1150px){ .pos{grid-template-columns:1fr} }
+
+/* a little air where a number sits hard against the edge of its pane */
+.tot .l{padding-inline:2px}
+.tot .l.g{padding-top:var(--sp-5,4px)}
+</style>
+<script>
+/* the two role panes build their title by concatenation, so the suffix has to
+   be translated on its own or it stays English in Arabic */
+Object.assign(AR, { 'what this role may do':'ما يمكن لهذا الدور فعله' });
+Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
+paint();
+</script>
 
 </body>
 </html>
