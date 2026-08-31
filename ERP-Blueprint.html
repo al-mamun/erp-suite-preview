@@ -203,8 +203,8 @@ footer p{max-width:64ch}
     accounting is right.</p>
     <div class="meta">
       <span><b>Prepared by</b> Abdullah Al Mamun</span>
-      <span><b>Version</b> 1.3</span>
-      <span><b>Date</b> 30 August 2026</span>
+      <span><b>Version</b> 1.4</span>
+      <span><b>Date</b> 31 August 2026</span>
     </div>
   </div>
 </header>
@@ -438,7 +438,7 @@ footer p{max-width:64ch}
       <tr><td><a href="#s25">Sync report</a></td><td>Every sync recorded, with a one-page weekly report — the “failed permanently” column must always be zero</td><td>Included</td></tr>
       <tr><td><a href="#s30">Working prototype</a></td><td>Every screen and field, clickable in a browser, in both languages, before anything is built</td><td>Included</td></tr>
 
-    </tbody>
+    <tr><td><a href="#s13">The sales invoice</a></td><td>One entry box with Enter-key flow; item by number, barcode or name; customer by name, phone or MOF</td><td>Included</td></tr><tr><td><a href="#s13">Available quantity and last price</a></td><td>On the invoice line, per store and per customer, each switchable</td><td>Included</td></tr><tr><td><a href="#s13">Below cost and over stock</a></td><td>Coloured and worded on the row; allow, warn or block, set per company</td><td>Included</td></tr><tr><td><a href="#s13">Rounding</a></td><td>To 0.05, 0.25 or 1, with the difference posted to a named account</td><td>Included</td></tr><tr><td><a href="#s13">Payment inside the invoice</a></td><td>Part or full, several lines, dollars and pounds together</td><td>Included</td></tr><tr><td><a href="#s13">Profit on the invoice</a></td><td>Shown only to a user whose role may see cost</td><td>Included</td></tr><tr><td><a href="#s13">Create and reorder from the invoice</a></td><td>New customer, new item, his statement, and last month's order reloaded</td><td>Included</td></tr><tr><td><a href="#s7">MOF number</a></td><td>On the customer record and searchable everywhere he is chosen</td><td>Included</td></tr><tr><td><a href="#s9">Item photo</a></td><td>On the item card, the POS tile, the salesperson screen and printed lists</td><td>Included</td></tr><tr><td><a href="#s10">Whole-warehouse transfer</a></td><td>Empty one warehouse into another as a single document</td><td>Included</td></tr><tr><td><a href="#s20">Statement — customers, suppliers, general</a></td><td>One report, three groupings, plus a detailed version showing the items</td><td>Included</td></tr><tr><td><a href="#s20">Expiry report</a></td><td>By batch, with days remaining and value at risk</td><td>Included</td></tr><tr><td><a href="#s20">Salesperson lookup</a></td><td>Prices and stock, with cost only where the role allows</td><td>Included</td></tr><tr><td><a href="#s21">Cost centres on or off</a></td><td>A company switch that removes them from menu, documents and reports</td><td>Included</td></tr><tr><td><a href="#s22">Mandatory fields</a></td><td>Which fields must be filled, decided per company</td><td>Included</td></tr><tr><td><a href="#s23">Cash-flow alerts</a></td><td>Below an amount, above an amount, or a negative three-week forecast</td><td>Included</td></tr></tbody>
   </table></div>
 
   <h3>Accounting</h3>
@@ -1078,6 +1078,15 @@ footer p{max-width:64ch}
       plan a van's day, and set a delivery charge per zone in the restaurant. Sales by area was one
       of the first things you asked to be able to see.</p></div>
   </div>
+
+  <div class="mod">
+    <h3>Finding him <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Name, phone, or MOF number</p>
+      <p>The customer record carries his <strong>MOF number</strong> alongside his phone, and both
+      are searchable from anywhere he is chosen — the invoice, the receipt, the statement. Part of a
+      name is enough, in Arabic or in Latin letters, and so is part of a phone number. This is a
+      small thing that saves a few seconds fifty times a day.</p></div>
+  </div>
 </section>
 
 <section id="s8">
@@ -1235,6 +1244,15 @@ footer p{max-width:64ch}
       of cheese and the till reads the weight out of the label and prices it. Without this, a
       supermarket till cannot work with a counter scale at all.</p></div>
   </div>
+
+  <div class="mod">
+    <h3>A photo on the item <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">One picture, everywhere the item appears</p>
+      <p>An item carries a photo — taken with a phone, or dropped onto the item card. One is the main
+      one and the rest are extras. The main photo then shows wherever the item does: on the item
+      card, on the point-of-sale tile, on the salesperson's screen, and on a printed price list.
+      Anyone allowed to edit the item may change it.</p></div>
+  </div>
 </section>
 
 <section id="s10">
@@ -1255,6 +1273,18 @@ footer p{max-width:64ch}
         choose block, warn, or allow and reconcile later</li>
         <li><strong>Reservations</strong> — so two people cannot sell the same last piece</li>
       </ul></div>
+  </div>
+
+  <div class="mod">
+    <h3>Moving a whole warehouse <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">One document, however many items</p>
+      <p>Closing a branch, emptying a van at the end of a route, or merging two stores is not
+      twenty transfers — it is <strong>one transfer with twenty lines</strong>. Choose the warehouse
+      to empty and the one to fill, and the system lists everything with a quantity in it, with the
+      value at cost, before anything moves. You see the total first and then decide.</p>
+      <p>It behaves like any other transfer after that: until the receiving side confirms, the value
+      sits in the <strong>goods-in-transit</strong> account rather than in either warehouse, so the
+      stock figure is never briefly wrong in two places at once.</p></div>
   </div>
 </section>
 
@@ -1403,6 +1433,92 @@ footer p{max-width:64ch}
       <p>When you sell to a customer, the system shows what he paid last time — with
       <strong>the date and the packaging level beside it</strong>, because a last price for a box
       tells you nothing when today you are selling pieces.</p></div>
+  </div>
+
+    <div class="mod">
+    <h3>The sales invoice, rebuilt around how your people actually type <span class="tag new">New</span></h3>
+
+    <div class="beat"><p class="beat-label">Why it was done as one piece</p>
+      <p>Of the thirty-eight points you sent, <strong>fourteen were about this one screen</strong>.
+      That is not a coincidence — it is the screen your people live in all day, and it is where a
+      system is judged. So it was rebuilt once, as a single piece of work, rather than patched
+      fourteen times.</p></div>
+
+    <div class="beat"><p class="beat-label">One box, and the Enter key</p>
+      <p>There is no “Add a line” button any more. There is <strong>one box</strong>, and it accepts
+      an <strong>item number</strong>, a <strong>barcode</strong>, or <strong>any part of a
+      name</strong> — in English or Arabic. Press Enter and the line appears with the right price
+      already in it, and the cursor lands on the quantity. Enter again moves to the price, again to
+      the discount, again back to the box for the next item. A whole invoice is typed without
+      touching the mouse.</p>
+      <p>If what you typed matches more than one item, the system shows the matches and asks which.
+      If it matches nothing, it says so and offers to <strong>create the item</strong> without
+      leaving the invoice. Scanning the same barcode twice adds one to the quantity instead of
+      making a second line.</p></div>
+
+    <div class="beat"><p class="beat-label">The customer, found the way you would find him</p>
+      <p>Name, part of a name, <strong>phone number</strong>, or <strong>MOF number</strong> — any
+      of them finds him, and the Arabic name is searched as well as the Latin one. Someone rings
+      and gives a phone number; that is enough. If nobody matches, the same box offers to
+      <strong>create the customer</strong> there and then.</p>
+      <p>Choosing him fills the payment term, the price level, the salesman and the control account
+      from his record, so the invoice cannot be written against the wrong terms by accident.</p></div>
+
+    <div class="beat"><p class="beat-label">What he paid last time, and what is on the shelf</p>
+      <p>Two columns answer the two questions asked at the counter. <strong>Available</strong> is the
+      quantity in the store this invoice is drawing from — not the total across all stores, which
+      would be a lie at the counter. <strong>Last price</strong> is what <em>this customer</em> paid
+      for <em>this item</em> the last time, with the date behind it; hovering shows the date and the
+      quantity. It is per customer, not a single global last price, because a wholesale customer and
+      a walk-in did not pay the same thing.</p>
+      <p>Both columns can be switched off for a company that does not want them on screen.</p></div>
+
+    <div class="beat"><p class="beat-label">Red for below cost, marked for over stock — and a company decides which</p>
+      <p>If the price, after its discount, falls <strong>below the cost</strong> of the item, the row
+      turns red and carries the words “Below cost”. If the quantity is <strong>more than the
+      stock</strong>, the row is marked and carries the words “Over stock”. Colour is never the only
+      signal; the words are always there too, so it still works in print and for someone who does not
+      see colour well.</p>
+      <p>What happens next is a setting, not a rule we chose for you. Each of the three states —
+      <strong>allowed with no warning</strong>, <strong>warn but let it save</strong>, <strong>block
+      the save</strong> — can be set for below-cost and for over-stock separately, and separately in
+      each of the eight companies. When something is blocked, the invoice says exactly which line and
+      why, and the Save button stops working until it is fixed.</p></div>
+
+    <div class="beat"><p class="beat-label">Discount, profit, and who may see it</p>
+      <p>Discount works at the line, by <strong>percentage or by value</strong>, and again on the
+      invoice as a whole. The invoice shows <strong>profit</strong> and <strong>profit
+      percentage</strong> — but only to a user whose role allows him to see cost. For everyone else
+      the cost, last price and profit columns are simply not on the screen; there is nothing to
+      shoulder-surf. It is the same screen, with fewer columns.</p></div>
+
+    <div class="beat"><p class="beat-label">Rounding, settled properly</p>
+      <p>The total can be rounded to the nearest 0.05, 0.25 or 1, or not rounded at all. What matters
+      is what happens to the fraction: it does not disappear. The difference is posted to a named
+      account — <strong>6580 Rounding differences</strong> — so the ledger still balances to the
+      cent, and at year end you can see exactly what rounding cost or gained over twelve months.</p></div>
+
+    <div class="beat"><p class="beat-label">Paying inside the invoice, in two currencies</p>
+      <p>Payment is taken on the invoice itself, in full or in part, with as many payment lines as
+      the customer wants to use: some cash in dollars, the rest in pounds, a cheque for the
+      remainder. Each line carries its own currency and each is converted at the invoice's stamped
+      rate, so the paid and remaining figures are always in one money. A button pays the whole
+      balance in one press.</p>
+      <p>Underneath sits his <strong>credit position</strong> — his limit, what he has already used,
+      and what this invoice would leave — recalculated as you type, and marked when the invoice
+      would push him past his limit.</p></div>
+
+    <div class="beat"><p class="beat-label">His statement, and last month's order, without leaving the screen</p>
+      <p>One button opens the <strong>customer's statement</strong> beside the invoice — what he owes
+      and what is still open — so the question “should I be selling to him at all today?” is answered
+      before the goods leave. Another lists his <strong>previous invoices</strong>: press one and its
+      lines load into this invoice, ready to be changed. Most repeat orders are a copy of the last
+      one with two quantities altered.</p></div>
+
+    <div class="beat"><p class="beat-label">Nothing on the screen is typed in</p>
+      <p>Every total, the discounts, the VAT, the rounding, the profit, the credit position — all of
+      it is worked out from the lines. Change one quantity and the whole screen moves. This is worth
+      saying because it is the difference between a picture of an invoice and an invoice.</p></div>
   </div>
 
   <div class="mod">
@@ -1953,6 +2069,48 @@ footer p{max-width:64ch}
       ledger at the moment you look at it.</strong> Nothing keeps its own running total, because
       separate totals always drift, and then nobody trusts either number.</p></div>
   </div>
+
+  <div class="mod">
+    <h3>The statement, in three shapes <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Customers, suppliers, or any account in the ledger</p>
+      <p>You asked for the statement to be organised by <strong>customers</strong>, by
+      <strong>suppliers</strong>, and as a <strong>general</strong> statement for any other account.
+      They are the same report reading different accounts — so they behave identically, print
+      identically, and cannot drift apart as three separate reports would.</p></div>
+    <div class="beat"><p class="beat-label">Normal, and detailed down to the items</p>
+      <p>The normal statement is the running list of documents, dates, debits, credits and balance,
+      in dollars and in pounds. Tick <strong>Detailed</strong> and every invoice opens up underneath
+      itself to show <strong>the items that were on it</strong> — the product, the quantity and the
+      price. That is the version a customer argues with, so it is the version he should be sent.</p></div>
+    <div class="beat"><p class="beat-label">Sending it</p>
+      <p>The statement can be printed, emailed or sent by WhatsApp, and the screen shows exactly what
+      would go out — the recipient, the attached PDF, and the message — before anything is sent.
+      <strong>How</strong> WhatsApp carries it is still an open decision with a monthly cost attached:
+      a free link that opens one customer's chat at a time, or a paid business account that can send
+      to two hundred customers at once. That decision is yours and it has not been made yet.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Expiry <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What is going out of date, and what it is worth</p>
+      <p>Expiry belongs to a <strong>batch</strong>, not to an item — the same product can sit in
+      three batches with three dates. The report lists the batches expiring inside a window you
+      choose, oldest first, with the quantity, the warehouse, the days remaining and the value at
+      cost. What has already expired is shown too, separately, because it is a loss that has already
+      happened and someone should be writing it off.</p>
+      <p>Because the system issues the oldest batch first, what this report shows is what will
+      actually be sold next — and the notification rule “an item is close to expiry” reads this same
+      list rather than a second one.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>A screen for the salesperson <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Price, stock, and cost if he is allowed</p>
+      <p>One screen for the man on the phone or in the van: type a number, a barcode or part of a
+      name and see the item's <strong>four selling prices</strong> and the quantity in each warehouse.
+      If his role permits it he also sees the <strong>cost</strong> and the margin; if it does not,
+      those columns are not on the screen at all. It is the same screen either way.</p></div>
+  </div>
 </section>
 
 <section id="s21">
@@ -2010,6 +2168,18 @@ footer p{max-width:64ch}
       And do you want <strong>profit</strong> per cost centre, or a full <strong>balance sheet</strong>
       per cost centre as well? The second is a bigger job, so it is better decided now than later.</p></div>
   </div>
+
+  <div class="mod">
+    <h3>Switching cost centres off <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">A company that does not use them should not see them</p>
+      <p>Cost centres are useful to a business with branches, routes and departments, and they are
+      clutter to one without. So they are a <strong>switch on the company</strong>, and turning it
+      off removes them everywhere at once — the menu entry disappears, the field leaves every
+      document, and the column leaves every report. It is not hidden with a permission; it is not
+      there.</p>
+      <p>Each of the eight companies answers this for itself, and so does every business you later
+      sell the system to.</p></div>
+  </div>
 </section>
 
 <section id="s22">
@@ -2038,6 +2208,21 @@ footer p{max-width:64ch}
       point where anything was disturbed. This is the sort of thing an auditor asks for and almost
       no small system can produce.</p></div>
   </div>
+
+  <div class="mod">
+    <h3>Two things a permission decides <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Who may see cost</p>
+      <p>Cost and profit are not a screen setting, they are a permission. A salesman on commission
+      normally sees the selling prices and the stock; a manager sees the cost, the margin and the
+      profit on the invoice. Rather than blur or hide the numbers, the columns are simply not
+      rendered for someone who may not see them.</p></div>
+    <div class="beat"><p class="beat-label">Which fields must be filled</p>
+      <p>Some fields cannot ever be optional — a customer with no name, an item with no number, an
+      invoice with no customer. Everything else is a <strong>company decision</strong>: a screen
+      lists the fields on customers, suppliers, items and invoices, and each can be marked required
+      or not. A required field shows a red star and stops the save with a message naming it. One
+      company can insist on the MOF number and a barcode; another can leave both optional.</p></div>
+  </div>
 </section>
 
 <section id="s23">
@@ -2062,6 +2247,18 @@ footer p{max-width:64ch}
   <p>Notifications reach people inside the system, by email — and, because it is how business is
   actually done in Lebanon, <strong>by WhatsApp</strong>. A payment reminder that arrives on
   WhatsApp is read. An email often is not.</p>
+
+  <div class="mod">
+    <h3>Cash at an amount you choose <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Tell me when it goes below, and when it goes above</p>
+      <p>Three cash rules join the list. <strong>Cash falls below an amount</strong> — the one that
+      matters, because it arrives before the problem does. <strong>Cash rises above an amount</strong>
+      — money sitting idle in a till that should be banked. And <strong>the next three weeks turn
+      negative</strong>, which reads the cash-flow forecast on the dashboard rather than the balance
+      today.</p>
+      <p>Each rule carries its own amount, the safes it watches, who is told, and whether it goes by
+      WhatsApp, email or only inside the system.</p></div>
+  </div>
 </section>
 
 <section id="s24">
@@ -2869,6 +3066,23 @@ footer p{max-width:64ch}
 
 <footer>
   <div class="wrap">
+    <p><strong>Revision 1.4 · 31 August 2026</strong> — Updated after your list of thirty-eight
+    points. Sixteen of them are now described here and built into the clickable prototype.
+    Fourteen were about the <strong>sales invoice</strong>, so it was rebuilt as one piece rather
+    than patched fourteen times: one entry box driven by the Enter key, items found by number,
+    barcode or name, customers found by name, phone or MOF number, the available quantity and the
+    last price this customer paid, red rows below cost and marked rows over stock with a
+    company setting deciding whether each is allowed, warned or blocked, rounding settled to a
+    named account, payment taken inside the invoice in both currencies, profit shown only where
+    the role allows, and his statement, a new customer, a new item or last month's order reached
+    without leaving the screen (§13). Beyond it: the MOF number, searchable (§7); a photo on the
+    item (§9); emptying a whole warehouse in one document (§10); the statement restructured into
+    customers, suppliers and general, with a detailed version showing every item line (§20); an
+    expiry report by batch (§20); a salesperson's screen (§20); cost centres switchable off for a
+    whole company (§21); mandatory fields decided per company (§22); and cash-flow alerts at
+    amounts you choose (§23). Four points from your list are <strong>not</strong> here and are
+    waiting on you: the two mapping features, the scanning of paper invoices, and the two VAT
+    rules, which need your accountant's answer before they can be written down.</p>
     <p><strong>Revision 1.3 · 30 August 2026</strong> — Updated after your first review. Seven
     changes, each of them also built into the clickable prototype: the trial balance now works out
     its own totals and says so when they do not agree, and the balance sheet reads the same
@@ -2882,7 +3096,7 @@ footer p{max-width:64ch}
     <p><strong>Revision 1.2 · 30 August 2026</strong> — Expanded after P3.1 verification:
     Arabic record editing is verified, field identity is column-index based and fail-closed,
     and checkbox controls remain intentionally unmapped until their data-model meaning is decided. Added a quick-reading guide, system map, product-at-a-glance table, lifecycle view and blueprint usage rules.</p>
-    <p><strong>ERP Suite Blueprint · Version 1.3 · 30 August 2026</strong></p>
+    <p><strong>ERP Suite Blueprint · Version 1.4 · 31 August 2026</strong></p>
     <p>Prepared for Yorgo by Abdullah Al Mamun. This document describes what will be built and how
     it will work. Anything you want changed, added or removed — tell us, and this document changes
     with it. It is meant to be argued with.</p>

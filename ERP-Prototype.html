@@ -11674,6 +11674,1269 @@ Object.assign(AR, { 'How this voucher balances':'كيف يتوازن هذا ال
 Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
 buildTree(); paint();
 </script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE SALES INVOICE — CR-012 … CR-023, CR-029, CR-030, CR-032
+
+   Fourteen of his thirty-eight numbered requirements land on this one screen.
+   They are built here as ONE job, because done separately they would be
+   fourteen reworks of the same screen.
+
+     CR-012  show / hide the available quantity
+     CR-013  the last price this customer paid for this item
+     CR-014  find the customer by name, part of a name, phone or MOF number
+     CR-015  add an item by item number, barcode or name
+     CR-016  one entry box, Enter moves on — no "Add a line" button
+     CR-017  the row turns red when the price is below cost
+     CR-018  the row is marked when the quantity is more than the stock
+     CR-019  a setting that allows, warns or blocks both of those
+     CR-020  discount by value and by percent — already existed, kept
+     CR-021  pay inside the invoice, in full or in part, USD and LBP mixed
+     CR-022  profit and profit % shown only to a user allowed to see cost
+     CR-023  rounding, settled to a named account
+     CR-029  create a customer or an item without leaving the invoice
+     CR-030  see the customer's statement inside the invoice
+     CR-032  reorder — load a previous invoice for this customer
+
+   Everything on this screen is computed from the state below. No total is
+   typed in. Change a quantity and every figure under it moves.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── the item file. Stock is split across his three stores and the splits
+      add up to the "On hand" already shown on the Items screen, so the two
+      screens cannot disagree. ── */
+const ITEMDIR = [
+ {no:'IT-0919', bc:'6291041',    en:'HP 17T-CN400 Core 5', ar:'لابتوب HP', pkg:'Piece',
+  cat:'Laptops', sub:'New',      cost:268.00, price:{Wholesale:380.00,'Super wholesale':355.00,Retail:415.00,Bulk:345.00},
+  st:{'Zahle main':24,'Beirut':8,'Van — Elie':2}},
+ {no:'IT-0920', bc:'6291058',    en:'DELL 5520 i5', ar:'لابتوب ديل', pkg:'Piece',
+  cat:'Laptops', sub:'Open box', cost:310.00, price:{Wholesale:429.00,'Super wholesale':405.00,Retail:465.00,Bulk:395.00},
+  st:{'Zahle main':3,'Beirut':1,'Van — Elie':0}},
+ {no:'IT-1204', bc:'6291990',    en:'A4 paper 80g', ar:'ورق A4', pkg:'Ream',
+  cat:'Paper', sub:'—',          cost:3.10, price:{Wholesale:4.20,'Super wholesale':3.95,Retail:4.90,Bulk:3.80},
+  st:{'Zahle main':900,'Beirut':300,'Van — Elie':40}},
+ {no:'IT-1204B',bc:'6291990005', en:'A4 paper 80g — box of 5', ar:'ورق A4 — علبة ٥', pkg:'Box (5)',
+  cat:'Paper', sub:'—',          cost:15.20, price:{Wholesale:20.00,'Super wholesale':19.20,Retail:23.50,Bulk:18.40},
+  st:{'Zahle main':180,'Beirut':60,'Van — Elie':8}},
+ {no:'IT-1550', bc:'6292411',    en:'Solar panel 550W', ar:'لوح شمسي', pkg:'Piece',
+  cat:'Solar', sub:'—',          cost:118.00, price:{Wholesale:149.00,'Super wholesale':142.00,Retail:165.00,Bulk:138.00},
+  st:{'Zahle main':0,'Beirut':0,'Van — Elie':0}},
+ {no:'IT-1801', bc:'—',          en:'Repair service — hour', ar:'خدمة صيانة', pkg:'Hour',
+  cat:'Services', sub:'—',       cost:0.00, price:{Wholesale:25.00,'Super wholesale':25.00,Retail:30.00,Bulk:25.00},
+  st:null}
+];
+
+/* ── the customer file. Phone and MOF are both searchable, because that is
+      how his people actually find someone on the phone. ── */
+const CUSTDIR = [
+ {code:'C-0101', en:'Karam Trading',    ar:'كرم للتجارة',       phone:'+961 3 445 112', mof:'1002554', area:'Zahle',
+  term:'Net 30 days',      lvl:'Wholesale',       limit:15000, bal:12480.00, acct:'4111', sman:'Elie Haddad'},
+ {code:'C-0104', en:'Bou Khalil Est.',  ar:'مؤسسة بو خليل',    phone:'+961 8 900 431', mof:'1008317', area:'Chtaura',
+  term:'3 instalments',    lvl:'Super wholesale', limit:40000, bal:38900.00, acct:'4118', sman:'Elie Haddad'},
+ {code:'C-0119', en:'Nasr Supermarket', ar:'سوبرماركت نصر',    phone:'+961 3 118 220', mof:'1011940', area:'Beirut',
+  term:'Cash on delivery', lvl:'Retail',          limit:0,     bal:0.00,     acct:'4111', sman:'Direct business'},
+ {code:'C-0000', en:'Walk-in customer', ar:'زبون عابر',         phone:'—',              mof:'—',       area:'—',
+  term:'Cash on delivery', lvl:'Retail',          limit:0,     bal:0.00,     acct:'4111', sman:'Direct business'}
+];
+
+/* ── what each customer last paid for each item, and when. This is the
+      answer to "last transaction price" — it is per customer, not a
+      global last price, because that is what he asked for. ── */
+const LASTSALE = {
+ 'C-0101|IT-0919':{p:378.00, d:'12/08/2026', q:2},
+ 'C-0101|IT-1204':{p:4.10,   d:'12/08/2026', q:400},
+ 'C-0101|IT-1204B':{p:19.60, d:'02/08/2026', q:15},
+ 'C-0101|IT-1550':{p:149.00, d:'21/07/2026', q:6},
+ 'C-0104|IT-0919':{p:362.00, d:'19/08/2026', q:6},
+ 'C-0104|IT-0920':{p:415.00, d:'19/08/2026', q:2},
+ 'C-0119|IT-1204':{p:4.90,   d:'25/08/2026', q:20}
+};
+
+/* ── previous invoices, for "reorder" ── */
+const PREVINV = [
+ {no:'SI-2026-1102', cust:'C-0101', d:'12/08/2026', lines:[
+   {no:'IT-0919', q:2, price:378.00, dis:0, note:'—'},
+   {no:'IT-1204', q:400, price:4.10, dis:0, note:'—'}]},
+ {no:'SI-2026-1044', cust:'C-0101', d:'21/07/2026', lines:[
+   {no:'IT-1550', q:6, price:149.00, dis:0, note:'—'},
+   {no:'IT-1204B', q:15, price:19.60, dis:5, note:'Campaign'}]},
+ {no:'SI-2026-1157', cust:'C-0104', d:'19/08/2026', lines:[
+   {no:'IT-0919', q:6, price:362.00, dis:0, note:'—'},
+   {no:'IT-0920', q:2, price:415.00, dis:0, note:'—'}]}
+];
+
+/* ── the customer's open documents, for the statement inside the invoice ── */
+const CUSTSTMT = {
+ 'C-0101':[['12/08/2026','SI-2026-1102','Invoice','2,396.00','','12,480.00'],
+           ['05/08/2026','RC-2026-0455','Receipt','','3,000.00','10,084.00'],
+           ['21/07/2026','SI-2026-1044','Invoice','1,188.00','','13,084.00'],
+           ['30/06/2026','—','Opening balance','11,896.00','','11,896.00']],
+ 'C-0104':[['19/08/2026','SI-2026-1157','Invoice','2,002.00','','38,900.00'],
+           ['01/08/2026','RC-2026-0441','Receipt','','5,000.00','36,898.00'],
+           ['30/06/2026','—','Opening balance','41,898.00','','41,898.00']],
+ 'C-0119':[['25/08/2026','SI-2026-1170','Invoice','98.00','','0.00'],
+           ['25/08/2026','RC-2026-0460','Receipt','','98.00','0.00']],
+ 'C-0000':[]
+};
+
+/* ── the settings that decide what the invoice allows. CR-019, CR-022, CR-023.
+      Every one of these is a per-company setting, not a hard rule. ── */
+const INVSET = {
+ belowCost : 'warn',      /* allow · warn · block */
+ overStock : 'warn',      /* allow · warn · block */
+ showAvail : true,        /* CR-012 */
+ showLast  : true,        /* CR-013 */
+ seeCost   : true,        /* CR-022 — comes from the role, shown here so it can be tried */
+ round     : '0.05',      /* none · 0.05 · 0.25 · 1 */
+ roundAcct : '6580 · Rounding differences',
+ enterFlow : true         /* CR-016 */
+};
+
+/* ── the invoice being written ── */
+const INV = {
+ no:'SI-2026-1181', date:'29/08/2026', cust:'C-0101', store:'Zahle main',
+ cur:'USD', rate:90000, vat:11, invDis:0, focus:'inv_entry', msg:'', find:'',
+ showStmt:false,
+ lines:[
+  {no:'IT-0919',  q:4,  price:380.00, dis:0, note:'—'},
+  {no:'IT-1204B', q:20, price:20.00,  dis:5, note:'Campaign'},
+  {no:'IT-1550',  q:12, price:149.00, dis:0, note:'Ordered'},
+  {no:'IT-0920',  q:1,  price:432.00, dis:0, note:'—'},
+  {no:'IT-1204',  q:60, price:2.90,   dis:0, note:'Clearing old stock'}
+ ],
+ pay:[{m:'Cash', cur:'USD', amt:0}]
+};
+
+/* ── small helpers ── */
+const invM = v => (Math.round((+v||0)*100)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const invM0 = v => Math.round(+v||0).toLocaleString('en-US');
+const invItem = no => ITEMDIR.find(i => i.no === no);
+const invCustRec = code => CUSTDIR.find(c => c.code === code) || CUSTDIR[0];
+function invName(it){ return lang === 'ar' && it.ar ? it.ar : it.en; }
+function invAvail(no, store){
+ const it = invItem(no); if(!it || !it.st) return null;
+ return it.st[store === undefined ? INV.store : store];
+}
+function invPriceFor(no){
+ const it = invItem(no); if(!it) return 0;
+ const c = invCustRec(INV.cust);
+ if(INVSET.showLast){ const ls = LASTSALE[c.code + '|' + no]; if(ls) return ls.p; }
+ return it.price[c.lvl] !== undefined ? it.price[c.lvl] : it.price.Wholesale;
+}
+
+/* ── the state of one line: is it below cost, is it over stock ── */
+function invLineState(l){
+ const it = invItem(l.no);
+ const s = { below:false, over:false, av:null, cost:0 };
+ if(!it) return s;
+ s.cost = it.cost;
+ const net = l.price * (1 - (+l.dis||0)/100);
+ s.below = it.cost > 0 && net < it.cost;
+ s.av = invAvail(l.no);
+ s.over = s.av !== null && l.q > s.av;
+ return s;
+}
+/* how many lines are actually blocked by the current settings */
+function invBlocked(){
+ return INV.lines.filter(l => {
+  const s = invLineState(l);
+  return (s.below && INVSET.belowCost === 'block') || (s.over && INVSET.overStock === 'block');
+ });
+}
+
+/* ── the arithmetic. Every total on the screen comes from here. ── */
+function invTotals(){
+ let gross = 0, itemDis = 0, cost = 0;
+ INV.lines.forEach(l => {
+  const it = invItem(l.no); if(!it) return;
+  const g = l.q * l.price;
+  const d = g * (+l.dis||0) / 100;
+  gross += g; itemDis += d; cost += l.q * it.cost;
+ });
+ const net = gross - itemDis - (+INV.invDis||0);
+ const vat = net * INV.vat / 100;
+ const raw = net + vat;
+ const step = INVSET.round === 'none' ? 0 : +INVSET.round;
+ const total = step ? Math.round(raw / step) * step : raw;
+ const rounding = total - raw;
+ const paid = INV.pay.reduce((a,p) => a + (p.cur === 'LBP' ? (+p.amt||0) / INV.rate : (+p.amt||0)), 0);
+ const profit = net - cost;
+ return { gross:gross, itemDis:itemDis, net:net, vat:vat, raw:raw, total:total, rounding:rounding,
+          paid:paid, due:total - paid, cost:cost, profit:profit,
+          margin: net > 0 ? profit / net * 100 : 0 };
+}
+
+/* ── repaint, and put the cursor back where the typing was ── */
+function invPaint(next){
+ if(next !== undefined) INV.focus = next;
+ paint();
+ setTimeout(function(){
+  const el = document.getElementById(INV.focus || 'inv_entry');
+  if(el){ el.focus(); if(el.select) el.select(); }
+ }, 0);
+}
+
+/* ── CR-015 / CR-016: one box. Item number, barcode, or any part of a name. ── */
+function invResolve(key){
+ const q = String(key || '').trim().toLowerCase();
+ if(!q) return [];
+ const exact = ITEMDIR.filter(i => i.no.toLowerCase() === q || i.bc.toLowerCase() === q);
+ if(exact.length) return exact;
+ return ITEMDIR.filter(i =>
+   i.no.toLowerCase().indexOf(q) >= 0 || i.bc.toLowerCase().indexOf(q) >= 0 ||
+   i.en.toLowerCase().indexOf(q) >= 0 || (i.ar || '').indexOf(key.trim()) >= 0);
+}
+function invAdd(key){
+ const hits = invResolve(key);
+ if(!hits.length){
+  INV.msg = 'nomatch:' + key;
+  invPaint('inv_entry'); return;
+ }
+ if(hits.length > 1){
+  INV.msg = 'many:' + key;
+  invPaint('inv_entry'); return;
+ }
+ invPush(hits[0].no);
+}
+function invPush(no){
+ const at = INV.lines.findIndex(l => l.no === no);
+ if(at >= 0){ INV.lines[at].q = +INV.lines[at].q + 1; INV.msg = ''; invPaint('inv_q_' + at); return; }
+ INV.lines.push({ no:no, q:1, price:invPriceFor(no), dis:0, note:'—' });
+ INV.msg = '';
+ invPaint('inv_q_' + (INV.lines.length - 1));
+}
+function invEntryKey(ev, el){
+ if(ev.key !== 'Enter') return;
+ ev.preventDefault();
+ invAdd(el.value);
+}
+/* Enter inside the grid: quantity → price → discount → back to the entry box */
+function invCellKey(ev, el, i, f){
+ if(ev.key !== 'Enter') return;
+ ev.preventDefault();
+ invSet(i, f, el.value, f === 'dis' ? 'inv_entry' : (f === 'q' ? 'inv_p_' + i : 'inv_d_' + i));
+}
+function invSet(i, f, v, next){
+ const l = INV.lines[i]; if(!l) return;
+ if(f === 'note') l.note = v || '—';
+ else l[f] = Math.max(0, +String(v).replace(/,/g,'') || 0);
+ INV.msg = '';
+ invPaint(next !== undefined ? next : ('inv_' + (f === 'q' ? 'q' : f === 'price' ? 'p' : 'd') + '_' + i));
+}
+function invDel(i){ INV.lines.splice(i,1); INV.msg=''; invPaint('inv_entry'); }
+
+/* ── CR-014: find the customer by anything he would actually know ── */
+function invFindCust(q){
+ const s = String(q||'').trim().toLowerCase();
+ if(!s) return [];
+ const digits = s.replace(/[^0-9]/g,'');
+ return CUSTDIR.filter(c =>
+   c.code.toLowerCase().indexOf(s) >= 0 ||
+   c.en.toLowerCase().indexOf(s) >= 0 ||
+   c.ar.indexOf(String(q).trim()) >= 0 ||
+   (digits.length >= 3 && c.phone.replace(/[^0-9]/g,'').indexOf(digits) >= 0) ||
+   (digits.length >= 3 && c.mof.replace(/[^0-9]/g,'').indexOf(digits) >= 0));
+}
+function invFindKey(el){ INV.find = el.value; invPaint('inv_find'); }
+function invPickCust(code){
+ INV.cust = code; INV.find = ''; INV.msg = '';
+ /* the price level changed, so any line still at the old list price follows it */
+ INV.lines.forEach(l => { const ls = LASTSALE[code + '|' + l.no]; if(ls) l.price = ls.p; });
+ invPaint('inv_entry');
+}
+
+/* ── CR-032: reorder ── */
+function invReorder(no){
+ const src = PREVINV.find(p => p.no === no); if(!src) return;
+ INV.lines = src.lines.map(l => ({ no:l.no, q:l.q, price:l.price, dis:l.dis, note:l.note }));
+ INV.msg = 'reordered:' + no;
+ invPaint('inv_entry');
+}
+/* ── CR-021: payment lines ── */
+function invPayAdd(){ INV.pay.push({m:'Cash', cur:INV.cur, amt:0}); invPaint('inv_pay_' + (INV.pay.length-1)); }
+function invPaySet(i, f, v){
+ const p = INV.pay[i]; if(!p) return;
+ p[f] = f === 'amt' ? Math.max(0, +String(v).replace(/,/g,'') || 0) : v;
+ invPaint('inv_pay_' + i);
+}
+function invPayDel(i){ INV.pay.splice(i,1); invPaint('inv_entry'); }
+function invPayFull(){
+ const t = invTotals();
+ const rest = t.due;
+ if(rest <= 0) return;
+ if(INV.pay.length){ const p = INV.pay[0]; p.amt = (+p.amt||0) + (p.cur === 'LBP' ? rest * INV.rate : rest); }
+ else INV.pay.push({m:'Cash', cur:INV.cur, amt:rest});
+ invPaint('inv_entry');
+}
+/* ── the settings, changed from the invoice itself ── */
+function invOpt(k, v){
+ INVSET[k] = (v === 'true') ? true : (v === 'false') ? false : v;
+ invPaint(INV.focus);
+}
+function invStmt(){ INV.showStmt = !INV.showStmt; invPaint('inv_entry'); }
+function invSetStore(v){ INV.store = v; invPaint('inv_entry'); }
+function invSetField(k, v){ INV[k] = (k === 'invDis' || k === 'rate' || k === 'vat') ? (+String(v).replace(/,/g,'')||0) : v; invPaint(INV.focus); }
+
+/* ═══════════ the screen ═══════════ */
+S.inv = function(){
+ const c = invCustRec(INV.cust);
+ const T = invTotals();
+ const blocked = invBlocked();
+ const opt = (k, v, t) => '<option value="' + v + '"' + (INVSET[k] === v ? ' selected' : '') + '>' + esc(tr(t)) + '</option>';
+ /* the label is translated, the value never is — the code behind a store or a
+    currency must stay the same word in both languages or nothing would match.
+    Kept as a local map rather than pushed into the global one, so no other
+    screen changes because of this block. */
+ const sel = (v, list, on) => '<select class="in" onchange="' + on + '">' +
+   list.map(o => '<option value="' + esc(o) + '"' + (o === v ? ' selected' : '') + '>' +
+     esc(invOpt2(o)) + '</option>').join('') + '</select>';
+
+ /* ── the customer finder ── */
+ const hits = invFindCust(INV.find);
+ const findBox =
+  '<div class="fs f4">' +
+   '<div><label>' + esc(tr('Find the customer')) + '</label>' +
+    '<input class="in" id="inv_find" value="' + esc(INV.find) + '" autocomplete="off" ' +
+     'placeholder="' + esc(tr('Name, part of a name, phone, or MOF number')) + '" ' +
+     'oninput="invFindKey(this)"></div>' +
+   '<div><label>' + esc(tr('Customer')) + '</label><input class="in" value="' +
+     esc(c.code + ' · ' + (lang==='ar'?c.ar:c.en)) + '" readonly></div>' +
+   '<div><label>' + esc(tr('Phone')) + '</label><input class="in" value="' + esc(c.phone) + '" readonly></div>' +
+   '<div><label>' + esc(tr('MOF number')) + '</label><input class="in" value="' + esc(c.mof) + '" readonly></div>' +
+  '</div>' +
+  (INV.find
+   ? (hits.length
+      ? '<div class="invhits">' + hits.map(h =>
+          '<button class="b" onclick="invPickCust(\'' + h.code + '\')">' +
+           esc((lang==='ar'?h.ar:h.en)) + ' <span class="mu">' + esc(h.code + ' · ' + h.phone + ' · ' + tr('MOF') + ' ' + h.mof) + '</span>' +
+          '</button>').join('') + '</div>'
+      : '<div class="invhits"><span class="mu">' + esc(tr('Nobody matches that.')) + '</span>' +
+        '<button class="b p" onclick="openM(\'cust\')">+ ' + esc(tr('Create this customer')) + '</button></div>')
+   : '');
+
+ /* ── the header ── */
+ const header = fgrid([
+  {l:'Bill number', v:INV.no, ro:1},
+  {l:'Date', v:INV.date, req:1},
+  {l:'Payment term', v:c.term, ro:1, hint:tr('Comes from the customer')},
+  {l:'Pricing type', v:c.lvl, ro:1},
+  {l:'Account', v:c.acct + ' · ' + tr('Local customers'), ro:1},
+  {l:'Salesman', v:c.sman, ro:1},
+  {l:'Currency', v:INV.cur, ro:1},
+  {l:'Exchange rate', t:'num', v:invM0(INV.rate), req:1,
+   hint:tr('Stamped on the invoice — later rate changes never move it')},
+  {l:'Reference'}
+ ], 3) +
+ '<div class="fs f3">' +
+  '<div><label>' + esc(tr('Store')) + '</label>' +
+   sel(INV.store, ['Zahle main','Beirut','Van — Elie'], 'invSetStore(this.value)') + '</div>' +
+  (SETT_CC_ON() ? '<div><label>' + esc(tr('Cost centre')) + '</label>' +
+   sel('Zahle branch', ['Zahle branch','Beirut branch','Bekaa route'], 'void 0') + '</div>' : '') +
+  '<div><label>' + esc(tr('Tax group')) + '</label>' +
+   sel('Standard 11%', ['Standard 11%','Exempt','Export 0%'], 'void 0') + '</div>' +
+ '</div>';
+
+ /* ── the entry box ── */
+ const entry =
+  '<div class="inventry">' +
+   '<input class="in" id="inv_entry" autocomplete="off" ' +
+    'placeholder="' + esc(tr('Item number, barcode, or name — then press Enter')) + '" ' +
+    'onkeydown="invEntryKey(event, this)">' +
+   '<button class="b" onclick="invAdd(document.getElementById(\'inv_entry\').value)">' + esc(tr('Add')) + '</button>' +
+   '<button class="b" onclick="openM(\'item\')">+ ' + esc(tr('New item')) + '</button>' +
+  '</div>' +
+  (INV.msg.indexOf('nomatch:') === 0
+   ? '<div class="fmsg err">' + ic('alertC','ic-14') + '<span>' +
+     esc(tr('Nothing matches') + ' “' + INV.msg.slice(8) + '”. ' + tr('Check the number, or create it.')) +
+     '</span></div>' : '') +
+  (INV.msg.indexOf('many:') === 0
+   ? '<div class="invhits"><span class="mu">' + esc(tr('More than one item matches — pick one:')) + '</span>' +
+     invResolve(INV.msg.slice(5)).map(h => '<button class="b" onclick="invPush(\'' + h.no + '\')">' +
+       esc(invName(h)) + ' <span class="mu">' + esc(h.no + ' · ' + h.bc) + '</span></button>').join('') +
+     '</div>' : '') +
+  (INV.msg.indexOf('reordered:') === 0
+   ? '<div class="fmsg ok">' + ic('checkCircle','ic-14') + '<span>' +
+     esc(tr('Lines loaded from') + ' ' + INV.msg.slice(10) + '. ' + tr('Change anything before saving.')) +
+     '</span></div>' : '');
+
+ /* ── the grid ── */
+ const cols = [];
+ cols.push(['#','n']);
+ cols.push([tr('Item number'),'']);
+ cols.push([tr('Item name'),'']);
+ cols.push([tr('Pkg'),'']);
+ if(INVSET.showAvail) cols.push([tr('Available'),'n']);
+ cols.push([tr('Qty'),'n']);
+ if(INVSET.seeCost) cols.push([tr('Cost price'),'n']);
+ if(INVSET.showLast) cols.push([tr('Last price'),'n']);
+ cols.push([tr('Sell price'),'n']);
+ cols.push([tr('Dis %'),'n']);
+ cols.push([tr('Dis'),'n']);
+ cols.push([tr('Total'),'n']);
+ if(INVSET.seeCost) cols.push([tr('Profit'),'n']);
+ cols.push([tr('Notes'),'']);
+ cols.push(['','']);
+
+ const body = INV.lines.map(function(l, i){
+  const it = invItem(l.no);
+  if(!it) return '';
+  const st = invLineState(l);
+  const g = l.q * l.price, d = g * (+l.dis||0)/100, tot = g - d;
+  const prof = tot - l.q * it.cost;
+  const ls = LASTSALE[c.code + '|' + l.no];
+  const cls = [];
+  if(st.below && INVSET.belowCost !== 'allow') cls.push(INVSET.belowCost === 'block' ? 'r-block' : 'r-bad');
+  if(st.over  && INVSET.overStock !== 'allow') cls.push(INVSET.overStock === 'block' ? 'r-block' : 'r-over');
+  const flags =
+   (st.below && INVSET.belowCost !== 'allow'
+     ? '<span class="pill ba" title="' + esc(tr('Cost') + ' ' + invM(it.cost)) + '">' + esc(tr('Below cost')) + '</span>' : '') +
+   (st.over && INVSET.overStock !== 'allow'
+     ? '<span class="pill wa" title="' + esc(tr('Available') + ' ' + (st.av===null?'—':st.av)) + '">' + esc(tr('Over stock')) + '</span>' : '');
+  const cells = [];
+  cells.push(['<span class="mu">' + (i+1) + '</span>','n']);
+  cells.push(['<span class="ds-code">' + esc(it.no) + '</span>','']);
+  cells.push([esc(invName(it)) + (flags ? ' ' + flags : ''),'']);
+  cells.push([esc(invOpt2(it.pkg)),'']);
+  if(INVSET.showAvail) cells.push([st.av === null ? '<span class="mu">—</span>'
+    : '<span class="' + (st.over ? 'avlow' : '') + '">' + invM0(st.av) + '</span>','n']);
+  cells.push(['<input class="in n cin" id="inv_q_' + i + '" value="' + l.q + '" ' +
+    'onchange="invSet(' + i + ',\'q\',this.value)" onkeydown="invCellKey(event,this,' + i + ',\'q\')">','n']);
+  if(INVSET.seeCost) cells.push(['<span class="mu">' + invM(it.cost) + '</span>','n']);
+  if(INVSET.showLast) cells.push([ls
+    ? '<span title="' + esc(ls.d + ' · ' + tr('quantity') + ' ' + ls.q) + '">' + invM(ls.p) + '</span>'
+    : '<span class="mu">' + esc(tr('first time')) + '</span>','n']);
+  cells.push(['<input class="in n cin" id="inv_p_' + i + '" value="' + invM(l.price) + '" ' +
+    'onchange="invSet(' + i + ',\'price\',this.value)" onkeydown="invCellKey(event,this,' + i + ',\'price\')">','n']);
+  cells.push(['<input class="in n cin s" id="inv_d_' + i + '" value="' + (+l.dis||0) + '" ' +
+    'onchange="invSet(' + i + ',\'dis\',this.value)" onkeydown="invCellKey(event,this,' + i + ',\'dis\')">','n']);
+  cells.push([invM(d),'n']);
+  cells.push(['<b>' + invM(tot) + '</b>','n']);
+  if(INVSET.seeCost) cells.push(['<span class="' + (prof < 0 ? 'negp' : '') + '">' + invM(prof) + '</span>','n']);
+  cells.push([esc(invOpt2(l.note)),'']);
+  cells.push(['<span class="rowact" title="Delete" onclick="invDel(' + i + ')">🗑</span>','']);
+  return '<tr class="' + cls.join(' ') + '">' +
+    cells.map(x => '<td class="' + x[1] + '">' + x[0] + '</td>').join('') + '</tr>';
+ }).join('');
+
+ const grid = '<div class="tw" data-scroll><table style="min-width:1420px"><thead><tr>' +
+   cols.map(x => '<th class="' + x[1] + '">' + esc(x[0]) + '</th>').join('') +
+   '</tr></thead><tbody>' + (body || '<tr><td colspan="' + cols.length + '"><span class="mu">' +
+     esc(tr('No lines yet. Type an item number, a barcode or a name in the box above.')) + '</span></td></tr>') +
+   '</tbody></table></div>';
+
+ /* ── the rules pane, so he can try each setting on the spot ── */
+ const rules =
+  '<div class="fs f4">' +
+   '<div><label>' + esc(tr('Selling below cost')) + '</label>' +
+    '<select class="in" onchange="invOpt(\'belowCost\',this.value)">' +
+     opt('belowCost','allow','Allowed, no warning') + opt('belowCost','warn','Warn — red row, still saveable') +
+     opt('belowCost','block','Blocked — cannot save') + '</select></div>' +
+   '<div><label>' + esc(tr('Quantity over stock')) + '</label>' +
+    '<select class="in" onchange="invOpt(\'overStock\',this.value)">' +
+     opt('overStock','allow','Allowed, no warning') + opt('overStock','warn','Warn — marked row, still saveable') +
+     opt('overStock','block','Blocked — cannot save') + '</select></div>' +
+   '<div><label>' + esc(tr('Rounding')) + '</label>' +
+    '<select class="in" onchange="invOpt(\'round\',this.value)">' +
+     opt('round','none','No rounding') + opt('round','0.05','To the nearest 0.05') +
+     opt('round','0.25','To the nearest 0.25') + opt('round','1','To the nearest 1') + '</select></div>' +
+   '<div><label>' + esc(tr('Rounding goes to')) + '</label><input class="in" value="' +
+     esc(INVSET.roundAcct) + '" readonly></div>' +
+  '</div>' +
+  '<div class="fs f3">' +
+   '<div class="chk"><input type="checkbox"' + (INVSET.showAvail?' checked':'') +
+    ' onchange="invOpt(\'showAvail\', this.checked?\'true\':\'false\')"><span>' +
+    esc(tr('Show the available quantity')) + '</span></div>' +
+   '<div class="chk"><input type="checkbox"' + (INVSET.showLast?' checked':'') +
+    ' onchange="invOpt(\'showLast\', this.checked?\'true\':\'false\')"><span>' +
+    esc(tr('Show the last price this customer paid')) + '</span></div>' +
+   '<div class="chk"><input type="checkbox"' + (INVSET.seeCost?' checked':'') +
+    ' onchange="invOpt(\'seeCost\', this.checked?\'true\':\'false\')"><span>' +
+    esc(tr('This user may see cost and profit')) + '</span></div>' +
+  '</div>';
+
+ /* ── totals ── */
+ const totalRow = (label, value, k) =>
+  '<div class="trow ' + (k||'') + '"><span>' + esc(label) + '</span><b>' + value + '</b></div>';
+ const totals =
+  totalRow(tr('Sum'), invM(T.gross)) +
+  totalRow(tr('Items discount'), invM(T.itemDis)) +
+  '<div class="trow"><span>' + esc(tr('Invoice discount')) + '</span>' +
+   '<input class="in n s" value="' + invM(INV.invDis) + '" onchange="invSetField(\'invDis\',this.value)"></div>' +
+  totalRow(tr('Net'), invM(T.net)) +
+  totalRow(tr('VAT') + ' ' + INV.vat + '%', invM(T.vat)) +
+  (INVSET.round !== 'none'
+   ? totalRow(tr('Rounding') + ' (' + INVSET.roundAcct.split(' · ')[0] + ')',
+       (T.rounding >= 0 ? '' : '−') + invM(Math.abs(T.rounding)), 'sm') : '') +
+  totalRow(tr('Total'), invM(T.total), 'big') +
+  totalRow(tr('Total in LBP'), invM0(T.total * INV.rate)) +
+  (INVSET.seeCost
+   ? totalRow(tr('Profit'), '<span class="' + (T.profit < 0 ? 'negp' : '') + '">' + invM(T.profit) + '</span>') +
+     totalRow(tr('Profit %'), (Math.round(T.margin*10)/10) + '%')
+   : '<div class="trow sm"><span>' + esc(tr('Profit')) + '</span><span class="mu">' +
+     esc(tr('hidden — this user may not see cost')) + '</span></div>');
+
+ /* ── payment inside the invoice, USD and LBP together ── */
+ const payRows = INV.pay.map(function(p, i){
+  return '<tr>' +
+   '<td>' + sel(p.m, ['Cash','Cheque','Bank transfer','Card','Credit — on account'], 'invPaySet(' + i + ',\'m\',this.value)') + '</td>' +
+   '<td>' + sel(p.cur, ['USD','LBP'], 'invPaySet(' + i + ',\'cur\',this.value)') + '</td>' +
+   '<td class="n"><input class="in n cin" id="inv_pay_' + i + '" value="' +
+     (p.cur === 'LBP' ? invM0(p.amt) : invM(p.amt)) + '" onchange="invPaySet(' + i + ',\'amt\',this.value)"></td>' +
+   '<td class="n"><span class="mu">' + (p.cur === 'LBP' ? invM((+p.amt||0)/INV.rate) : invM(p.amt)) + '</span></td>' +
+   '<td><span class="rowact" title="Delete" onclick="invPayDel(' + i + ')">🗑</span></td>' +
+   '</tr>';
+ }).join('');
+ const payment =
+  '<div class="tw"><table><thead><tr>' +
+   ['Method','Currency','Amount','In USD',''].map(h => '<th class="' + (h==='Amount'||h==='In USD'?'n':'') + '">' + esc(tr(h)) + '</th>').join('') +
+   '</tr></thead><tbody>' + payRows + '</tbody></table></div>' +
+  '<div class="invbtns">' +
+   '<button class="b" onclick="invPayAdd()">+ ' + esc(tr('Another payment')) + '</button>' +
+   '<button class="b" onclick="invPayFull()">' + esc(tr('Pay the whole balance')) + '</button>' +
+  '</div>' +
+  '<div class="fs f3">' +
+   '<div><label>' + esc(tr('Paid')) + '</label><input class="in n" value="' + invM(T.paid) + '" readonly></div>' +
+   '<div><label>' + esc(tr('Remaining')) + '</label><input class="in n" value="' + invM(T.due) + '" readonly></div>' +
+   '<div><label>' + esc(tr('State')) + '</label><input class="in" value="' +
+     esc(T.due <= 0.001 ? tr('Paid') : (T.paid > 0 ? tr('Part paid') : tr('Unpaid'))) + '" readonly></div>' +
+  '</div>' +
+  '<div class="fmsg ' + (c.limit > 0 && (c.bal + T.due) > c.limit ? 'warn' : 'hintmsg') + '">' +
+   (c.limit > 0 && (c.bal + T.due) > c.limit ? ic('alertT','ic-14') : '') +
+   '<span>' + esc(c.limit === 0
+     ? tr('This customer has no credit limit — cash only.')
+     : tr('Credit limit') + ' ' + invM(c.limit) + ' · ' + tr('already used') + ' ' + invM(c.bal) +
+       ' · ' + tr('this invoice would leave') + ' ' + invM(c.bal + T.due)) + '</span></div>';
+
+ /* ── CR-030: his statement, without leaving the invoice ── */
+ const st = CUSTSTMT[c.code] || [];
+ const stmtPane = !INV.showStmt ? '' :
+  pane(tr('Statement') + ' — ' + (lang==='ar'?c.ar:c.en),
+   (st.length
+    ? '<div class="tw"><table><thead><tr>' +
+      ['Date','Document','Type','Debit','Credit','Balance'].map(h =>
+        '<th class="' + (['Debit','Credit','Balance'].indexOf(h)>=0?'n':'') + '">' + esc(tr(h)) + '</th>').join('') +
+      '</tr></thead><tbody>' + st.map(r => '<tr>' +
+        r.map((v,i2) => '<td class="' + (i2>=3?'n':'') + '">' + esc(v) + '</td>').join('') + '</tr>').join('') +
+      '</tbody></table></div>'
+    : '<span class="mu">' + esc(tr('Nothing open for this customer.')) + '</span>') +
+   note(tr('This is the short view.'),
+     tr('The full statement — with every item line, both currencies, and send by email or WhatsApp — is on the Account statement screen.')),
+   '<button class="b" onclick="openTab(\'stmt\',\'Account statement\',\'كشف حساب\')">' +
+    esc(tr('Open the full statement')) + '</button>');
+
+ /* ── reorder ── */
+ const prev = PREVINV.filter(p => p.cust === c.code);
+ const reorder = prev.length
+  ? '<div class="invhits">' + prev.map(p =>
+      '<button class="b" onclick="invReorder(\'' + p.no + '\')">' + esc(p.no) +
+      ' <span class="mu">' + esc(p.d + ' · ' + p.lines.length + ' ' + tr('lines')) + '</span></button>').join('') + '</div>'
+  : '<span class="mu">' + esc(tr('No earlier invoice for this customer.')) + '</span>';
+
+ /* ── can it be saved? ── */
+ const saveBar = blocked.length
+  ? '<div class="fsum">' + ic('alertC','ic-14') + '<div><b>' +
+     esc(tr('This invoice cannot be saved yet')) + '</b><ul>' +
+     blocked.map(l => { const s2 = invLineState(l); const it = invItem(l.no);
+      return '<li>' + esc(invName(it) + ' — ' +
+       (s2.below && INVSET.belowCost === 'block' ? tr('the price is below cost') + ' (' + invM(it.cost) + ')' : '') +
+       (s2.below && s2.over && INVSET.belowCost === 'block' && INVSET.overStock === 'block' ? ' · ' : '') +
+       (s2.over && INVSET.overStock === 'block' ? tr('only') + ' ' + invM0(s2.av) + ' ' + tr('in stock') : '')) + '</li>';
+     }).join('') + '</ul></div></div>'
+  : '';
+
+ return head('Sales invoice',
+   tr('One entry box, live stock, the price he paid last time, and the profit — if you are allowed to see it'),
+   [btn('Print'), btn('Send'), blocked.length ? btn('Save') : btn('Save','p')]) +
+  pane(tr('Who is buying'), findBox,
+    '<button class="b" onclick="invStmt()">' +
+     esc(INV.showStmt ? tr('Hide the statement') : tr('Show his statement')) + '</button>') +
+  stmtPane +
+  pane(tr('Header'), header) +
+  pane(tr('Lines'), entry + grid,
+    '<span class="mu">' + esc(INV.lines.length + ' ' + tr('lines') + ' · ' + tr('store') + ': ' + invOpt2(INV.store)) + '</span>') +
+  saveBar +
+  '<div class="g g2">' +
+   pane(tr('Totals'), '<div class="ttab">' + totals + '</div>') +
+   pane(tr('Payment'), payment) +
+  '</div>' +
+  '<div class="g g2">' +
+   pane(tr('Reorder — a previous invoice'), reorder) +
+   pane(tr('Invoice rules'), rules) +
+  '</div>' +
+  note(tr('Nothing on this screen is typed in.'),
+   tr('Every total, every discount, the VAT, the rounding and the profit are worked out from the lines. Change a quantity or a price and watch the whole screen move. The three settings under “Invoice rules” are per company — each of the eight can be stricter or looser than the others.'));
+};
+
+/* the cost-centre switch (CR-027) lives in a later block; default on until then */
+function SETT_CC_ON(){ return (typeof SETT !== 'undefined' && 'costCentre' in SETT) ? !!SETT.costCentre : true; }
+
+/* dropdown labels for this screen only — the stored value stays English */
+const INVOPTAR = {
+ 'Zahle main':'زحلة الرئيسي', 'Beirut':'بيروت', 'Van — Elie':'سيارة — إيلي',
+ 'Zahle branch':'فرع زحلة', 'Beirut branch':'فرع بيروت', 'Bekaa route':'خط البقاع',
+ 'Standard 11%':'عادي ١١٪', 'Exempt':'معفى', 'Export 0%':'تصدير ٠٪',
+ 'Cash':'نقداً', 'Cheque':'شيك', 'Bank transfer':'حوالة مصرفية', 'Card':'بطاقة',
+ 'Credit — on account':'على الحساب', 'USD':'دولار أميركي', 'LBP':'ليرة لبنانية',
+ 'Piece':'قطعة', 'Box (5)':'علبة (٥)', 'Ream':'رزمة', 'Hour':'ساعة',
+ 'Campaign':'حملة', 'Ordered':'مطلوب', 'Clearing old stock':'تصريف مخزون قديم'
+};
+function invOpt2(o){ return (lang === 'ar' && INVOPTAR[o]) ? INVOPTAR[o] : o; }
+
+/* ── MOF number on the customer list and the customer form (CR-014) ── */
+(function(){
+ if(!L.cust || !L.cust.cols) return;
+ const at = L.cust.cols.findIndex(x => x.h === 'Phone');
+ if(at < 0 || L.cust.cols.some(x => x.h === 'MOF number')) return;
+ L.cust.cols.splice(at + 1, 0, C('MOF number'));
+ const mof = { 'C-0101':'1002554', 'C-0104':'1008317', 'C-0119':'1011940' };
+ L.cust.rows.forEach(r => { r.splice(at + 1, 0, mof[r[0]] || '—'); });
+})();
+/* the customer form already carries "Tax number" — that IS the MOF number.
+   It is named rather than duplicated, so there is only ever one field. */
+(function(){
+ const f = F.cust && F.cust.s && F.cust.s[0] && F.cust.s[0].f;
+ if(!f) return;
+ const tn = f.find(x => x.l === 'Tax number');
+ if(tn && !tn.hint) tn.hint = 'The MOF number. The invoice searches on it.';
+})();
+
+/* ── the rounding account, if the chart does not already carry one ── */
+(function(){
+ if(typeof CHART === 'undefined') return;
+ if(CHART.some(r => String(r[0]) === '6580')) return;
+ const at = CHART.findIndex(r => String(r[0]).indexOf('65') === 0);
+ const row = ['6580','Rounding differences','فروقات التقريب','0.00'];
+ if(at >= 0) CHART.splice(at + 1, 0, row); else CHART.push(row);
+ if(typeof CIDX !== 'undefined' && CIDX && CIDX['6580'] === undefined) CIDX['6580'] = row;
+})();
+
+Object.assign(AR, {
+ 'Find the customer':'ابحث عن الزبون',
+ 'Name, part of a name, phone, or MOF number':'الاسم أو جزء منه، أو الهاتف، أو رقم المالية',
+ 'MOF number':'رقم المالية', 'MOF':'المالية',
+ 'Nobody matches that.':'لا أحد يطابق ذلك.',
+ 'Create this customer':'أنشئ هذا الزبون',
+ 'Who is buying':'من يشتري',
+ 'Item number, barcode, or name — then press Enter':'رقم الصنف أو الباركود أو الاسم — ثم اضغط Enter',
+ 'New item':'صنف جديد', 'Add':'أضف',
+ 'Nothing matches':'لا شيء يطابق',
+ 'Check the number, or create it.':'تحقق من الرقم، أو أنشئه.',
+ 'More than one item matches — pick one:':'أكثر من صنف يطابق — اختر واحداً:',
+ 'Lines loaded from':'تم تحميل السطور من',
+ 'Change anything before saving.':'غيّر ما تشاء قبل الحفظ.',
+ 'Available':'المتوفر', 'Last price':'آخر سعر', 'first time':'أول مرة',
+ 'Below cost':'أقل من الكلفة', 'Over stock':'أكثر من المخزون',
+ 'Selling below cost':'البيع بأقل من الكلفة', 'Quantity over stock':'كمية أكثر من المخزون',
+ 'Allowed, no warning':'مسموح، بلا تنبيه',
+ 'Warn — red row, still saveable':'تنبيه — سطر أحمر، ويمكن الحفظ',
+ 'Warn — marked row, still saveable':'تنبيه — سطر مُعلَّم، ويمكن الحفظ',
+ 'Blocked — cannot save':'ممنوع — لا يمكن الحفظ',
+ 'Rounding':'التقريب', 'No rounding':'بلا تقريب', 'To the nearest 0.05':'لأقرب ٠٫٠٥',
+ 'To the nearest 0.25':'لأقرب ٠٫٢٥', 'To the nearest 1':'لأقرب ١',
+ 'Rounding goes to':'التقريب يُرحَّل إلى',
+ 'Show the available quantity':'إظهار الكمية المتوفرة',
+ 'Show the last price this customer paid':'إظهار آخر سعر دفعه هذا الزبون',
+ 'This user may see cost and profit':'هذا المستخدم يرى الكلفة والربح',
+ 'hidden — this user may not see cost':'مخفي — هذا المستخدم لا يرى الكلفة',
+ 'Invoice rules':'قواعد الفاتورة',
+ 'Another payment':'دفعة أخرى', 'Pay the whole balance':'دفع كامل الرصيد',
+ 'Method':'الطريقة', 'Currency':'العملة', 'Amount':'المبلغ', 'In USD':'بالدولار',
+ 'Paid':'مدفوع', 'Remaining':'المتبقي', 'Part paid':'مدفوع جزئياً', 'Unpaid':'غير مدفوع',
+ 'This customer has no credit limit — cash only.':'لا سقف ائتمان لهذا الزبون — نقداً فقط.',
+ 'Credit limit':'سقف الائتمان', 'already used':'المستعمل', 'this invoice would leave':'هذه الفاتورة تترك',
+ 'Statement':'كشف حساب', 'Show his statement':'أظهر كشف حسابه', 'Hide the statement':'أخفِ الكشف',
+ 'Open the full statement':'افتح الكشف الكامل',
+ 'Nothing open for this customer.':'لا شيء مفتوح لهذا الزبون.',
+ 'This is the short view.':'هذه النظرة المختصرة.',
+ 'The full statement — with every item line, both currencies, and send by email or WhatsApp — is on the Account statement screen.':
+  'الكشف الكامل — بكل سطور الأصناف، وبالعملتين، ومع الإرسال بالبريد أو واتساب — في شاشة كشف الحساب.',
+ 'Reorder — a previous invoice':'إعادة طلب — فاتورة سابقة',
+ 'No earlier invoice for this customer.':'لا فاتورة سابقة لهذا الزبون.',
+ 'This invoice cannot be saved yet':'لا يمكن حفظ هذه الفاتورة بعد',
+ 'the price is below cost':'السعر أقل من الكلفة', 'only':'فقط', 'in stock':'في المخزون',
+ 'No lines yet. Type an item number, a barcode or a name in the box above.':
+  'لا سطور بعد. اكتب رقم صنف أو باركود أو اسماً في الصندوق أعلاه.',
+ 'Nothing on this screen is typed in.':'لا شيء في هذه الشاشة مكتوب يدوياً.',
+ 'Every total, every discount, the VAT, the rounding and the profit are worked out from the lines. Change a quantity or a price and watch the whole screen move. The three settings under “Invoice rules” are per company — each of the eight can be stricter or looser than the others.':
+  'كل المجاميع والحسومات والضريبة والتقريب والربح تُحتسب من السطور. غيّر كمية أو سعراً وسترى الشاشة كلها تتحرك. الإعدادات الثلاثة تحت «قواعد الفاتورة» لكل شركة — كل واحدة من الثماني يمكن أن تكون أشد أو أخف من غيرها.',
+ 'One entry box, live stock, the price he paid last time, and the profit — if you are allowed to see it':
+  'صندوق إدخال واحد، مخزون حي، السعر الذي دفعه آخر مرة، والربح — إن كان مسموحاً لك رؤيته',
+ 'Comes from the customer':'يأتي من الزبون', 'Local customers':'زبائن محليون',
+ 'lines':'سطور', 'store':'المستودع', 'quantity':'الكمية',
+ 'Send':'إرسال', 'Reference':'مرجع',
+ 'Stamped on the invoice — later rate changes never move it':
+  'مثبَّت على الفاتورة — تغيّر السعر لاحقاً لا يحرّكه'
+});
+Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
+buildTree(); paint();
+</script>
+<style>
+/* the invoice grid: colour is never the only signal — every coloured row
+   also carries a worded badge in the item column. */
+tbody tr.r-bad  td{background:var(--c-danger-soft)}
+tbody tr.r-over td{background:var(--c-warning-soft)}
+tbody tr.r-block td{background:var(--c-danger-soft);
+  box-shadow:inset 2px 0 0 var(--c-danger)}
+tbody tr.r-bad.r-over td{background:linear-gradient(90deg,var(--c-danger-soft),var(--c-warning-soft))}
+.avlow{color:var(--c-danger);font-weight:600}
+.negp{color:var(--c-danger)}
+.inventry{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.inventry .in{flex:1 1 320px;min-width:220px}
+.invhits{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.invhits .mu{font-size:12px}
+.invbtns{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+input.in.cin{padding:4px 6px;height:auto;min-width:74px}
+input.in.cin.s{min-width:56px}
+.ttab .trow{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:6px 0;border-bottom:1px solid var(--c-border-subtle,var(--line,#e2ded5))}
+.ttab .trow:last-child{border-bottom:0}
+.ttab .trow.sm{font-size:12px;color:var(--c-text-muted,#7c756a)}
+.ttab .trow.big{font-size:16px;padding:10px 0}
+.ttab .trow input.in{max-width:130px}
+</style>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE REST OF WHAT WAS BUILT FROM HIS LIST OF 38
+
+     CR-027  hide the cost centre feature entirely, per company
+     CR-031  transfer a whole warehouse to another
+     CR-033  cash-flow alerts at amounts he sets
+     CR-039  a photo on the item
+     CR-041  which fields are mandatory, decided per company
+     CR-042  expiry reports
+     CR-046  a screen for the salesperson — price, and cost if he is allowed
+     CR-047  the statement restructured: customers, suppliers, general
+     CR-048  a detailed statement for any kind of account
+     CR-034  send the statement by email, WhatsApp or print (preview only —
+             the sending route itself is still a decision, see CR-011)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── CR-027: company switches ── */
+const SETT = { costCentre:true };
+function settCC(on){
+ SETT.costCentre = !!on;
+ MENU.forEach(g => {
+  const i = g.items.findIndex(x => x[0] === 'cc');
+  if(!SETT.costCentre && i >= 0) g.items.splice(i, 1);
+  if(SETT.costCentre && i < 0 && g.en === 'Data Management')
+   g.items.push(['cc','Cost centres','مراكز الكلفة']);
+ });
+ if(!SETT.costCentre && active === 'cc'){ closeTab('cc'); }
+ buildTree(); paint();
+}
+S.comp = (orig => function(){
+ return orig() + pane(tr('Features this company uses'),
+  '<div class="fs f3">' +
+   '<div class="chk"><input type="checkbox"' + (SETT.costCentre ? ' checked' : '') +
+    ' onchange="settCC(this.checked)"><span>' + esc(tr('Use cost centres')) + '</span></div>' +
+   '<div class="chk"><input type="checkbox" checked disabled><span>' + esc(tr('Use VAT')) + '</span></div>' +
+   '<div class="chk"><input type="checkbox" checked disabled><span>' + esc(tr('Use packages and barcodes')) + '</span></div>' +
+  '</div>' +
+  note(tr('Switching cost centres off removes them everywhere.'),
+   tr('The menu entry, the field on every document, and the column on every report. Try it — the Cost centres screen disappears from Data Management and the field leaves the sales invoice. Each of the eight companies decides this for itself.')));
+})(S.comp);
+
+/* ── CR-031: transfer a whole warehouse ── */
+const TFER = { from:'Zahle main', to:'Beirut', mode:'items' };
+function tferSet(k, v){ TFER[k] = v; paint(); }
+function tferPlan(){
+ const rows = [];
+ let units = 0, value = 0;
+ ITEMDIR.forEach(it => {
+  if(!it.st) return;
+  const q = it.st[TFER.from] || 0;
+  if(!q) return;
+  units += q; value += q * it.cost;
+  rows.push([it.no, invName(it), invOpt2(it.pkg), invM0(q), invM(it.cost), invM(q * it.cost)]);
+ });
+ return { rows:rows, units:units, value:value };
+}
+S.tfer = function(){
+ const base = renderList('tfer','Transfers','تحويل بين المخازن');
+ const sel2 = (v, on) => '<select class="in" onchange="' + on + '">' +
+   ['Zahle main','Beirut','Van — Elie'].map(o =>
+     '<option value="' + esc(o) + '"' + (o === v ? ' selected' : '') + '>' + esc(invOpt2(o)) + '</option>').join('') +
+   '</select>';
+ const p = tferPlan();
+ const same = TFER.from === TFER.to;
+ return base + pane(tr('Move a whole warehouse'),
+  '<div class="fs f4">' +
+   '<div><label>' + esc(tr('From warehouse')) + '</label>' + sel2(TFER.from, "tferSet('from',this.value)") + '</div>' +
+   '<div><label>' + esc(tr('To warehouse')) + '</label>' + sel2(TFER.to, "tferSet('to',this.value)") + '</div>' +
+   '<div><label>' + esc(tr('What moves')) + '</label><input class="in" value="' +
+     esc(tr('Everything with a quantity')) + '" readonly></div>' +
+   '<div><label>' + esc(tr('Goods in transit account')) + '</label><input class="in" value="3580 · ' +
+     esc(tr('Goods in transit')) + '" readonly></div>' +
+  '</div>' +
+  (same
+   ? '<div class="fmsg err">' + ic('alertC','ic-14') + '<span>' +
+     esc(tr('The two warehouses are the same. Pick a different destination.')) + '</span></div>'
+   : (p.rows.length
+      ? tbl([C('Item number'),C('Name'),C('Pkg'),n('Quantity'),n('Cost'),n('Value')],
+          p.rows.concat([['<b>' + esc(tr('Total')) + '</b>','','', '<b>' + invM0(p.units) + '</b>','',
+            '<b>' + invM(p.value) + '</b>']]), {min:820})
+      : '<div class="fmsg hintmsg"><span>' + esc(tr('That warehouse is empty — there is nothing to move.')) + '</span></div>')),
+  '<button class="b p"' + (same || !p.rows.length ? ' disabled' : '') + '>' +
+   esc(tr('Create the transfer')) + '</button>') +
+ note(tr('One document, not one per item.'),
+  tr('The list above is worked out from what is actually on the shelf right now, so it changes as stock changes. Closing a branch or emptying a van is one transfer with as many lines as there are items — and until the other side confirms receipt, the value sits in the goods-in-transit account.'));
+};
+
+/* ── CR-039: the photo on the item ── */
+const ITEMPHOTO = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+ '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="220" viewBox="0 0 320 220">' +
+ '<rect width="320" height="220" fill="#eceae4"/>' +
+ '<rect x="46" y="52" width="228" height="128" rx="8" fill="#3c3a35"/>' +
+ '<rect x="56" y="62" width="208" height="108" rx="4" fill="#8fa8bf"/>' +
+ '<rect x="26" y="180" width="268" height="12" rx="6" fill="#57544d"/>' +
+ '<text x="160" y="212" font-family="sans-serif" font-size="11" fill="#7c756a" text-anchor="middle">IT-0919</text>' +
+ '</svg>');
+S.item1 = (orig => function(){
+ return orig() + pane(tr('Photos'),
+  '<div class="photos">' +
+   '<figure><img src="' + ITEMPHOTO + '" alt="' + esc(tr('Item photo')) + '">' +
+    '<figcaption>' + esc(tr('Main photo') + ' · IT-0919.svg · 4 KB') + '</figcaption></figure>' +
+   '<div class="photodrop">' + ic('image','ic-14') + '<span>' +
+    esc(tr('Drop a photo here, or take one with the phone camera')) + '</span></div>' +
+  '</div>' +
+  note(tr('The photo travels with the item.'),
+   tr('It shows on the item card, in the POS tile, on the salesperson screen and on a printed price list. One photo is the main one; the rest are extras. Anyone with the right to edit the item may change it.')),
+  '<span class="mu">' + esc(tr('1 photo')) + '</span>');
+})(S.item1);
+
+/* ── CR-041: which fields are mandatory, per company ── */
+const REQF = [
+ { e:'Customer', f:[['Name',1,1],['Arabic name',0,0],['Phone',0,1],['Tax number (MOF)',0,1],
+                    ['Address',0,0],['Classification',1,1],['Salesman',0,1],['Credit limit',0,0]] },
+ { e:'Supplier', f:[['Name',1,1],['Phone',0,1],['Tax number (MOF)',0,1],['Payment term',0,0]] },
+ { e:'Item',     f:[['Item number',1,1],['Name',1,1],['Category',1,1],['Sub category',0,0],
+                    ['Barcode',0,1],['Base unit',1,1],['Cost price',0,0],['Photo',0,0]] },
+ { e:'Sales invoice', f:[['Customer',1,1],['Salesman',0,1],['Store',1,1],['Reference',0,0]] }
+];
+function reqToggle(ei, fi){
+ const row = REQF[ei].f[fi];
+ if(row[1]) return;              /* locked by the system — cannot be turned off */
+ row[2] = row[2] ? 0 : 1;
+ paint();
+}
+S.reqf = function(){
+ return head('Mandatory fields',
+   tr('Which fields a user must fill before a record can be saved — decided per company'),
+   [btn('Print'), btn('Copy to another company')]) +
+  REQF.map((g, ei) => pane(tr(g.e),
+    tbl([C('Field'),C('Required'),C('Set by')],
+      g.f.map((f, fi) => [
+        esc(tr(f[0])),
+        f[1]
+         ? '<span class="pill ok">' + esc(tr('Always')) + '</span>'
+         : '<div class="chk"><input type="checkbox"' + (f[2] ? ' checked' : '') +
+           ' onchange="reqToggle(' + ei + ',' + fi + ')"><span>' +
+           esc(f[2] ? tr('Required') : tr('Optional')) + '</span></div>',
+        f[1] ? '<span class="mu">' + esc(tr('The system — a record makes no sense without it')) + '</span>'
+             : '<span class="mu">' + esc(tr('This company')) + '</span>'
+      ]), {min:640}))).join('') +
+  note(tr('A required field shows a red star and stops the save.'),
+   tr('The ones marked “Always” cannot be switched off — a customer with no name or an item with no number is not a record. Everything else is a company decision, and the eight companies can each answer it differently.'));
+};
+
+/* ── CR-042: expiry ── */
+const BATCH = [
+ { it:'Fresh milk 1L',       no:'IT-2210', b:'B-4471', wh:'Beirut',     q:180,  cost:0.85, exp:'2026-09-04' },
+ { it:'Yogurt 500g',         no:'IT-2214', b:'B-4480', wh:'Beirut',     q:96,   cost:0.62, exp:'2026-09-11' },
+ { it:'Paracetamol 500mg',   no:'IT-3301', b:'L-2291', wh:'Zahle main', q:420,  cost:1.10, exp:'2026-09-26' },
+ { it:'Battery AA pack',     no:'IT-2455', b:'B-4390', wh:'Zahle main', q:640,  cost:0.48, exp:'2026-11-02' },
+ { it:'Printer toner 26A',   no:'IT-1902', b:'T-0182', wh:'Zahle main', q:24,   cost:38.00, exp:'2027-02-18' },
+ { it:'Fresh milk 1L',       no:'IT-2210', b:'B-4462', wh:'Zahle main', q:60,   cost:0.85, exp:'2026-08-27' },
+ { it:'Cream cheese 200g',   no:'IT-2231', b:'B-4455', wh:'Beirut',     q:35,   cost:1.40, exp:'2026-08-22' }
+];
+const EXPR = { within:60 };
+function exprSet(v){ EXPR.within = +v || 0; paint(); }
+function exprDays(iso){
+ const today = new Date('2026-08-29T00:00:00Z');
+ return Math.round((new Date(iso + 'T00:00:00Z') - today) / 86400000);
+}
+S.expr = function(){
+ const rows = BATCH.map(b => Object.assign({ d:exprDays(b.exp) }, b))
+   .filter(b => b.d <= EXPR.within)
+   .sort((a, b) => a.d - b.d);
+ const gone = rows.filter(r => r.d < 0);
+ const soon = rows.filter(r => r.d >= 0 && r.d <= 30);
+ const val = rs => rs.reduce((a, r) => a + r.q * r.cost, 0);
+ const opt = v => '<option value="' + v + '"' + (EXPR.within === v ? ' selected' : '') + '>' +
+   esc(v === 9999 ? tr('Everything') : tr('Within') + ' ' + v + ' ' + tr('days')) + '</option>';
+ return head('Expiry report',
+   tr('What is about to go out of date, what already has, and what it is worth'),
+   [btn('Print'), btn('Excel'), btn('PDF')]) +
+  '<div class="g g4">' +
+   kpi(tr('Already expired'), invM0(gone.reduce((a,r)=>a+r.q,0)), invM(val(gone)) + ' ' + tr('at cost'), gone.length ? 'w' : '') +
+   kpi(tr('Expiring in 30 days'), invM0(soon.reduce((a,r)=>a+r.q,0)), invM(val(soon)) + ' ' + tr('at cost'), soon.length ? 'w' : '') +
+   kpi(tr('Batches listed'), rows.length, tr('within') + ' ' + (EXPR.within === 9999 ? tr('all dates') : EXPR.within + ' ' + tr('days'))) +
+   kpi(tr('Value at risk'), invM(val(rows)), tr('at moving average cost')) +
+  '</div>' +
+  pane(tr('Filter'),
+   '<div class="fs f4">' +
+    '<div><label>' + esc(tr('Expiring')) + '</label><select class="in" onchange="exprSet(this.value)">' +
+      opt(7) + opt(30) + opt(60) + opt(90) + opt(9999) + '</select></div>' +
+    '<div><label>' + esc(tr('Warehouse')) + '</label><select class="in"><option>' + esc(tr('All')) +
+      '</option><option value="Zahle main">' + esc(invOpt2('Zahle main')) + '</option>' +
+      '<option value="Beirut">' + esc(invOpt2('Beirut')) + '</option></select></div>' +
+    '<div><label>' + esc(tr('Category')) + '</label><select class="in"><option>' + esc(tr('All')) + '</option></select></div>' +
+    '<div class="chk"><input type="checkbox" checked><span>' + esc(tr('Include what already expired')) + '</span></div>' +
+   '</div>') +
+  pane(tr('Batches'),
+   rows.length
+    ? tbl([C('Item number'),C('Item'),C('Batch'),C('Warehouse'),n('Quantity'),n('Cost'),n('Value'),C('Expires'),n('Days'),C('State')],
+        rows.map(r => [
+          '<span class="ds-code">' + esc(r.no) + '</span>', esc(r.it), esc(r.b), esc(invOpt2(r.wh)),
+          invM0(r.q), invM(r.cost), invM(r.q * r.cost), esc(r.exp.split('-').reverse().join('/')),
+          '<span class="' + (r.d < 0 ? 'avlow' : '') + '">' + r.d + '</span>',
+          r.d < 0  ? pill('ba', tr('Expired'))
+        : r.d <= 7 ? pill('ba', tr('This week'))
+        : r.d <= 30? pill('wa', tr('This month'))
+                   : pill('ok', tr('Watch'))
+        ]), {min:960})
+    : '<span class="mu">' + esc(tr('Nothing expires in that window.')) + '</span>') +
+  note(tr('Expiry is a batch fact, not an item fact.'),
+   tr('The same item can sit in three batches with three dates. The system counts the oldest batch out first, so what is listed here is what will actually be sold next — and the notification rule “an item is close to expiry” reads this same list.'));
+};
+
+/* ── CR-046: the salesperson's screen ── */
+const SLOOK = { q:'' };
+function slookSet(v){ SLOOK.q = v; paint(); setTimeout(() => { const e = document.getElementById('slk'); if(e){ e.focus(); e.setSelectionRange(e.value.length, e.value.length); } }, 0); }
+S.slook = function(){
+ const hits = SLOOK.q ? invResolve(SLOOK.q) : ITEMDIR;
+ const cols = [C('Item number'),C('Barcode'),C('Item'),C('Pkg'),
+   n(invOpt2('Zahle main')),n(invOpt2('Beirut')),n(invOpt2('Van — Elie')),n('Total'),
+   n('Retail'),n('Wholesale'),n('Super wholesale'),n('Bulk')];
+ if(INVSET.seeCost) cols.push(n('Cost'), n('Margin at wholesale'));
+ const rows = hits.map(it => {
+  const st = it.st || {};
+  const tot = it.st ? (st['Zahle main']||0) + (st['Beirut']||0) + (st['Van — Elie']||0) : null;
+  const r = ['<span class="ds-code">' + esc(it.no) + '</span>', esc(it.bc), esc(invName(it)), esc(invOpt2(it.pkg)),
+   it.st ? invM0(st['Zahle main']||0) : '<span class="mu">—</span>',
+   it.st ? invM0(st['Beirut']||0) : '<span class="mu">—</span>',
+   it.st ? invM0(st['Van — Elie']||0) : '<span class="mu">—</span>',
+   tot === null ? '<span class="mu">—</span>'
+     : '<b class="' + (tot === 0 ? 'avlow' : '') + '">' + invM0(tot) + '</b>',
+   invM(it.price.Retail), invM(it.price.Wholesale), invM(it.price['Super wholesale']), invM(it.price.Bulk)];
+  if(INVSET.seeCost){
+   const m = it.price.Wholesale > 0 ? (it.price.Wholesale - it.cost) / it.price.Wholesale * 100 : 0;
+   r.push(invM(it.cost), (Math.round(m*10)/10) + '%');
+  }
+  return r;
+ });
+ return head('Salesperson lookup',
+   tr('One screen for the man on the phone or in the van — what it costs, what it sells for, and what is left'),
+   [btn('Print price list'), btn('Excel')]) +
+  pane(tr('Find an item'),
+   '<div class="inventry"><input class="in" id="slk" value="' + esc(SLOOK.q) + '" autocomplete="off" ' +
+    'placeholder="' + esc(tr('Item number, barcode, or name')) + '" oninput="slookSet(this.value)"></div>' +
+   (SLOOK.q && !hits.length
+    ? '<div class="fmsg err">' + ic('alertC','ic-14') + '<span>' +
+      esc(tr('Nothing matches') + ' “' + SLOOK.q + '”.') + '</span></div>' : '')) +
+  pane(tr('Prices and stock'), rows.length ? tbl(cols, rows, {min:1180})
+    : '<span class="mu">' + esc(tr('Nothing to show.')) + '</span>',
+   INVSET.seeCost
+    ? pill('wa', tr('You may see cost'))
+    : pill('ok', tr('Cost is hidden for your role'))) +
+  note(tr('Whether cost appears is a permission, not a setting on this screen.'),
+   tr('A salesman on commission usually sees the four selling prices and the stock, and not the cost. A manager sees everything. It is the same screen either way — the columns simply are not there for someone who may not see them. Change it under Invoice rules on the sales invoice to see both versions.'));
+};
+
+/* ── CR-047 / CR-048: the statement, restructured ── */
+const SUPPSTMT = {
+ 'S-0044':[['22/08/2026','PB-2026-0611','Purchase bill','','8,420.00','19,640.00'],
+           ['11/08/2026','PV-2026-0288','Payment','6,000.00','','11,220.00'],
+           ['02/08/2026','PB-2026-0598','Purchase bill','','5,180.00','17,220.00'],
+           ['30/06/2026','—','Opening balance','','12,040.00','12,040.00']],
+ 'S-0051':[['18/08/2026','PB-2026-0605','Purchase bill','','2,310.00','2,310.00']]
+};
+const GLSTMT = {
+ '5310':[['29/08/2026','RV-2026-0418','Receipt — Karam Trading','2,000.00','','18,940.00'],
+         ['28/08/2026','PV-2026-0301','Payment — Bekaa Paper','','1,150.00','16,940.00'],
+         ['26/08/2026','RV-2026-0410','Receipt — Nasr Supermarket','98.00','','18,090.00'],
+         ['30/06/2026','—','Opening balance','17,992.00','','17,992.00']],
+ '6037':[['28/08/2026','AD-2026-0031','Damage — Zahle main','318.00','','460.00'],
+         ['25/08/2026','AD-2026-0030','Expiry — Beirut','142.00','','142.00']]
+};
+/* the item lines behind a document — this is what "detailed" means */
+const DOCLINES = {
+ 'SI-2026-1102':[['IT-0919','HP 17T-CN400 Core 5','2','378.00','756.00'],
+                 ['IT-1204','A4 paper 80g','400','4.10','1,640.00']],
+ 'SI-2026-1044':[['IT-1550','Solar panel 550W','6','149.00','894.00'],
+                 ['IT-1204B','A4 paper 80g — box of 5','15','19.60','294.00']],
+ 'SI-2026-1157':[['IT-0919','HP 17T-CN400 Core 5','6','362.00','2,172.00'],
+                 ['IT-0920','DELL 5520 i5','2','415.00','830.00']],
+ 'SI-2026-1170':[['IT-1204','A4 paper 80g','20','4.90','98.00']],
+ 'PB-2026-0611':[['IT-0919','HP 17T-CN400 Core 5','20','268.00','5,360.00'],
+                 ['IT-1550','Solar panel 550W','26','118.00','3,068.00']],
+ 'PB-2026-0598':[['IT-1204','A4 paper 80g','1,000','3.10','3,100.00'],
+                 ['IT-1204B','A4 paper 80g — box of 5','137','15.20','2,082.40']],
+ 'PB-2026-0605':[['IT-2455','Battery AA pack','1,500','0.48','720.00'],
+                 ['IT-1902','Printer toner 26A','42','37.86','1,590.00']]
+};
+const STMPARTY = {
+ cust:[['C-0101','Karam Trading','كرم للتجارة','4111'],['C-0104','Bou Khalil Est.','مؤسسة بو خليل','4118'],
+       ['C-0119','Nasr Supermarket','سوبرماركت نصر','4111']],
+ supp:[['S-0044','Bekaa Paper Co.','شركة البقاع للورق','4011'],['S-0051','Tech Import SAL','تك إمبورت ش.م.ل','4011']],
+ gl:[['5310','Main cash box','الصندوق الرئيسي','5310'],['6037','Stock losses','خسائر المخزون','6037']]
+};
+const STM = { kind:'cust', who:'C-0101', detail:false, send:'' };
+function stmSet(k, v){
+ STM[k] = (v === 'true') ? true : (v === 'false') ? false : v;
+ if(k === 'kind') STM.who = STMPARTY[STM.kind][0][0];
+ STM.send = '';
+ paint();
+}
+function stmSend(how){ STM.send = how; paint(); }
+function stmRows(){
+ if(STM.kind === 'cust') return CUSTSTMT[STM.who] || [];
+ if(STM.kind === 'supp') return SUPPSTMT[STM.who] || [];
+ return GLSTMT[STM.who] || [];
+}
+function stmParty(){
+ const p = (STMPARTY[STM.kind] || []).find(x => x[0] === STM.who);
+ return p || ['—','—','—','—'];
+}
+S.stmt = function(){
+ const p = stmParty();
+ const rows = stmRows().slice().reverse();   /* oldest first, the way a statement reads */
+ const num = v => +String(v || '0').replace(/,/g,'') || 0;
+ let dr = 0, cr = 0;
+ const body = [];
+ rows.forEach(r => {
+  dr += num(r[3]); cr += num(r[4]);
+  body.push(['<span class="mu">' + esc(r[0]) + '</span>',
+    '<span class="ds-code">' + esc(r[1]) + '</span>', esc(tr(r[2])),
+    r[3] ? invM(num(r[3])) : '', r[4] ? invM(num(r[4])) : '',
+    '<b>' + invM(num(r[5])) + '</b>', invM0(num(r[5]) * 90000)]);
+  if(STM.detail && DOCLINES[r[1]]){
+   DOCLINES[r[1]].forEach(l => body.push([
+     '<span class="mu">↳</span>', '<span class="ds-code sub">' + esc(l[0]) + '</span>',
+     '<span class="mu">' + esc(l[1]) + ' · ' + esc(tr('quantity')) + ' ' + esc(l[2]) +
+       ' × ' + esc(l[3]) + '</span>',
+     '<span class="mu">' + esc(l[4]) + '</span>', '', '', '']));
+  }
+ });
+ const closing = rows.length ? num(rows[rows.length - 1][5]) : 0;
+ body.push(['<b>' + esc(tr('Total')) + '</b>','','','<b>' + invM(dr) + '</b>','<b>' + invM(cr) + '</b>',
+   '<b>' + invM(closing) + '</b>','<b>' + invM0(closing * 90000) + '</b>']);
+
+ const kindBtn = (k, t) => '<button class="b' + (STM.kind === k ? ' p' : '') +
+   '" onclick="stmSet(\'kind\',\'' + k + '\')">' + esc(tr(t)) + '</button>';
+ const whoSel = '<select class="in" onchange="stmSet(\'who\',this.value)">' +
+   STMPARTY[STM.kind].map(x => '<option value="' + esc(x[0]) + '"' + (x[0] === STM.who ? ' selected' : '') + '>' +
+     esc(x[0] + ' · ' + (lang === 'ar' ? x[2] : x[1])) + '</option>').join('') + '</select>';
+
+ const name = lang === 'ar' ? p[2] : p[1];
+ const msg = tr('Dear') + ' ' + name + ', ' +
+   tr('your statement to') + ' 29/08/2026 ' + tr('is attached. Balance') + ': ' + invM(closing) + ' USD. ' +
+   tr('Thank you.');
+ const sendPane = !STM.send ? '' : pane(tr('Ready to send') + ' — ' + tr(STM.send === 'wa' ? 'WhatsApp' : STM.send === 'em' ? 'Email' : 'Print'),
+   '<div class="fs f2">' +
+    '<div><label>' + esc(tr('To')) + '</label><input class="in" value="' +
+      esc(STM.send === 'wa' ? (CUSTDIR.find(c => c.code === STM.who) || {phone:'—'}).phone
+        : STM.send === 'em' ? (STM.who.toLowerCase() + '@example.com')
+        : tr('Default printer — A4')) + '" readonly></div>' +
+    '<div><label>' + esc(tr('Attachment')) + '</label><input class="in" value="' +
+      esc('Statement-' + STM.who + '-2026-08-29.pdf') + '" readonly></div>' +
+   '</div>' +
+   '<div class="fs f1"><div><label>' + esc(tr('Message')) + '</label><textarea class="in" rows="3" readonly>' +
+     esc(msg) + '</textarea></div></div>' +
+   note(tr('Nothing has been sent.'),
+    tr('This is what would go out. The prototype stops here on purpose: which route actually carries it — a WhatsApp link opened one customer at a time, or a paid business account that can send in bulk — is a decision with a monthly cost attached, and it has not been made yet.')),
+   pill('wa', tr('Preview only')));
+
+ return head('Account statement',
+   tr('Customers, suppliers or any account in the ledger — short, or with every item line'),
+   [btn('Print'), btn('Excel'), btn('Word'), btn('PDF')]) +
+  pane(tr('Which account'),
+   '<div class="invbtns">' + kindBtn('cust','Customers') + kindBtn('supp','Suppliers') +
+     kindBtn('gl','General ledger') + '</div>' +
+   '<div class="fs f4">' +
+    '<div><label>' + esc(tr('Account')) + '</label>' + whoSel + '</div>' +
+    '<div><label>' + esc(tr('From')) + '</label><input class="in" value="01/01/2026"></div>' +
+    '<div><label>' + esc(tr('To')) + '</label><input class="in" value="29/08/2026"></div>' +
+    '<div><label>' + esc(tr('Currency')) + '</label><select class="in"><option>' + esc(tr('Both')) +
+      '</option><option>USD</option><option>LBP</option></select></div>' +
+   '</div>' +
+   '<div class="fs f3">' +
+    '<div class="chk"><input type="checkbox"' + (STM.detail ? ' checked' : '') +
+     ' onchange="stmSet(\'detail\', this.checked?\'true\':\'false\')"><span>' +
+     esc(tr('Detailed — show the items on every document')) + '</span></div>' +
+    '<div class="chk"><input type="checkbox"><span>' + esc(tr('Include unposted')) + '</span></div>' +
+    '<div class="chk"><input type="checkbox" checked><span>' + esc(tr('Show the running balance')) + '</span></div>' +
+   '</div>',
+   '<span class="mu">' + esc(tr(STM.kind === 'cust' ? 'A customer' : STM.kind === 'supp' ? 'A supplier' : 'A ledger account')) + '</span>') +
+  pane(esc(p[0] + ' · ' + name),
+   tbl([C('Date'),C('Document'),C('Description'),n('Debit'),n('Credit'),n('Balance'),n('Balance LBP')],
+     body, {min:900}),
+   '<div class="invbtns">' +
+    '<button class="b" onclick="stmSend(\'em\')">' + esc(tr('Email')) + '</button>' +
+    '<button class="b" onclick="stmSend(\'wa\')">' + esc(tr('WhatsApp')) + '</button>' +
+    '<button class="b" onclick="stmSend(\'pr\')">' + esc(tr('Print')) + '</button>' +
+   '</div>') +
+  sendPane +
+  note(tr('Three kinds of statement, one screen.'),
+   tr('A customer statement, a supplier statement and a plain ledger account are the same report reading different accounts — so they behave identically, print identically, and cannot drift apart. Tick “Detailed” and every invoice opens up to show what was actually on it.'));
+};
+
+/* ── a general way to translate text that sits inside a static table row.
+      Table cells are raw HTML, so they never passed through tr(). Anything
+      marked data-tx is translated after every paint, in whatever language
+      is current. Used by the rows added just below. ── */
+enhance = (base => function(root){
+ base(root);
+ (root || document).querySelectorAll('[data-tx]').forEach(el => {
+  const k = el.getAttribute('data-tx');
+  if(k) el.textContent = tr(k);
+ });
+})(enhance);
+const txs = k => '<span data-tx="' + esc(k) + '">' + esc(k) + '</span>';
+
+/* ── CR-033: cash-flow alerts at amounts he sets ── */
+(function(){
+ if(!L.notif || !L.notif.rows) return;
+ if(L.notif.rows.some(r => String(r[0]).indexOf('Cash') >= 0)) return;
+ L.notif.rows.unshift(
+  [txs('Cash falls below an amount'), 'US$ 5,000 · ' + txs('all safes'),
+   txs('Owner') + ', ' + txs('Accountant'), txs('WhatsApp') + ' + ' + txs('in the system'),
+   '<span class="pill ok">' + txs('Active') + '</span>', del()],
+  [txs('Cash rises above an amount'), 'US$ 40,000 · ' + txs('Main cash box'),
+   txs('Owner'), txs('WhatsApp'),
+   '<span class="pill ok">' + txs('Active') + '</span>', del()],
+  [txs('Cash flow next 3 weeks turns negative'), txs('Any week') + ' · ' + txs('all safes'),
+   txs('Owner') + ', ' + txs('Accountant'), txs('Email') + ' + ' + txs('in the system'),
+   '<span class="pill ok">' + txs('Active') + '</span>', del()]);
+})();
+(function(){
+ const f = F.notif && F.notif.s && F.notif.s[0] && F.notif.s[0].f;
+ if(!f) return;
+ const w = f.find(x => x.l === 'When');
+ if(w && w.o && w.o.indexOf('Cash falls below an amount') < 0)
+  w.o = ['Cash falls below an amount','Cash rises above an amount',
+         'Cash flow next 3 weeks turns negative'].concat(w.o);
+ if(!f.some(x => x.l === 'Amount'))
+  f.splice(2, 0, { l:'Amount', t:'num', v:'5000',
+    hint:'Only for the cash rules. Which safes it watches is set under “Only for”.' });
+})();
+
+/* ── the new screens on the menu ── */
+(function(){
+ const put = (after, entry, groupEn) => MENU.forEach(g => {
+  if(groupEn && g.en !== groupEn) return;
+  const i = g.items.findIndex(x => x[0] === after);
+  if(i >= 0 && !g.items.some(x => x[0] === entry[0])) g.items.splice(i + 1, 0, entry);
+ });
+ put('srep', ['expr','Expiry report','تقرير الصلاحية'], 'Reporting');
+ put('quo',  ['slook','Salesperson lookup','شاشة المندوب'], 'Sales');
+ put('numb', ['reqf','Mandatory fields','الحقول الإلزامية'], 'Settings');
+})();
+
+Object.assign(AR, {
+ 'Features this company uses':'الميزات التي تستعملها هذه الشركة',
+ 'Use cost centres':'استعمال مراكز الكلفة', 'Use VAT':'استعمال الضريبة',
+ 'Use packages and barcodes':'استعمال التعبئة والباركود',
+ 'Switching cost centres off removes them everywhere.':'إيقاف مراكز الكلفة يزيلها من كل مكان.',
+ 'The menu entry, the field on every document, and the column on every report. Try it — the Cost centres screen disappears from Data Management and the field leaves the sales invoice. Each of the eight companies decides this for itself.':
+  'بند القائمة، والحقل في كل مستند، والعمود في كل تقرير. جرّب — تختفي شاشة مراكز الكلفة من إدارة البيانات ويختفي الحقل من فاتورة المبيعات. كل شركة من الثماني تقرر هذا لنفسها.',
+ 'Move a whole warehouse':'نقل مستودع كامل', 'From warehouse':'من مستودع', 'To warehouse':'إلى مستودع',
+ 'What moves':'ما الذي ينتقل', 'Everything with a quantity':'كل ما له كمية',
+ 'Goods in transit account':'حساب بضاعة بالطريق', 'Goods in transit':'بضاعة بالطريق',
+ 'The two warehouses are the same. Pick a different destination.':'المستودعان نفسهما. اختر وجهة مختلفة.',
+ 'That warehouse is empty — there is nothing to move.':'هذا المستودع فارغ — لا شيء لنقله.',
+ 'Create the transfer':'أنشئ التحويل', 'One document, not one per item.':'مستند واحد، لا مستند لكل صنف.',
+ 'The list above is worked out from what is actually on the shelf right now, so it changes as stock changes. Closing a branch or emptying a van is one transfer with as many lines as there are items — and until the other side confirms receipt, the value sits in the goods-in-transit account.':
+  'اللائحة أعلاه محسوبة مما هو فعلاً على الرف الآن، فتتغير مع تغير المخزون. إقفال فرع أو تفريغ سيارة هو تحويل واحد بعدد سطور الأصناف — وإلى أن يؤكد الطرف الآخر الاستلام، تبقى القيمة في حساب البضاعة بالطريق.',
+ 'Photos':'الصور', 'Item photo':'صورة الصنف', 'Main photo':'الصورة الرئيسية', '1 photo':'صورة واحدة',
+ 'Drop a photo here, or take one with the phone camera':'أفلت صورة هنا، أو التقطها بكاميرا الهاتف',
+ 'The photo travels with the item.':'الصورة ترافق الصنف.',
+ 'It shows on the item card, in the POS tile, on the salesperson screen and on a printed price list. One photo is the main one; the rest are extras. Anyone with the right to edit the item may change it.':
+  'تظهر في بطاقة الصنف، وفي مربع نقطة البيع، وفي شاشة المندوب، وفي لائحة الأسعار المطبوعة. صورة واحدة رئيسية والباقي إضافية. من له صلاحية تعديل الصنف يمكنه تغييرها.',
+ 'Mandatory fields':'الحقول الإلزامية',
+ 'Which fields a user must fill before a record can be saved — decided per company':
+  'الحقول التي يجب ملؤها قبل حفظ السجل — تُقرَّر لكل شركة',
+ 'Copy to another company':'انسخ إلى شركة أخرى',
+ 'Field':'الحقل', 'Required':'إلزامي', 'Optional':'اختياري', 'Set by':'يحدده', 'Always':'دائماً',
+ 'The system — a record makes no sense without it':'النظام — لا معنى للسجل بدونه',
+ 'This company':'هذه الشركة',
+ 'A required field shows a red star and stops the save.':'الحقل الإلزامي يحمل نجمة حمراء ويمنع الحفظ.',
+ 'The ones marked “Always” cannot be switched off — a customer with no name or an item with no number is not a record. Everything else is a company decision, and the eight companies can each answer it differently.':
+  'المعلّمة بـ«دائماً» لا يمكن إيقافها — زبون بلا اسم أو صنف بلا رقم ليس سجلاً. ما عدا ذلك قرار الشركة، والشركات الثماني قد تجيب كل واحدة بغير جواب الأخرى.',
+ 'Tax number (MOF)':'الرقم الضريبي (المالية)', 'Photo':'صورة',
+ 'Expiry report':'تقرير الصلاحية',
+ 'What is about to go out of date, what already has, and what it is worth':
+  'ما اقترب من انتهاء الصلاحية، وما انتهى فعلاً، وكم يساوي',
+ 'Already expired':'منتهي الصلاحية', 'Expiring in 30 days':'ينتهي خلال ٣٠ يوماً',
+ 'Batches listed':'الدفعات المعروضة', 'Value at risk':'القيمة المعرضة للخطر',
+ 'at cost':'بالكلفة', 'at moving average cost':'بكلفة المتوسط المتحرك',
+ 'within':'ضمن', 'all dates':'كل التواريخ', 'Within':'ضمن', 'days':'يوماً',
+ 'Expiring':'ينتهي خلال', 'Include what already expired':'تضمين ما انتهى فعلاً',
+ 'Batches':'الدفعات', 'Batch':'الدفعة', 'Expires':'ينتهي', 'Days':'الأيام',
+ 'Expired':'منتهٍ', 'This week':'هذا الأسبوع', 'This month':'هذا الشهر', 'Watch':'مراقبة',
+ 'Nothing expires in that window.':'لا شيء ينتهي ضمن هذه المدة.',
+ 'Expiry is a batch fact, not an item fact.':'الصلاحية صفة الدفعة لا الصنف.',
+ 'The same item can sit in three batches with three dates. The system counts the oldest batch out first, so what is listed here is what will actually be sold next — and the notification rule “an item is close to expiry” reads this same list.':
+  'الصنف نفسه قد يكون في ثلاث دفعات بثلاثة تواريخ. النظام يُخرج الأقدم أولاً، فما هنا هو ما سيُباع فعلاً — وقاعدة التنبيه «صنف قارب انتهاء صلاحيته» تقرأ هذه اللائحة نفسها.',
+ 'Salesperson lookup':'شاشة المندوب',
+ 'One screen for the man on the phone or in the van — what it costs, what it sells for, and what is left':
+  'شاشة واحدة لمن على الهاتف أو في السيارة — الكلفة، وسعر البيع، والمتبقي',
+ 'Print price list':'اطبع لائحة الأسعار', 'Find an item':'ابحث عن صنف',
+ 'Item number, barcode, or name':'رقم الصنف أو الباركود أو الاسم',
+ 'Prices and stock':'الأسعار والمخزون', 'Nothing to show.':'لا شيء لعرضه.',
+ 'You may see cost':'يمكنك رؤية الكلفة', 'Cost is hidden for your role':'الكلفة مخفية عن دورك',
+ 'Margin at wholesale':'الهامش بسعر الجملة',
+ 'Whether cost appears is a permission, not a setting on this screen.':
+  'ظهور الكلفة صلاحية، لا إعداداً في هذه الشاشة.',
+ 'A salesman on commission usually sees the four selling prices and the stock, and not the cost. A manager sees everything. It is the same screen either way — the columns simply are not there for someone who may not see them. Change it under Invoice rules on the sales invoice to see both versions.':
+  'المندوب بالعمولة يرى عادةً أسعار البيع الأربعة والمخزون لا الكلفة. المدير يرى كل شيء. الشاشة نفسها في الحالتين — الأعمدة ببساطة غير موجودة لمن لا يحق له رؤيتها. غيّرها تحت «قواعد الفاتورة» في فاتورة المبيعات لترى النسختين.',
+ 'Customers, suppliers or any account in the ledger — short, or with every item line':
+  'الزبائن أو الموردون أو أي حساب في الدفتر — مختصر، أو بكل سطور الأصناف',
+ 'Which account':'أي حساب', 'General ledger':'الدفتر العام',
+ 'A customer':'زبون', 'A supplier':'مورّد', 'A ledger account':'حساب في الدفتر',
+ 'Detailed — show the items on every document':'مفصّل — أظهر الأصناف في كل مستند',
+ 'Show the running balance':'أظهر الرصيد الجاري',
+ 'Purchase bill':'فاتورة شراء', 'Payment':'دفعة', 'Opening balance':'رصيد افتتاحي',
+ 'Invoice':'فاتورة', 'Receipt':'سند قبض', 'Balance LBP':'الرصيد بالليرة',
+ 'Include unposted':'تضمين غير المرحّل',
+ 'Receipt — Karam Trading':'سند قبض — كرم للتجارة',
+ 'Payment — Bekaa Paper':'سند دفع — البقاع للورق',
+ 'Receipt — Nasr Supermarket':'سند قبض — سوبرماركت نصر',
+ 'Damage — Zahle main':'تلف — زحلة الرئيسي',
+ 'Expiry — Beirut':'انتهاء صلاحية — بيروت',
+ 'Everything':'كل شيء', 'Cost':'الكلفة', 'Retail':'مفرق', 'Wholesale':'جملة',
+ 'Cash falls below an amount':'النقد ينزل تحت مبلغ',
+ 'Cash rises above an amount':'النقد يرتفع فوق مبلغ',
+ 'Cash flow next 3 weeks turns negative':'التدفق النقدي للأسابيع الثلاثة القادمة يصبح سالباً',
+ 'all safes':'كل الصناديق', 'Any week':'أي أسبوع', 'Main cash box':'الصندوق الرئيسي',
+ 'Owner':'المالك', 'Accountant':'المحاسب', 'in the system':'داخل النظام',
+ 'WhatsApp':'واتساب', 'Email':'بريد إلكتروني', 'Active':'فعّال',
+ 'Super wholesale':'جملة الجملة', 'Bulk':'كمية كبيرة', 'Balance':'الرصيد',
+ 'Ready to send':'جاهز للإرسال', 'To':'إلى', 'Attachment':'المرفق', 'Message':'الرسالة',
+ 'Default printer — A4':'الطابعة الافتراضية — A4', 'Preview only':'معاينة فقط',
+ 'Dear':'حضرة', 'your statement to':'كشف حسابك حتى', 'is attached. Balance':'مرفق. الرصيد',
+ 'Thank you.':'شكراً لكم.',
+ 'Nothing has been sent.':'لم يُرسل شيء.',
+ 'This is what would go out. The prototype stops here on purpose: which route actually carries it — a WhatsApp link opened one customer at a time, or a paid business account that can send in bulk — is a decision with a monthly cost attached, and it has not been made yet.':
+  'هذا ما كان سيُرسل. النموذج يتوقف هنا عن قصد: الطريق الذي يحمله فعلاً — رابط واتساب يُفتح لزبون واحد في كل مرة، أو حساب أعمال مدفوع يرسل بالجملة — قرار له كلفة شهرية، ولم يُتخذ بعد.',
+ 'Three kinds of statement, one screen.':'ثلاثة أنواع من الكشوف، شاشة واحدة.',
+ 'A customer statement, a supplier statement and a plain ledger account are the same report reading different accounts — so they behave identically, print identically, and cannot drift apart. Tick “Detailed” and every invoice opens up to show what was actually on it.':
+  'كشف الزبون وكشف المورّد وحساب الدفتر هي التقرير نفسه يقرأ حسابات مختلفة — فتتصرف بالطريقة نفسها، وتُطبع بالطريقة نفسها، ولا يمكن أن تتباعد. علّم «مفصّل» فتنفتح كل فاتورة لتُظهر ما كان عليها فعلاً.'
+});
+Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
+buildTree(); paint();
+</script>
+<style>
+.photos{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.photos figure{margin:0;border:1px solid var(--c-border,var(--line,#e2ded5));border-radius:8px;overflow:hidden;
+  background:var(--c-surface,#fff);max-width:320px}
+.photos figure img{display:block;width:100%;height:auto}
+.photos figcaption{padding:6px 10px;font-size:12px;color:var(--c-text-muted,#7c756a)}
+.photodrop{display:flex;align-items:center;gap:8px;min-width:240px;min-height:120px;padding:16px;
+  border:1px dashed var(--c-border,var(--line,#e2ded5));border-radius:8px;
+  color:var(--c-text-muted,#7c756a);font-size:13px}
+.ds-code.sub{opacity:.75;font-size:11px}
+</style>
 
 </body>
 </html>
