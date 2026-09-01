@@ -7,11 +7,11 @@
 <meta name="googlebot" content="noindex, nofollow">
 <title>ERP Suite Blueprint</title>
 <style>
-  :root{color-scheme:light dark}
-  html,body{margin:0}
-  body{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#fafaf9}
-  img{max-width:100%}
-  [hidden]{display:none!important}
+:root{color-scheme:light dark}
+html,body{margin:0}
+body{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#fafaf9}
+img{max-width:100%}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -203,8 +203,8 @@ footer p{max-width:64ch}
     accounting is right.</p>
     <div class="meta">
       <span><b>Prepared by</b> Abdullah Al Mamun</span>
-      <span><b>Version</b> 1.5</span>
-      <span><b>Date</b> 31 August 2026</span>
+      <span><b>Version</b> 1.6</span>
+      <span><b>Date</b> 1 September 2026</span>
     </div>
   </div>
 </header>
@@ -855,6 +855,107 @@ footer p{max-width:64ch}
   <h2><span class="num">Section 6</span>Your chart of accounts</h2>
   <p class="lede">Your seven classes, exactly as you use them today — plus one screen that makes
   this system sellable to any other business.</p>
+
+  <div class="mod">
+    <h3>How the accounting actually works <span class="tag new">New</span></h3>
+
+    <div class="beat"><p class="beat-label">You asked four questions. Here they are, answered together</p>
+      <p>What is a journal voucher for. What the chart of accounts really is. What the system posts
+      by itself. And how a document on one screen becomes a line in the ledger on another. They are
+      four ways of asking the same thing, so the honest answer is one picture rather than four.</p></div>
+
+    <div class="beat"><p class="beat-label">Everything goes through one road</p>
+      <p>A sale, a purchase, a receipt, a payment, a till sale, a stock movement, a salary run, a
+      depreciation run — every one of them takes the same road:</p>
+      <p style="text-align:center"><strong>the document you fill in → the accounting engine →
+      the journal entry → the ledger → the trial balance → your reports</strong></p>
+      <p>There is <strong>one</strong> engine, and nothing else in the system is allowed to write
+      into the ledger. Not the till, not the stock screen, not a report. That single rule is what
+      makes the trial balance always tie, because there is only one place a number can come from.
+      In your current system each part writes its own accounting, which is why the stock report
+      carries a column called <em>Stock difference</em> — two parts of the same program disagreeing.</p></div>
+
+    <div class="beat"><p class="beat-label">You work the document. The system writes the accounting</p>
+      <p>Your salesman fills in an invoice. He never sees a debit or a credit, and he should not
+      have to. The moment he posts it, the system writes the journal entry underneath — customer
+      debited, sales credited, VAT credited, stock reduced, cost recorded — and it cannot post the
+      invoice without also writing that entry. They are one action, not two.</p></div>
+
+    <div class="beat"><p class="beat-label">So what is a journal voucher for?</p>
+      <p>For the things that have no document: an adjustment, an accrual, a correction, opening
+      balances, a depreciation adjustment, an exchange adjustment, a reclassification. Real
+      accountant's work.</p>
+      <p>It is <strong>not</strong> for recording a sale or a purchase by hand. And the system does
+      not merely discourage that — it makes it impossible. The customers account, the suppliers
+      account, the VAT account and the stock account are marked as accounts only the engine may
+      touch. An accountant opening a manual voucher will not find them in the list, and typing the
+      number in is refused when he tries to post. That flag already exists in your current system;
+      we are simply enforcing it.</p></div>
+
+    <div class="beat"><p class="beat-label">Two kinds of account, and the difference matters</p>
+      <div class="tw"><table>
+        <thead><tr><th>Kind</th><th>What it is</th><th>Can it take an entry?</th></tr></thead>
+        <tbody>
+          <tr><td><strong>A heading</strong></td><td>“4 Third parties”, “41 Debtors” — it organises the
+            tree and adds up what is underneath</td><td><strong>Never</strong></td></tr>
+          <tr><td><strong>A posting account</strong></td><td>“4111 Trade receivables” — a real account
+            at the bottom of the tree</td><td>Yes</td></tr>
+          <tr><td><strong>…and of those, a control account</strong></td><td>Customers, suppliers, VAT,
+            stock, bank</td><td>By the system only — never by hand</td></tr>
+        </tbody>
+      </table></div>
+      <p>Once an account has a single entry against it, its number and its place in the tree are
+      frozen forever, and it can never be deleted — only switched off. The name stays editable. If
+      that were not true, renaming and renumbering a used account would silently rewrite last
+      year's balance sheet, and last year's printed report would stop matching the system.</p></div>
+
+    <div class="beat"><p class="beat-label">Where the account numbers come from — the one screen that matters</p>
+      <p>Not one account number is written inside the program. Every automatic entry asks the
+      <strong>Linked accounts</strong> screen a question — “where do sales go?”, “where does VAT
+      go?”, “which account holds the customer's balance on instalment terms?” — and uses the
+      answer.</p>
+      <p>This is the screen you asked for by name, and it is worth being clear about why it is
+      worth more than it looks. In the system you have today those numbers — 4011, 4111, 4425, 60,
+      70 — are compiled inside the program file. Every business you sell to is forced onto your
+      exact chart of accounts. With this screen, a company with a different chart is a
+      configuration, not a new version of the software. It is the difference between a program you
+      run and a product you sell.</p></div>
+
+    <div class="beat"><p class="beat-label">Every entry knows which document made it — and back again</p>
+      <p>Open any invoice, purchase bill, receipt or till sale and press <strong>View accounting
+      impact</strong>. You will see the exact entry it created: every line, why that line exists,
+      the amounts in dollars and in pounds, the exchange rate stamped on it, and which Linked
+      accounts rule chose each account. Change a quantity on the invoice and look again — the
+      entry changes with it.</p>
+      <p>It works the other way too. In the general ledger, every line names its source document
+      and opens it. Nothing in the book is an amount with no story.</p>
+      <p>Your current system does this with text: it writes <em>Trans#</em> or <em>INV#</em> into a
+      description field and hopes. That is the right instinct in the weakest possible form — one
+      typo and the link is gone, and nothing notices. Here it is a real connection, and every night
+      the system checks both directions: an invoice with no entry is a hole in your revenue, and an
+      entry with no invoice is a hole in your audit. Either one is reported the same night.</p></div>
+
+    <div class="beat"><p class="beat-label">Posted means posted</p>
+      <p>Before it is posted, a document is a draft: edit it freely, it affects nothing. The moment
+      it is posted the entry exists and can never be edited or deleted — not by a user, not by an
+      administrator, not by us. A correction is a <strong>reversal</strong>: the original stays
+      visible, the reversal points at it, and the new document is issued. Your books then show what
+      happened <em>and</em> what was corrected.</p>
+      <p>This is the single biggest difference from what you run today. When we read four of your
+      live vouchers, three carried a modification stamp one minute after they were created, and the
+      posted status was an ordinary dropdown anyone could change back. Your ledger today is not a
+      record of what happened; it is a record of what it currently says happened. That is the thing
+      an auditor cannot accept, and it is the thing we are fixing first.</p></div>
+
+    <div class="beat"><p class="beat-label">Every entry balances in every currency</p>
+      <p>Not only in pounds. If a voucher touches dollars and pounds, it balances in dollars
+      <em>and</em> in pounds, separately, or it does not post. Your own system already does this —
+      we checked, on your voucher 2026003677 — and we corrected our design to match it after
+      reading yours.</p>
+      <p>The rate used is stamped onto the entry and never recalculated. When the rate moves
+      tomorrow, last month's reports do not move with it. Without that rule no period could ever be
+      closed.</p></div>
+  </div>
 
   <div class="mod">
     <h3>The account tree <span class="tag have">You have this</span></h3>
@@ -3209,6 +3310,13 @@ footer p{max-width:64ch}
 
 <footer>
   <div class="wrap">
+    <p><strong>Revision 1.6 · 1 September 2026</strong> — Added <em>How the accounting actually
+    works</em> to Section 6, answering your four questions together: what a journal voucher is for,
+    what the chart of accounts really is, what the system posts by itself, and how a document
+    becomes a line in the ledger. The prototype now shows it rather than describing it — every
+    invoice, purchase bill, receipt and till sale has a <strong>View accounting impact</strong>
+    button, and every ledger line opens the document that made it.</p>
+
     <p><strong>Revision 1.5 · 31 August 2026</strong> — Two things happened. First, we read your own
     system from the inside — the application, its settings, and four live posted vouchers you sent —
     and took from it what it does better than our design: a currency and a rate on every voucher line,
@@ -3255,7 +3363,7 @@ footer p{max-width:64ch}
     <p><strong>Revision 1.2 · 30 August 2026</strong> — Expanded after P3.1 verification:
     Arabic record editing is verified, field identity is column-index based and fail-closed,
     and checkbox controls remain intentionally unmapped until their data-model meaning is decided. Added a quick-reading guide, system map, product-at-a-glance table, lifecycle view and blueprint usage rules.</p>
-    <p><strong>ERP Suite Blueprint · Version 1.5 · 31 August 2026</strong></p>
+    <p><strong>ERP Suite Blueprint · Version 1.6 · 1 September 2026</strong></p>
     <p>Prepared for Yorgo by Abdullah Al Mamun. This document describes what will be built and how
     it will work. Anything you want changed, added or removed — tell us, and this document changes
     with it. It is meant to be argued with.</p>

@@ -14115,6 +14115,318 @@ paint();
    screens Yorgo's tills actually run. Raised with him rather than guessed.
    ─────────────────────────────────────────────────────────────────────── */
 </style>
+<style>
+.imp{display:grid;gap:var(--sp-10,12px)}
+.impx{display:flex;gap:var(--s3,10px);flex-wrap:wrap;align-items:center;margin-top:var(--s3,10px)}
+.lnk{color:var(--c-accent);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.lnk:hover{opacity:.75}
+.pmap{font-family:var(--mo);font-size:11.5px;color:var(--c-text-2)}
+</style>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   VIEW ACCOUNTING IMPACT — the document ⇄ ledger drill-down
+
+   The client's stated uncertainty is "the relationship between operational
+   documents and the General Ledger". Until now the prototype had an invoice
+   screen and a ledger screen with nothing joining them, so the relationship
+   could be described but not shown.
+
+   Two directions, both live:
+       document  →  the entry it creates  →  the ledger lines
+       ledger line  →  the entry  →  back to the source document
+
+   Two rules this demonstration obeys, because they are the architecture:
+
+   1. NOTHING HERE NAMES AN ACCOUNT. Every line asks LINKACC for a purpose —
+      "sales_goods", "vat_output" — and the map answers with a code. It is the
+      same map the Linked accounts screen shows. Change
+      the map, and every entry in the product changes with it. In the old
+      system these codes were compiled into the .exe.
+
+   2. THE SALES INVOICE ENTRY IS COMPUTED, NOT WRITTEN DOWN. It reads the same
+      invTotals() the invoice screen reads, so editing a quantity or a discount
+      on the invoice changes the journal entry. The other three documents are
+      the fixed sample documents those screens already show; their entries are
+      computed from those figures the same way.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── purpose → account CODE only. The name is read from the chart, so the
+      account is named once in the product and appears in Arabic when the
+      chart is in Arabic. The Linked accounts screen is the UI for this map. ── */
+const LINKACC = {
+ ar_control:     '4111',
+ ar_instalment:  '4118',
+ ap_control:     '4011',
+ sales_goods:    '7011',
+ discount_given: '7092',
+ vat_output:     '4425',
+ vat_input:      '4426',
+ cogs:           '6011',
+ inventory:      '3011',
+ cash_box:       '5310',
+ rounding:       '6039'
+};
+const PURPOSE = {
+ ar_control:'Customers', ar_instalment:'Instalment customers', ap_control:'Suppliers',
+ sales_goods:'Sales', discount_given:'Discount given', vat_output:'VAT on sales',
+ vat_input:'VAT on purchases', cogs:'Cost of goods sold', inventory:'Stock',
+ cash_box:'Cash box', rounding:'Rounding'
+};
+function LA(p){ const c = LINKACC[p]; if(!c) return '?';
+ const nm = (typeof accName === 'function') ? accName(c) : '';
+ return c + (nm ? ' · ' + nm : ''); }
+
+const m2 = v => (Math.round(v*100)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const m0 = v => Math.round(v).toLocaleString('en-US');
+
+/* a line: purpose, what it is, party, debit, credit — all in document currency */
+function iL(purpose, why, party, dr, cr){ return {p:purpose, why:why, party:party, dr:dr||0, cr:cr||0}; }
+
+/* ── the four documents ──────────────────────────────────────────────────── */
+var IMPACTOF = 'inv';
+
+function impactDoc(k){
+ if(k === 'inv'){
+  const t = invTotals();
+  const dis = t.itemDis + (+INV.invDis || 0);
+  const L = [
+   iL('ar_control','What the customer now owes, including VAT', INV.cust || 'Karam Trading', t.total, 0),
+   iL('discount_given','Discount given away — kept visible, not hidden in the price','', dis, 0),
+   iL('sales_goods','Sales at full price, before discount','', 0, t.gross),
+   iL('vat_output','VAT owed to the state','', 0, t.vat)
+  ];
+  if(Math.abs(t.rounding) > 0.0001)
+   L.push(iL('rounding','Rounding difference', '',
+             t.rounding < 0 ? -t.rounding : 0, t.rounding > 0 ? t.rounding : 0));
+  L.push(iL('cogs','What these goods cost you','', t.cost, 0));
+  L.push(iL('inventory','Goods leaving the warehouse','', 0, t.cost));
+  return { title:'Sales invoice', no:(INV.no || 'SI-2026-1181'), date:'29/08/2026',
+           cur:'USD', rate:(+INV.rate || 90000), lines:L, live:true, back:'inv',
+           voucher:'JV-2026-2216' };
+ }
+ if(k === 'pbill'){
+  const net = 24864.00 / 1.11, vat = 24864.00 - net;
+  return { title:'Purchase bill', no:'PB-2026-0410', date:'27/08/2026', cur:'USD', rate:90000,
+           voucher:'JV-2026-2201', back:'pbill', live:false, lines:[
+   iL('inventory','Goods arriving in the warehouse, at cost','', net, 0),
+   iL('vat_input','VAT you can reclaim from the state','', vat, 0),
+   iL('ap_control','What you now owe the supplier','Elektra SAL', 0, 24864.00)]};
+ }
+ if(k === 'rcpt'){
+  return { title:'Receipt voucher', no:'RV-2026-0419', date:'29/08/2026', cur:'USD', rate:90000,
+           voucher:'JV-2026-2214', back:'rcpt', live:false, lines:[
+   iL('cash_box','Money in the till','', 2000.00, 0),
+   iL('ar_control','The customer owes 2,000.00 less','Karam Trading', 0, 2000.00)]};
+ }
+ /* POS — the shelf price INCLUDES VAT, so every figure is divided out of the
+    gross before it reaches revenue. Getting this backwards is the classic
+    retail posting error: it overstates sales by the VAT and understates the
+    liability. */
+ const gross = 900.84, dis = 0.84, total = 900.00, r = 1.11;
+ const grossNet = gross / r;          // sales at full price, net of VAT
+ const disNet   = dis   / r;          // the discount, net of VAT
+ const vat      = total - total / r;  // VAT actually owed on what was charged
+ const L = [
+  iL('cash_box','Cash taken at the till','', total, 0),
+  iL('discount_given','Discount given at the till','', disNet, 0),
+  iL('sales_goods','Sales at full price','', 0, grossNet),
+  iL('vat_output','VAT owed to the state — VAT was included in the shelf price','', 0, vat)
+ ];
+ const d0 = (total + disNet) - (grossNet + vat);
+ if(Math.abs(d0) > 0.0001)
+  L.push(iL('rounding','Rounding difference','', d0 < 0 ? -d0 : 0, d0 > 0 ? d0 : 0));
+ return { title:'POS sale', no:'POS-2-004417', date:'29/08/2026', cur:'USD', rate:90000,
+          voucher:'JV-2026-2217', back:'pos', live:false, lines:L };
+}
+
+function openImpact(k){ IMPACTOF = k; openTab('impact','Accounting impact','الأثر المحاسبي'); }
+
+/* ── the screen ──────────────────────────────────────────────────────────── */
+S.impact = () => {
+ const d = impactDoc(IMPACTOF);
+ const dr = d.lines.reduce((a,l) => a + l.dr, 0);
+ const cr = d.lines.reduce((a,l) => a + l.cr, 0);
+ const diff = dr - cr;
+ const ok = Math.abs(diff) < 0.005;
+
+ const rows = d.lines.filter(l => l.dr || l.cr).map((l,i) => [
+  String(i+1),
+  '<span class="pmap">' + esc(l.p) + '</span> ' + esc(tr(PURPOSE[l.p] || l.p)) + '<br>' + esc(LA(l.p)),
+  esc(tr(l.why)),
+  l.party ? esc(l.party) : '<span class="mu">—</span>',
+  l.dr ? m2(l.dr) : '', l.cr ? m2(l.cr) : '',
+  l.dr ? m0(l.dr * d.rate) : '', l.cr ? m0(l.cr * d.rate) : ''
+ ]);
+ rows.push(['<b>' + esc(tr('Total')) + '</b>','','','',
+   '<b>' + m2(dr) + '</b>','<b>' + m2(cr) + '</b>',
+   '<b>' + m0(dr * d.rate) + '</b>','<b>' + m0(cr * d.rate) + '</b>']);
+
+ return head('Accounting impact',
+   esc(tr(d.title)) + ' ' + esc(d.no) + ' → ' + esc(tr('voucher')) + ' ' + esc(d.voucher) +
+   ' · ' + esc(tr('the entry this document created')),
+   [btn('Print the voucher'), btn('Open in the general ledger')]) +
+
+  (d.live
+   ? note(tr('This is computed from the invoice on screen, not written down.'),
+          tr('Change a quantity or a discount on the sales invoice and come back — the entry changes with it. That is what "the system generates the accounting" means.'))
+   : note(tr('This is the sample document that screen shows.'),
+          tr('The entry is worked out from its figures the same way the live invoice is.'))) +
+
+  pane('The entry',
+   tbl([C('#'), C('Account'), C('Why this line exists'), C('Party'),
+        n(tr('Debit') + ' ' + d.cur), n(tr('Credit') + ' ' + d.cur),
+        n(tr('Debit') + ' LBP'), n(tr('Credit') + ' LBP')],
+       rows) +
+   '<div class="impx" style="padding:var(--s4,16px)">' +
+     (ok ? pill('ok', tr('Balanced') + ' — ' + d.cur + ' ' + m2(dr) + ' = ' + m2(cr))
+         : pill('er', tr('Out of balance by') + ' ' + m2(diff))) +
+     (ok ? pill('ok', tr('Balanced') + ' — LBP ' + m0(dr*d.rate) + ' = ' + m0(cr*d.rate))
+         : '') +
+     '<span class="mu">' + esc(tr('Rate stamped on this entry')) + ': 1 USD = ' +
+       m0(d.rate) + ' LBP</span>' +
+   '</div>',
+   pill('ok', tr('Posted'))) +
+
+  pane('Where the account codes came from',
+   tbl([C('Purpose'), C('Account chosen'), C('Who decides')],
+    d.lines.filter(l => l.dr || l.cr).map(l => [
+     '<span class="pmap">' + esc(l.p) + '</span> ' + esc(tr(PURPOSE[l.p] || l.p)),
+     esc(LA(l.p)),
+     '<span class="lnk" onclick="openTab(\'linked\',\'linked\',\'linked\')">' +
+       esc(tr('Linked accounts')) + '</span>'
+    ]))) +
+
+  note(tr('Not one account number is written into the program.'),
+       tr('Every line above asked the Linked accounts screen a question — "where do sales go?" — and used the answer. Change that screen and every future entry follows, with no new version of the software. In the old system these numbers were inside the program file.')) +
+
+  pane('Follow it further',
+   '<div class="impx" style="padding:var(--s4,16px)">' +
+    '<button class="b" onclick="openTab(\'' + d.back + '\',\'' + d.back + '\',\'' + d.back + '\')">← ' +
+      esc(tr('Back to')) + ' ' + esc(tr(d.title)) + ' ' + esc(d.no) + '</button>' +
+    '<button class="b" onclick="openTab(\'gl\',\'gl\',\'gl\')">' + esc(tr('See these lines in the general ledger')) + '</button>' +
+    '<button class="b" onclick="openTab(\'tb\',\'tb\',\'tb\')">' + esc(tr('See the trial balance')) + '</button>' +
+    '<button class="b" onclick="openTab(\'jvs\',\'jvs\',\'jvs\')">' + esc(tr('All vouchers')) + '</button>' +
+   '</div>');
+};
+
+/* ── the button, on every document that posts ────────────────────────────── */
+function impactBtn(k){
+ return '<button class="b" onclick="openImpact(\'' + k + '\')">' +
+        esc(tr('View accounting impact')) + '</button>';
+}
+const IMPACTDOCS = ['inv','pbill','rcpt','pos'];
+IMPACTDOCS.forEach(k => {
+ if(typeof S[k] !== 'function') return;
+ S[k] = (orig => function(){
+  const html = orig();
+  return html.indexOf('openImpact(') > -1 ? html
+       : html.replace('<div class="tools">', '<div class="tools">' + impactBtn(k));
+ })(S[k]);
+});
+/* `pbill` has no S.pbill — it is drawn by renderList from the L dataset, so the
+   button has to be injected there instead. Same for any other document screen
+   that is a list rather than a hand-built form. */
+renderList = (base => function(id, en, ar){
+ const html = base(id, en, ar);
+ if(IMPACTDOCS.indexOf(id) === -1 || html.indexOf('openImpact(') > -1) return html;
+ return html.replace('<div class="tools">', '<div class="tools">' + impactBtn(id));
+})(renderList);
+
+/* ── the other direction: a ledger line opens its document ───────────────── */
+S.gl = () => head('General ledger',tr('Every account and every movement behind it — the book the auditor asks for'),
+  [btn('Print'),btn('Excel'),btn('PDF'),addBtn('Save this report','rptf')])+
+ pane('Filter',fgrid([{l:'From',v:'01/01/2026'},{l:'To',v:'29/08/2026'},
+  {l:'From account',t:'sel',o:['1 · Capital','All']},{l:'To account',t:'sel',o:['7 · Income','All']},
+  {l:'Level',t:'sel',o:['Postable accounts only','All levels']},
+  {l:'Currency',t:'sel',o:['USD','LBP','Both']},
+  {l:'Cost centre',t:'sel',o:['All','Zahle branch','Beirut branch']},
+  {l:'Skip accounts with no movement',t:'chk',v:1}],4))+
+ pane('41111 · Ordinary clients',tbl([C('Date'),C('Voucher'),C('Party'),C('Source document'),n('Debit'),n('Credit'),n('Balance'),C('Cost centre')],[
+  ['01/01','—','—','Opening balance','188,000.00','','188,000.00','—'],
+  ['04/08','JV-2026-2140','Karam Trading','<span class="lnk" onclick="openImpact(\'inv\')">Invoice SI-2026-1141</span>','1,596.60','','189,596.60','Zahle branch'],
+  ['20/08','JV-2026-2190','Karam Trading','<span class="lnk" onclick="openImpact(\'rcpt\')">Receipt RV-2026-0402</span>','','2,000.00','187,596.60','Zahle branch'],
+  ['29/08','JV-2026-2213','Karam Trading','<span class="lnk" onclick="openImpact(\'inv\')">Invoice SI-2026-1180</span>','4,573.20','','192,169.80','Zahle branch'],
+  ['<b>Account total</b>','','','','<b>426,657.00</b>','<b>386,000.00</b>','<b>176,000.00</b>','']]))+
+ pane('4011 · Local suppliers',tbl([C('Date'),C('Voucher'),C('Party'),C('Source document'),n('Debit'),n('Credit'),n('Balance'),C('Cost centre')],[
+  ['01/01','—','—','Opening balance','','36,000.00','−36,000.00','—'],
+  ['27/08','JV-2026-2201','Elektra SAL','<span class="lnk" onclick="openImpact(\'pbill\')">Bill PB-2026-0410</span>','','24,864.00','−60,864.00','—'],
+  ['28/08','JV-2026-2209','Elektra SAL','Payment PV-2026-0233','8,000.00','','−52,864.00','—'],
+  ['<b>Account total</b>','','','','<b>128,400.00</b>','<b>172,520.00</b>','<b>−44,120.00</b>','']]))+
+ pane('5310 · Main cash box',tbl([C('Date'),C('Voucher'),C('Party'),C('Source document'),n('Debit'),n('Credit'),n('Balance'),C('Cost centre')],[
+  ['01/01','—','—','Opening balance','6,000.00','','6,000.00','—'],
+  ['28/08','JV-2026-2212','—','Rent August','','500.00','5,500.00','Zahle branch'],
+  ['29/08','JV-2026-2214','Karam Trading','<span class="lnk" onclick="openImpact(\'rcpt\')">Receipt RV-2026-0418</span>','2,000.00','','7,500.00','Zahle branch'],
+  ['<b>Account total</b>','','','','<b>141,220.00</b>','<b>133,100.00</b>','<b>8,120.00</b>','']]))+
+ note(tr('Every line knows where it came from.'),tr('Click a source document and it opens — the invoice, the receipt, the bill. Nothing in this book is an amount with no story. The old system wrote the document number into a description field and hoped; here it is a real link, and a line without one is reported as a fault the same night.'));
+
+Object.assign(AR, {
+ 'Accounting impact':'الأثر المحاسبي',
+ 'View accounting impact':'عرض الأثر المحاسبي',
+ 'voucher':'قيد',
+ 'Sales invoice':'فاتورة مبيعات',
+ 'Purchase bill':'فاتورة شراء',
+ 'Receipt voucher':'سند قبض',
+ 'POS sale':'بيع على الصندوق',
+ 'Debit':'مدين',
+ 'Credit':'دائن',
+ 'Party':'الطرف',
+ 'Account':'الحساب',
+ 'Total':'المجموع',
+ 'Posted':'مُرحّل',
+ 'the entry this document created':'القيد الذي أنشأه هذا المستند',
+ 'The entry':'القيد',
+ 'Why this line exists':'سبب هذا السطر',
+ 'Where the account codes came from':'من أين أتت أرقام الحسابات',
+ 'Account chosen':'الحساب المختار',
+ 'Who decides':'من يقرر',
+ 'Purpose':'الغرض',
+ 'Linked accounts':'الحسابات المرتبطة',
+ 'Follow it further':'تابع أكثر',
+ 'Back to':'العودة إلى',
+ 'See these lines in the general ledger':'عرض هذه السطور في دفتر الأستاذ',
+ 'See the trial balance':'عرض ميزان المراجعة',
+ 'All vouchers':'كل القيود',
+ 'Balanced':'متوازن',
+ 'Out of balance by':'غير متوازن بمقدار',
+ 'Rate stamped on this entry':'سعر الصرف المثبت على هذا القيد',
+ 'Source document':'المستند المصدر',
+ 'Print the voucher':'طباعة القيد',
+ 'Open in the general ledger':'فتح في دفتر الأستاذ',
+ 'This is computed from the invoice on screen, not written down.':'هذا محسوب من الفاتورة على الشاشة، وليس مكتوباً مسبقاً.',
+ 'Change a quantity or a discount on the sales invoice and come back — the entry changes with it. That is what "the system generates the accounting" means.':'غيّر الكمية أو الحسم على فاتورة المبيعات ثم عد — يتغير القيد معها. هذا ما يعنيه أن النظام هو من ينشئ القيد المحاسبي.',
+ 'This is the sample document that screen shows.':'هذا هو المستند النموذجي الذي تعرضه تلك الشاشة.',
+ 'The entry is worked out from its figures the same way the live invoice is.':'يُحتسب القيد من أرقامه بالطريقة نفسها المتبعة في الفاتورة الحية.',
+ 'Not one account number is written into the program.':'ولا رقم حساب واحد مكتوب داخل البرنامج.',
+ 'Every line above asked the Linked accounts screen a question — "where do sales go?" — and used the answer. Change that screen and every future entry follows, with no new version of the software. In the old system these numbers were inside the program file.':'كل سطر أعلاه سأل شاشة الحسابات المرتبطة سؤالاً — إلى أين تذهب المبيعات؟ — واستعمل الجواب. غيّر تلك الشاشة فتتبعها كل القيود المستقبلية، دون نسخة جديدة من البرنامج. في النظام القديم كانت هذه الأرقام داخل ملف البرنامج.',
+ 'What the customer now owes, including VAT':'ما يترتب على الزبون الآن، شاملاً الضريبة',
+ 'Discount given away — kept visible, not hidden in the price':'الحسم الممنوح — يبقى ظاهراً، لا مخفياً في السعر',
+ 'Sales at full price, before discount':'المبيعات بالسعر الكامل قبل الحسم',
+ 'Sales at full price':'المبيعات بالسعر الكامل',
+ 'VAT owed to the state':'الضريبة المستحقة للدولة',
+ 'VAT you can reclaim from the state':'الضريبة القابلة للاسترداد من الدولة',
+ 'What these goods cost you':'كلفة هذه البضاعة عليك',
+ 'Goods leaving the warehouse':'بضاعة تخرج من المستودع',
+ 'Goods arriving in the warehouse, at cost':'بضاعة تدخل المستودع بالكلفة',
+ 'What you now owe the supplier':'ما يترتب عليك للمورد الآن',
+ 'Money in the till':'نقد في الصندوق',
+ 'The customer owes 2,000.00 less':'ينقص رصيد الزبون 2,000.00',
+ 'Cash taken at the till':'نقد مقبوض على الصندوق',
+ 'Discount given at the till':'حسم ممنوح على الصندوق',
+ 'VAT owed to the state — VAT was included in the shelf price':'الضريبة المستحقة للدولة — كانت مشمولة في سعر الرف',
+ 'Rounded to the nearest 0.05':'مقرّب إلى أقرب 0.05',
+ 'Every line knows where it came from.':'كل سطر يعرف من أين أتى.',
+ 'Click a source document and it opens — the invoice, the receipt, the bill. Nothing in this book is an amount with no story. The old system wrote the document number into a description field and hoped; here it is a real link, and a line without one is reported as a fault the same night.':'اضغط على المستند المصدر فيُفتح — الفاتورة، السند، فاتورة الشراء. لا يوجد في هذا الدفتر مبلغ بلا قصة. النظام القديم كان يكتب رقم المستند في حقل الوصف ويأمل؛ هنا هو رابط حقيقي، وأي سطر بلا مستند يُبلَّغ عنه كخلل في الليلة نفسها.',
+ 'Voucher':'القيد',
+ 'Every account and every movement behind it — the book the auditor asks for':'كل حساب وكل حركة خلفه — الدفتر الذي يطلبه المدقق',
+ 'Rounding difference':'فرق التقريب',
+ 'Customers':'الزبائن','Instalment customers':'زبائن التقسيط','Suppliers':'الموردون',
+ 'Sales':'المبيعات','Discount given':'الحسم الممنوح','VAT on sales':'ضريبة على المبيعات',
+ 'VAT on purchases':'ضريبة على المشتريات','Cost of goods sold':'كلفة البضاعة المباعة',
+ 'Stock':'المخزون','Cash box':'الصندوق','Rounding':'التقريب'
+});
+Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
+paint();
+</script>
 
 </body>
 </html>
