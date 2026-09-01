@@ -312,7 +312,7 @@ label{display:block;font-size:11px;color:var(--ink3);margin-bottom:var(--sp-3);f
 <div class="frame">
   <aside class="nav" id="nav">
     <div class="logo"><div class="m">C</div>
-      <div><div class="t" data-t="brand">CTOP Suite</div><div class="s" data-t="brandS">Marounc Group</div></div></div>
+      <div><div class="t" data-t="brand">CTOP Suite</div><div class="s" data-t="brandS">Computop Group</div></div></div>
     <div class="navsearch"><input id="mfilter" placeholder="Find a screen…" data-tph="findPh"></div>
     <nav class="tree" id="tree"></nav>
   </aside>
@@ -327,13 +327,13 @@ label{display:block;font-size:11px;color:var(--ink3);margin-bottom:var(--sp-3);f
           <button id="cL" onclick="setCur('LBP')">LBP</button></div>
         <div class="sw"><button id="lE" class="on" onclick="setLang('en')">EN</button>
           <button id="lA" onclick="setLang('ar')">عربي</button></div>
-        <div class="usr"><span class="a">Y</span><span data-t="who">Yorgo · admin</span></div>
+        <div class="usr"><span class="a">Y</span><span data-t="who">George · admin</span></div>
       </div>
     </header>
     <div class="tabs" id="tabs"></div>
     <div class="scroll" id="view"></div>
     <div class="status">
-      <span><b data-t="stCo">Company:</b> <span id="stCoV">Marounc Trading</span></span>
+      <span><b data-t="stCo">Company:</b> <span id="stCoV">Computop Trading</span></span>
       <span><b data-t="stUser">User:</b> admin</span>
       <span><span class="dot" style="background:var(--ok)"></span><span data-t="stOnline">Online · all devices synced</span></span>
       <div class="r"><span data-t="stVer">Version 1.0 · prototype</span></div>
@@ -610,7 +610,7 @@ lic:{t:'Set up a new customer business',s:[
   {l:'Users',t:'num',v:'6',req:1},{l:'Devices',t:'num',v:'3',req:1},{l:'Companies',t:'num',v:'1'},
   {l:'Modules',t:'sel',o:['Accounting · Stock · Sales · POS','Everything','Everything + Production']},
   {l:'Starts',req:1},{l:'Expires',req:1},{l:'Billing',t:'sel',o:['Yearly','Half-yearly','Quarterly','Monthly']}]},
- {h:'Set-up',f:[{l:'Chart of accounts template',t:'sel',o:['Lebanese unified chart','Copy from Marounc Trading','Empty']},
+ {h:'Set-up',f:[{l:'Chart of accounts template',t:'sel',o:['Lebanese unified chart','Copy from Computop Trading','Empty']},
   {l:'Base currency',t:'sel',o:['LBP','USD']},{l:'Reporting currency',t:'sel',o:['USD','None']},
   {l:'Send licence by',t:'sel',o:['Email','WhatsApp']}]}]},
 
@@ -638,7 +638,7 @@ comp:{t:'New company',s:[
   {l:'VAT registered',t:'chk'},{l:'VAT number'},{l:'Year-end style',t:'sel',o:['Carried forward automatically','Post a closing entry']}]}]},
 
 branch:{t:'New branch',s:[{h:'Branch',f:[{l:'Code',req:1},{l:'Name',req:1},{l:'Arabic name'},
-  {l:'Company',t:'sel',o:['Marounc Trading','Marounc Distribution'],req:1},{l:'Address',t:'area'},
+  {l:'Company',t:'sel',o:['Computop Trading','Computop Distribution'],req:1},{l:'Address',t:'area'},
   {l:'Phone'},{l:'Cost centre',t:'sel',o:['Zahle branch','Beirut branch']},{l:'Active',t:'chk',v:1}]}]},
 
 notif:{t:'New notification rule',s:[{h:'Rule',f:[
@@ -708,8 +708,8 @@ const T={
  stripB:['Working prototype','نموذج تجريبي'],
  stripS:['Every menu opens · every Add button opens its real form · switch to عربي to see the whole system mirror',
          'كل قائمة تفتح · كل زر إضافة يفتح شاشته · اضغط EN لعرض النسخة الإنكليزية'],
- brand:['CTOP Suite','مجموعة CTOP'], brandS:['Marounc Group','مجموعة مارون'],
- findPh:['Find a screen…','ابحث عن شاشة…'], who:['Yorgo · admin','يورغو · مدير'],
+ brand:['CTOP Suite','مجموعة CTOP'], brandS:['Computop Group','مجموعة مارون'],
+ findPh:['Find a screen…','ابحث عن شاشة…'], who:['George · admin','يورغو · مدير'],
  stCo:['Company:','الشركة:'], stUser:['User:','المستخدم:'],
  stOnline:['Online · all devices synced','متصل · كل الأجهزة متزامنة'],
  stVer:['Version 1.0 · prototype','الإصدار 1.0 · نموذج'],
@@ -929,7 +929,7 @@ salc:{t:'New salary component',s:[{h:'Component',f:[{l:'Code',req:1},{l:'Name',r
   {l:'Taxable',t:'chk'},{l:'Active',t:'chk',v:1}]}]},
 
 payrun:{t:'New payroll run',s:[{h:'Run',f:[{l:'Month',t:'sel',o:['August 2026','September 2026'],req:1},
-  {l:'Company',t:'sel',o:['Marounc Trading','Marounc Distribution'],req:1},
+  {l:'Company',t:'sel',o:['Computop Trading','Computop Distribution'],req:1},
   {l:'Branch',t:'sel',o:['All','Zahle','Beirut']},{l:'Pay date',v:'31/08/2026',req:1},
   {l:'Currency',t:'sel',o:['USD','LBP'],req:1},{l:'Exchange rate',t:'num',v:'90000'},
   {l:'Include end of service',t:'chk',hint:'Off for now — you said simple payroll first'},
@@ -946,7 +946,7 @@ role:{t:'New role',s:[{h:'Role',f:[{l:'Code',req:1},{l:'Name',req:1},{l:'Arabic 
   {l:'Can open a closed period',t:'chk'},{l:'Can export data',t:'chk',v:1}]}]},
 
 numb:{t:'New numbering rule',s:[{h:'Rule',f:[{l:'Document',t:'sel',o:['Sales invoice','POS receipt','Purchase bill','Journal voucher','Receipt voucher','Payment voucher','Quotation','Transfer'],req:1},
-  {l:'Company',t:'sel',o:['Marounc Trading','All'],req:1},{l:'Branch',t:'sel',o:['All','Zahle','Beirut']},
+  {l:'Company',t:'sel',o:['Computop Trading','All'],req:1},{l:'Branch',t:'sel',o:['All','Zahle','Beirut']},
   {l:'Prefix',v:'SI-'},{l:'Include year',t:'chk',v:1},{l:'Digits',t:'num',v:'4'},
   {l:'Next number',t:'num',v:'1181',req:1},{l:'Restart every year',t:'chk',v:1},
   {l:'Offline devices get their own block',t:'chk',v:1,
@@ -985,7 +985,7 @@ tax:{t:'New tax group',s:[{h:'Tax',f:[{l:'Code',req:1},{l:'Name',req:1},{l:'Arab
   {l:'Goes in VAT return box',t:'sel',o:['Box 1 — standard sales','Box 4 — purchases','Not reported']},
   {l:'Valid from',v:'01/01/2026'},{l:'Active',t:'chk',v:1}]}]},
 
-per:{t:'Open a new period',s:[{h:'Period',f:[{l:'Company',t:'sel',o:['Marounc Trading'],req:1},
+per:{t:'Open a new period',s:[{h:'Period',f:[{l:'Company',t:'sel',o:['Computop Trading'],req:1},
   {l:'Year',t:'num',v:'2027',req:1},{l:'Month',t:'sel',o:['January','February','March'],req:1},
   {l:'Journals may be posted until',v:'05/02/2027',req:1},
   {l:'VAT may be changed until',v:'20/04/2027'},
@@ -1263,8 +1263,8 @@ fa:{t:'Fixed assets',add:'asset',addT:'New asset',tools:['Print','Excel'],
 
 dep:{t:'Depreciation runs',add:'generic',addT:'Run depreciation',tools:['Print','Excel'],
  cols:[C('Period'),C('Company'),n('Assets'),n('Charge USD'),n('Charge LBP'),C('Expense account'),C('Split by cost centre'),C('Voucher'),C('State')],
- rows:[['July 2026','Marounc Trading','14','412.00','37,080,000','6811 · Depreciation','<span class="pill ok">Yes</span>','JV-2026-2180','<span class="pill ok">Posted</span>'],
-  ['August 2026','Marounc Trading','16','438.00','39,420,000','6811 · Depreciation','<span class="pill ok">Yes</span>','—','<span class="pill in">Ready to run</span>']]},
+ rows:[['July 2026','Computop Trading','14','412.00','37,080,000','6811 · Depreciation','<span class="pill ok">Yes</span>','JV-2026-2180','<span class="pill ok">Posted</span>'],
+  ['August 2026','Computop Trading','16','438.00','39,420,000','6811 · Depreciation','<span class="pill ok">Yes</span>','—','<span class="pill in">Ready to run</span>']]},
 
 reval:{t:'FX revaluation',sub:'Month-end restatement of money accounts at the closing rate — reversed on day one of the next month',
  add:'generic',addT:'Run revaluation',tools:['Print','Excel'],
@@ -1283,8 +1283,8 @@ safes:{t:'Cash boxes',add:'safe',addT:'New cash box',tools:['Print','Excel'],
 
 banks:{t:'Bank accounts',add:'bank',addT:'New bank account',tools:['Print','Excel'],
  cols:[C('Bank'),C('Account name'),C('Number'),C('Currency'),C('Branch'),n('Book balance'),n('Statement balance'),n('Unreconciled'),C('Account'),C('Status'),C('')],
- rows:[['Bank Audi','Marounc Trading USD','LB62 0999 …','USD','Zahle','44,120.00','43,880.00','240.00','5121','<span class="pill ok">Active</span>',del()],
-  ['BLOM','Marounc Trading LBP','LB11 0014 …','LBP','Zahle','1,240,000,000','1,240,000,000','0','5122','<span class="pill ok">Active</span>',del()]]},
+ rows:[['Bank Audi','Computop Trading USD','LB62 0999 …','USD','Zahle','44,120.00','43,880.00','240.00','5121','<span class="pill ok">Active</span>',del()],
+  ['BLOM','Computop Trading LBP','LB11 0014 …','LBP','Zahle','1,240,000,000','1,240,000,000','0','5122','<span class="pill ok">Active</span>',del()]]},
 
 stfer:{t:'Safe transfers',add:'generic',addT:'New safe transfer',tools:['Print'],
  cols:[C('Number'),C('Date'),C('From'),C('To'),C('Currency'),n('Amount'),n('Rate'),C('Reason'),C('User'),C('')],
@@ -1346,14 +1346,14 @@ cflow:{t:'Cash flow',sub:'What is coming in, what is going out, and when — fro
 
 vrep:{t:'VAT report',tools:['Print','Excel','PDF'],
  cols:[C('Quarter'),C('Company'),n('Standard sales'),n('Output VAT'),n('Purchases'),n('Input VAT'),n('Blocked input'),n('Net payable'),C('Filing deadline'),C('State')],
- rows:[['Q1 2026','Marounc Trading','311,400.00','34,254.00','248,000.00','27,280.00','1,120.00','8,094.00','20/04/2026','<span class="pill ok">Filed</span>'],
-  ['Q2 2026','Marounc Trading','344,120.00','37,853.20','266,400.00','29,304.00','980.00','9,529.20','20/07/2026','<span class="pill ok">Filed</span>'],
-  ['Q3 2026','Marounc Trading','214,880.00','23,636.80','188,400.00','20,724.00','610.00','3,522.80','20/10/2026','<span class="pill in">In progress</span>']]},
+ rows:[['Q1 2026','Computop Trading','311,400.00','34,254.00','248,000.00','27,280.00','1,120.00','8,094.00','20/04/2026','<span class="pill ok">Filed</span>'],
+  ['Q2 2026','Computop Trading','344,120.00','37,853.20','266,400.00','29,304.00','980.00','9,529.20','20/07/2026','<span class="pill ok">Filed</span>'],
+  ['Q3 2026','Computop Trading','214,880.00','23,636.80','188,400.00','20,724.00','610.00','3,522.80','20/10/2026','<span class="pill in">In progress</span>']]},
 
 /* ── Users ── */
 users:{t:'Users',add:'user',addT:'New user',tools:['Excel'],
  cols:[C('Username'),C('Full name'),C('Role'),C('Branches'),C('Warehouses'),C('Cash box'),C('Sees cost'),C('Last login'),C('Device'),C('Status'),C('')],
- rows:[['admin','Yorgo','Owner','All','All','All','<span class="pill ok">Yes</span>','29/08 · 09:12','Office PC','<span class="pill ok">Active</span>',del()],
+ rows:[['admin','George','Owner','All','All','All','<span class="pill ok">Yes</span>','29/08 · 09:12','Office PC','<span class="pill ok">Active</span>',del()],
   ['rania','Rania Saad','Accountant','All','All','Main cash box','<span class="pill ok">Yes</span>','29/08 · 08:40','Office PC','<span class="pill ok">Active</span>',del()],
   ['elie','Elie Haddad','Salesman','Zahle','Van — Elie','Van — Elie','—','29/08 · 07:55','Van tablet','<span class="pill ok">Active</span>',del()],
   ['nabil','Nabil Aoun','Cashier','Beirut','Beirut','Till 2','—','28/08 · 20:10','POS 2','<span class="pill ok">Active</span>',del()]]},
@@ -1370,9 +1370,9 @@ audit:{t:'Audit log',sub:'Who did what, when, from where — and what the value 
 /* ── Settings lists ── */
 numb:{t:'Document numbering',add:'numb',addT:'New rule',tools:['Excel'],
  cols:[C('Document'),C('Company'),C('Branch'),C('Prefix'),C('Digits'),C('Yearly'),n('Next number'),C('Offline block'),C('Example'),C('')],
- rows:[['Sales invoice','Marounc Trading','All','SI-','4','<span class="pill ok">Yes</span>','1181','<span class="pill ok">On</span>','SI-2026-1181',del()],
-  ['POS receipt','Marounc Trading','Beirut','PS-','5','<span class="pill ok">Yes</span>','04412','<span class="pill ok">On</span>','PS-2026-04412',del()],
-  ['Journal voucher','Marounc Trading','All','JV-','4','<span class="pill ok">Yes</span>','2215','—','JV-2026-2215',del()]],
+ rows:[['Sales invoice','Computop Trading','All','SI-','4','<span class="pill ok">Yes</span>','1181','<span class="pill ok">On</span>','SI-2026-1181',del()],
+  ['POS receipt','Computop Trading','Beirut','PS-','5','<span class="pill ok">Yes</span>','04412','<span class="pill ok">On</span>','PS-2026-04412',del()],
+  ['Journal voucher','Computop Trading','All','JV-','4','<span class="pill ok">Yes</span>','2215','—','JV-2026-2215',del()]],
  note:['Why the offline block matters:','the van tablet gets a reserved range before it leaves. Two devices can never produce the same invoice number, even after a week with no internet.']},
 
 print:{t:'Print setup',add:'printf',addT:'New template',tools:['Print'],
@@ -1426,7 +1426,7 @@ const S={};
 const money=(u,l)=>`<span class="mo">${u}</span> <span class="mu">/ ${l}</span>`;
 const bars=(vals,labs)=>`<div class="bars">${vals.map((v,i)=>`<i style="height:${v}%"><s>${labs[i]}</s></i>`).join('')}</div><div style="height:18px"></div>`;
 
-S.dash=()=>head('Overview','Friday 29 August 2026 · Marounc Trading · Zahle branch',
+S.dash=()=>head('Overview','Friday 29 August 2026 · Computop Trading · Zahle branch',
   [btn('Today'),btn('This month','p'),btn('Print')])+
  `<div class="g g4">
    ${kpi('Sales today','US$ 4,812','21 invoices · 3 unpaid','u')}
@@ -2151,13 +2151,13 @@ S.roles=()=>head('Roles & permissions','View, add, change and delete — per scr
 S.comp=()=>head('Company & branches','Eight companies, each with its own books — one login',
   [btn('Print'),addBtn('New branch','branch'),addBtn('New company','comp')])+
  pane('Companies',tbl([C('Code'),C('Name'),C('Arabic name'),C('Tax number'),C('Base currency'),C('Reporting'),C('VAT'),C('Fiscal year'),n('Branches'),n('Users'),C('Chart'),C('Status'),C('')],[
-  ['CO-01','Marounc Trading','مارون للتجارة','1234567-601','LBP','USD','<span class="pill ok">Registered</span>','January','2','12','Lebanese unified','<span class="pill ok">Live</span>',del()],
-  ['CO-02','Marounc Distribution','مارون للتوزيع','7654321-601','LBP','USD','<span class="pill mu">Not registered</span>','January','1','4','Copied from CO-01','<span class="pill ok">Live</span>',del()],
+  ['CO-01','Computop Trading','مارون للتجارة','1234567-601','LBP','USD','<span class="pill ok">Registered</span>','January','2','12','Lebanese unified','<span class="pill ok">Live</span>',del()],
+  ['CO-02','Computop Distribution','مارون للتوزيع','7654321-601','LBP','USD','<span class="pill mu">Not registered</span>','January','1','4','Copied from CO-01','<span class="pill ok">Live</span>',del()],
   ['CO-03','Zahle Retail','زحلة للمفرق','—','LBP','USD','<span class="pill mu">Not registered</span>','January','1','3','Copied from CO-01','<span class="pill in">Setting up</span>',del()]],{min:1200}))+
  pane('Branches',tbl([C('Code'),C('Company'),C('Name'),C('Arabic name'),C('Address'),C('Phone'),C('Cost centre'),n('Warehouses'),n('Cash boxes'),C('Status'),C('')],[
-  ['BR-01','Marounc Trading','Zahle','زحلة','Chtaura road','+961 8 810 000','Zahle branch','2','1','<span class="pill ok">Active</span>',del()],
-  ['BR-02','Marounc Trading','Beirut','بيروت','Achrafieh','+961 1 200 400','Beirut branch','1','1','<span class="pill ok">Active</span>',del()],
-  ['BR-03','Marounc Distribution','Zahle warehouse','مستودع زحلة','Industrial zone','+961 8 810 111','Zahle branch','1','0','<span class="pill ok">Active</span>',del()]],{min:1100}))+
+  ['BR-01','Computop Trading','Zahle','زحلة','Chtaura road','+961 8 810 000','Zahle branch','2','1','<span class="pill ok">Active</span>',del()],
+  ['BR-02','Computop Trading','Beirut','بيروت','Achrafieh','+961 1 200 400','Beirut branch','1','1','<span class="pill ok">Active</span>',del()],
+  ['BR-03','Computop Distribution','Zahle warehouse','مستودع زحلة','Industrial zone','+961 8 810 111','Zahle branch','1','0','<span class="pill ok">Active</span>',del()]],{min:1100}))+
  note('Each company is sealed:','a user who is not given a company cannot see it, cannot report on it, and cannot reach its data even by accident. That separation is in the database itself, not just in the screens.');
 
 S.sync=()=>head('Devices & sync','Who is offline, what is waiting, and what needs a decision',
@@ -2184,7 +2184,7 @@ S.lic=()=>head('Licences & subscriptions','Your customers, their expiry dates, a
  `<div class="g g4">${kpi('Active licences','24','8 own companies')}${kpi('Expiring in 30 days','3','reminders sent','w')}
   ${kpi('Monthly recurring','US$ 1,840','from 16 subscriptions')}${kpi('Expired','1','read-only mode','w')}</div>
  ${pane('Licences',tbl([C('Customer'),C('Plan'),C('Modules'),n('Users'),n('Branches'),C('Starts'),C('Expires'),C('Billing'),n('Price'),C('Offline'),C('Devices'),C('State'),C('')],[
-  ['Marounc Trading','Own use','Everything','12','2','01/01/2027','—','—','—','<span class="pill ok">Yes</span>','5','<span class="pill ok">Active</span>',''],
+  ['Computop Trading','Own use','Everything','12','2','01/01/2027','—','—','—','<span class="pill ok">Yes</span>','5','<span class="pill ok">Active</span>',''],
   ['Aoun Supermarket','Retail','POS, Stock, Accounting','6','1','01/03/2026','01/03/2027','Yearly','1,200.00','<span class="pill ok">Yes</span>','3','<span class="pill ok">Active</span>',del()],
   ['Bekaa Restaurant','Restaurant','Restaurant POS, Stock','4','1','15/09/2025','15/09/2026','Yearly','900.00','<span class="pill ok">Yes</span>','2','<span class="pill wa">Expires in 17 days</span>',del()],
   ['Saida Traders','Wholesale','Everything except Manufacturing','10','2','01/02/2026','01/08/2026','Half yearly','1,400.00','—','4','<span class="pill ba">Expired — read only</span>',del()]],{min:1350}))}
@@ -2340,7 +2340,7 @@ function setCur(c){
   paint();
 }
 function fillSelects(){
-  $('#co').innerHTML=['Marounc Trading','Marounc Distribution','Zahle Retail'].map(o=>`<option>${o}</option>`).join('');
+  $('#co').innerHTML=['Computop Trading','Computop Distribution','Zahle Retail'].map(o=>`<option>${o}</option>`).join('');
   $('#br').innerHTML=['Zahle','Beirut','All branches'].map(o=>`<option>${o}</option>`).join('');
   $('#co').onchange=e=>{ $('#stCoV').textContent=e.target.value; };
 }
@@ -3042,7 +3042,7 @@ pret:{t:'New return bill',s:[
 jv:{t:'New journal voucher',s:[
  {h:'Voucher',f:[{l:'Voucher number',v:'JV-2026-2215',ro:1},{l:'Date',v:'29/08/2026',req:1},
   {l:'Voucher type',t:'sel',o:['Manual','Opening balance','Closing entry','Adjustment','Reversal','Accrual'],req:1},
-  {l:'Company',t:'sel',o:['Marounc Trading','Marounc Distribution'],req:1},
+  {l:'Company',t:'sel',o:['Computop Trading','Computop Distribution'],req:1},
   {l:'Period',v:'August 2026 — open until 05/09',ro:1},
   {l:'Reference'},{l:'Description',t:'area',req:1}]},
  {h:'Money',f:[{l:'Currency',t:'sel',o:['USD','LBP','EUR'],req:1},
@@ -3096,7 +3096,7 @@ cadjf:{t:'New cost adjustment',s:[
   {l:'Approved by',t:'sel',o:['Owner','Accountant'],req:1},
   {l:'Show me the affected documents first',t:'chk',v:1}]}]},
 
-depf:{t:'Run depreciation',s:[{h:'Run',f:[{l:'Company',t:'sel',o:['Marounc Trading','Marounc Distribution'],req:1},
+depf:{t:'Run depreciation',s:[{h:'Run',f:[{l:'Company',t:'sel',o:['Computop Trading','Computop Distribution'],req:1},
   {l:'Period',t:'sel',o:['August 2026','September 2026'],req:1},
   {l:'Assets included',t:'sel',o:['All in use','One category','One branch'],req:1},
   {l:'Category',t:'sel',o:['All','Vehicles','Fittings','Machines']},
@@ -3107,7 +3107,7 @@ depf:{t:'Run depreciation',s:[{h:'Run',f:[{l:'Company',t:'sel',o:['Marounc Tradi
   {l:'Preview before posting',t:'chk',v:1}]}]},
 
 revalf:{t:'Run FX revaluation',s:[{h:'Revaluation',f:[
-  {l:'Company',t:'sel',o:['Marounc Trading','Marounc Distribution'],req:1},
+  {l:'Company',t:'sel',o:['Computop Trading','Computop Distribution'],req:1},
   {l:'As at',v:'31/08/2026',req:1},{l:'Closing rate',t:'num',v:'90,000',req:1},
   {l:'Rate type',t:'sel',o:['Closing','Official peg','Manual'],req:1},
   {l:'Accounts included',t:'sel',o:['All money accounts','Choose myself'],req:1,
@@ -3738,7 +3738,7 @@ S.open=()=>{
 S.daybook=()=>head('Day book','Every entry in date order — the statutory journal, printable and numbered',
   [btn('August 2026','p'),btn('Print'),btn('Excel'),btn('PDF'),addBtn('New voucher','jv')])+
  pane('Filter',fgrid([{l:'From',v:'01/08/2026'},{l:'To',v:'31/08/2026'},
-  {l:'Company',t:'sel',o:['Marounc Trading','Marounc Distribution']},
+  {l:'Company',t:'sel',o:['Computop Trading','Computop Distribution']},
   {l:'Voucher type',t:'sel',o:['All','Sales','Purchases','Receipts','Payments','Manual','FX','Payroll']},
   {l:'Currency',t:'sel',o:['USD','LBP','Both']},{l:'Include unposted drafts',t:'chk'}],4))+
  pane('August 2026',tbl([C('Line'),C('Date'),C('Voucher'),C('Type'),C('Account'),C('Description'),C('Cur'),n('Rate'),n('Debit'),n('Credit'),n('Debit LBP'),n('Credit LBP'),C('Cost centre')],[
@@ -3892,10 +3892,10 @@ S.icomp=()=>head('Inter-company','Eight companies that trade with each other —
  `<div class="g g4">${kpi('Open between companies','US$ 24,800','across 4 pairs')}${kpi('Matched','US$ 22,400','90%','u')}
   ${kpi('Unmatched','US$ 2,400','one side missing','w')}${kpi('Companies','3 of 8','live so far')}</div>
  ${pane('Balances between companies',tbl([C('From'),C('To'),C('Nature'),C('Currency'),n('They show'),n('The other shows'),n('Difference'),C('Match'),C('')],[
-  ['Marounc Trading','Marounc Distribution','Goods sold','USD','14,200.00','14,200.00','0.00','<span class="pill ok">Matched</span>',del()],
-  ['Marounc Trading','Zahle Retail','Goods sold','USD','8,200.00','8,200.00','0.00','<span class="pill ok">Matched</span>',del()],
-  ['Marounc Distribution','Marounc Trading','Rent recharged','USD','1,200.00','0.00','<span class="dr">1,200.00</span>','<span class="pill ba">One side missing</span>',del()],
-  ['Zahle Retail','Marounc Trading','Cash advanced','USD','1,200.00','0.00','<span class="dr">1,200.00</span>','<span class="pill ba">One side missing</span>',del()]],{min:1100}))}
+  ['Computop Trading','Computop Distribution','Goods sold','USD','14,200.00','14,200.00','0.00','<span class="pill ok">Matched</span>',del()],
+  ['Computop Trading','Zahle Retail','Goods sold','USD','8,200.00','8,200.00','0.00','<span class="pill ok">Matched</span>',del()],
+  ['Computop Distribution','Computop Trading','Rent recharged','USD','1,200.00','0.00','<span class="dr">1,200.00</span>','<span class="pill ba">One side missing</span>',del()],
+  ['Zahle Retail','Computop Trading','Cash advanced','USD','1,200.00','0.00','<span class="dr">1,200.00</span>','<span class="pill ba">One side missing</span>',del()]],{min:1100}))}
  ${pane('How it works',tbl([C('Step'),C('What the system does')],[
   ['1','A sale to a related company posts to 41112 · Related companies, not to the ordinary client account'],
   ['2','The buying company is told, and its bill is created as a draft against 4013 · Related suppliers'],
@@ -3913,7 +3913,7 @@ S.consol=()=>head('Consolidation','The group on one page — several companies, 
   {l:'Rate for the profit and loss',t:'sel',o:['Average rate for the period','Closing rate']},
   {l:'Eliminate inter-company',t:'chk',v:1},{l:'Eliminate profit still in stock',t:'chk',v:1},
   {l:'As at',v:'31/08/2026'},{l:'Compare with',t:'sel',o:['Last year','Budget','Nothing']}],4))+
- pane('Group result',tbl([C('Line'),n('Marounc Trading'),n('Marounc Distribution'),n('Zahle Retail'),n('Sum'),n('Eliminations'),n('Group')],[
+ pane('Group result',tbl([C('Line'),n('Computop Trading'),n('Computop Distribution'),n('Zahle Retail'),n('Sum'),n('Eliminations'),n('Group')],[
   ['Sales','122,560.00','48,200.00','31,400.00','202,160.00','−22,400.00','179,760.00'],
   ['Cost of goods sold','−93,020.00','−38,400.00','−24,100.00','−155,520.00','+21,180.00','−134,340.00'],
   ['<b>Gross profit</b>','<b>29,540.00</b>','<b>9,800.00</b>','<b>7,300.00</b>','<b>46,640.00</b>','<b>−1,220.00</b>','<b>45,420.00</b>'],
@@ -3970,7 +3970,7 @@ recurf:{t:'New recurring entry',s:[
 
 budgetf:{t:'New budget',s:[
  {h:'Budget',f:[{l:'Name',req:1},{l:'Year',t:'sel',o:['2027','2026'],req:1},
-  {l:'Company',t:'sel',o:['Marounc Trading','Marounc Distribution'],req:1},
+  {l:'Company',t:'sel',o:['Computop Trading','Computop Distribution'],req:1},
   {l:'Cost centre',t:'sel',o:['All','Zahle branch','Beirut branch','Bekaa route'],req:1},
   {l:'Currency',t:'sel',o:['USD','LBP'],req:1},
   {l:'Level of detail',t:'sel',o:['Per account','Per account group','Sales and expenses only'],req:1}]},
@@ -4005,8 +4005,8 @@ whtf:{t:'New withholding rule',s:[{h:'Rule',f:[{l:'Name',req:1},
    hint:'Leave off until your accountant confirms the scope and the rate for the year'}]}]},
 
 icompf:{t:'New inter-company transaction',s:[{h:'Transaction',f:[
-  {l:'From company',t:'sel',o:['Marounc Trading','Marounc Distribution','Zahle Retail'],req:1},
-  {l:'To company',t:'sel',o:['Marounc Distribution','Zahle Retail','Marounc Trading'],req:1},
+  {l:'From company',t:'sel',o:['Computop Trading','Computop Distribution','Zahle Retail'],req:1},
+  {l:'To company',t:'sel',o:['Computop Distribution','Zahle Retail','Computop Trading'],req:1},
   {l:'Nature',t:'sel',o:['Goods sold','Service provided','Rent recharged','Cash advanced','Expense paid on behalf'],req:1},
   {l:'Date',v:'29/08/2026',req:1},{l:'Currency',t:'sel',o:['USD','LBP'],req:1},
   {l:'Amount',t:'num',req:1},{l:'Exchange rate',t:'num',v:'90,000'},
@@ -4055,7 +4055,7 @@ S.lic=()=>{
  let body;
  if(v===0){
   body=note('This tab is what your own companies see — and what every customer you sell to sees on his own screen.','He never sees your other customers, your prices to them, or your revenue. Same software, one tab, two completely separate views.')+
-   `<div class="g g4">${kpi('Plan','Full · own use','Marounc Group')}${kpi('Users','12 of unlimited','4 active right now')}
+   `<div class="g g4">${kpi('Plan','Full · own use','Computop Group')}${kpi('Users','12 of unlimited','4 active right now')}
     ${kpi('Companies','3 of 8','5 not set up yet')}${kpi('Expires','—','owner licence, no expiry','u')}</div>
    <div class="g g2">
    ${pane('What this licence includes',tbl([C('Module'),C('Included'),n('Used'),n('Limit')],[
@@ -4230,7 +4230,7 @@ S.tenants=()=>{
   body=`<div class="g g4">${kpi('Subscribers','17','16 sold · 1 own group')}${kpi('Companies running','41','across all subscribers')}
    ${kpi('Users logged in today','88','')}${kpi('Documents today','2,140','all subscribers')}</div>
    ${pane('Every business on the platform',tbl([C('Subscriber'),C('Country'),C('Plan'),C('Base currency'),C('Currencies on'),n('Companies'),n('Users'),n('Devices'),C('Region'),C('Version'),C('Expires'),C('Health'),C('State'),C('')],[
-    ['Marounc Group','Lebanon','Own use','LBP','USD · LBP · EUR','3 of 8','12','5','Beirut','1.0.4','—','<span class="pill ok">Green</span>','<span class="pill ok">Live</span>',''],
+    ['Computop Group','Lebanon','Own use','LBP','USD · LBP · EUR','3 of 8','12','5','Beirut','1.0.4','—','<span class="pill ok">Green</span>','<span class="pill ok">Live</span>',''],
     ['Aoun Supermarket','Lebanon','Retail','LBP','USD · LBP','1','6','3','Beirut','1.0.4','01/03/2027','<span class="pill ok">Green</span>','<span class="pill ok">Live</span>',del()],
     ['Bekaa Restaurant','Lebanon','Restaurant','LBP','USD · LBP','1','4','2','Beirut','1.0.4','15/09/2026','<span class="pill ok">Green</span>','<span class="pill wa">Renewing</span>',del()],
     ['Chtaura Wholesale','Lebanon','Wholesale','USD','USD · LBP','2','10','4','Beirut','1.0.3','01/06/2027','<span class="pill wa">1 version behind</span>','<span class="pill ok">Live</span>',del()],
@@ -4297,7 +4297,7 @@ S.curcat=()=>head('Currency catalogue','Every currency the platform knows — yo
   ['IQD','Iraqi Dinar','دينار عراقي','ID','0','250','After','Iraq','0','Manual','<span class="pill mu">Off</span>',del()]],{min:1350}))+
  `<div class="g g2">
   ${pane('Turned on per subscriber',tbl([C('Subscriber'),C('Base'),C('Reporting'),C('Also allowed'),C('Rate types they keep')],[
-   ['Marounc Group','LBP','USD','EUR','Buy · Sell · Closing · Average'],
+   ['Computop Group','LBP','USD','EUR','Buy · Sell · Closing · Average'],
    ['Aoun Supermarket','LBP','USD','—','Buy · Sell · Closing'],
    ['Chtaura Wholesale','USD','USD','LBP','Buy · Sell · Closing'],
    ['Amman Trading','JOD','USD','—','Closing · Average']]),addBtn('Turn one on','curf'))}
@@ -4314,7 +4314,7 @@ S.fx=()=>{
  let body;
  if(v===0){
   body=scope('ten')+
-   pane('Currencies switched on for Marounc Trading',
+   pane('Currencies switched on for Computop Trading',
     tbl([C('Code'),C('Name'),C('Arabic name'),n('Decimals'),C('Base'),C('Reporting'),C('Used for'),n('Buy'),n('Sell'),n('Closing'),n('Average'),C('Updated'),C('')],[
      ['USD','US Dollar','دولار','2','—','<span class="pill ok">Yes</span>','Selling, buying, reporting','1.0000','1.0000','1.0000','1.0000','—',''],
      ['LBP','Lebanese Pound','ليرة لبنانية','0','<span class="pill ok">Yes</span>','—','Statutory books, VAT return','89,500','90,500','90,000','89,880','29/08',del()],
@@ -4373,7 +4373,7 @@ S.fx=()=>{
 S.branding=()=>head('Branding & white label','Your name on it, or theirs — per subscriber',
   [btn('Preview'),addBtn('New branding set','brandf')])+scope('own')+
  pane('',tbl([C('Subscriber'),C('Product name they see'),C('Logo'),C('Colour'),C('Login screen'),C('On printouts'),C('Support contact shown'),C('Your footer'),C('')],[
-  ['Marounc Group','CTOP Suite','Own','Green','Own logo','Own logo and address','Yourself','—',del()],
+  ['Computop Group','CTOP Suite','Own','Green','Own logo','Own logo and address','Yourself','—',del()],
   ['Aoun Supermarket','CTOP Suite','Own','Green','Your logo','His logo and address','Your number','<span class="pill ok">Small line</span>',del()],
   ['Chtaura Wholesale','Chtaura System','Own','Blue','His logo','His logo and address','Your number','<span class="pill mu">Hidden</span>',del()],
   ['Amman Trading','CTOP Suite','Own','Green','Your logo','His logo and address','Your number','<span class="pill ok">Small line</span>',del()]],{min:1200}))+
@@ -4389,7 +4389,7 @@ S.releases=()=>head('Versions & rollout','One build, released in waves — so a 
   ['1.0.3','04/07/2026','Everyone','2','Landed cost, cost adjustment','<span class="pill ok">Yes</span>','<span class="pill mu">Superseded</span>'],
   ['1.0.2','12/05/2026','Everyone','1','First release','<span class="pill ok">Yes</span>','<span class="pill mu">Superseded</span>']],{min:1050}))}
  ${pane('The rule that protects you',tbl([C('Ring'),C('Who'),C('When')],[
-  ['1 · Your own books','Marounc Group','The day it is built. If it breaks, it breaks for you, not for a paying customer'],
+  ['1 · Your own books','Computop Group','The day it is built. If it breaks, it breaks for you, not for a paying customer'],
   ['2 · Two friendly subscribers','Aoun, Tripoli','A week later, after your own month end has closed on it'],
   ['3 · Everyone else','The other 14','A week after that, and never on a Friday'],
   ['Database changes','All','Applied forward only, always reversible, always after a verified backup']]))}
@@ -4459,7 +4459,7 @@ S.status=()=>head('Service status','Is it up, is it backed up, is it fast',[btn(
   ['Every voucher balances','17','0','—'],['Snapshot matches the raw ledger','17','0','—'],
   ['Stock quantity matches stock value','16','1','Saida Traders — expired, not syncing'],
   ['Backup taken and verified','17','0','—'],['Audit chain unbroken','17','0','—'],
-  ['Offline devices synced within limit','16','1','Marounc — van tablet, 2 days']]))}
+  ['Offline devices synced within limit','16','1','Computop — van tablet, 2 days']]))}
  ${note('Every one of these runs on every subscriber, every night.','You find out on the first morning, not on the hundredth. For a business that resells software, that is the difference between a support call and a lost customer.')}`;
 
 Object.assign(F,{
@@ -4578,7 +4578,7 @@ function setApp(a){
   APP=a; TABS=[]; active=null;
   $$('.appsw button').forEach(b=>b.classList.toggle('on',b.dataset.app===a));
   $('.logo .t').textContent = a==='own'?'CTOP Console':'CTOP Suite';
-  $('.logo .s').textContent = a==='own'?'Owner · the platform':'Marounc Group';
+  $('.logo .s').textContent = a==='own'?'Owner · the platform':'Computop Group';
   $('.logo .m').textContent = a==='own'?'◆':'C';
   $('#ctxbiz').style.display = a==='own'?'none':'';
   if(a==='own') openTab('tenants','Subscribers','المشتركون');
@@ -4606,7 +4606,7 @@ S.branding=()=>{
  let body;
  if(v===0){
   body=pane('Per subscriber',tbl([C('Subscriber'),C('Product name they see'),C('Logo'),C('Colour'),C('Login screen'),C('On printouts'),C('Support contact shown'),C('Your footer'),n('Price'),C('')],[
-   ['Marounc Group','CTOP Suite','Own','Green','Own logo','Own logo and address','Yourself','—','—',''],
+   ['Computop Group','CTOP Suite','Own','Green','Own logo','Own logo and address','Yourself','—','—',''],
    ['Aoun Supermarket','CTOP Suite','Own','Green','Your logo','His logo and address','Your number','<span class="pill ok">Small line</span>','—',del()],
    ['Chtaura Wholesale','Chtaura System','Own','Blue','His logo','His logo and address','Your number','<span class="pill mu">Hidden</span>','200.00',del()],
    ['Amman Trading','CTOP Suite','Own','Green','Your logo','His logo and address','Your number','<span class="pill ok">Small line</span>','—',del()]],{min:1250}),
@@ -4615,7 +4615,7 @@ S.branding=()=>{
  } else if(v===1){
   body=note('Every subscriber gets an address from day one, and can bring his own later.','On signup he is live at his-name.ctop.app within a minute — no waiting for DNS. If he later wants erp.hiscompany.com, he adds two DNS records, the certificate is issued automatically, and the old address keeps working so nobody is locked out mid-change.')+
    pane('Addresses',tbl([C('Subscriber'),C('Their address'),C('Given by us'),C('Certificate'),C('Expires'),C('Renews'),C('Redirect'),C('Email sent from'),C('State'),C('')],[
-    ['Marounc Group','erp.marounc.com','marounc.ctop.app','<span class="pill ok">Valid</span>','12/11/2026','Automatic','www → erp','erp@marounc.com','<span class="pill ok">Live</span>',del()],
+    ['Computop Group','erp.computop.com','computop.ctop.app','<span class="pill ok">Valid</span>','12/11/2026','Automatic','www → erp','erp@computop.com','<span class="pill ok">Live</span>',del()],
     ['Aoun Supermarket','aoun.ctop.app','aoun.ctop.app','<span class="pill ok">Valid</span>','—','Automatic','—','noreply@ctop.app','<span class="pill ok">Live</span>',del()],
     ['Chtaura Wholesale','system.chtaurawholesale.com','chtaura.ctop.app','<span class="pill ok">Valid</span>','04/12/2026','Automatic','ctop.app address still works','system@chtaurawholesale.com','<span class="pill ok">Live</span>',del()],
     ['Amman Trading','amman.ctop.app','amman.ctop.app','<span class="pill ok">Valid</span>','—','Automatic','—','noreply@ctop.app','<span class="pill ok">Live</span>',del()],
@@ -4637,7 +4637,7 @@ S.branding=()=>{
  } else {
   body=pane('Email that goes out to a subscriber’s customers',
    tbl([C('Subscriber'),C('Sent from'),C('Verified'),C('Reply goes to'),C('Templates'),C('Language'),C('Your name on it'),C('')],[
-    ['Marounc Group','erp@marounc.com','<span class="pill ok">Yes</span>','accounts@marounc.com','Invoice · Statement · Reminder · Quotation','Arabic + English','<span class="pill mu">No</span>',del()],
+    ['Computop Group','erp@computop.com','<span class="pill ok">Yes</span>','accounts@computop.com','Invoice · Statement · Reminder · Quotation','Arabic + English','<span class="pill mu">No</span>',del()],
     ['Aoun Supermarket','noreply@ctop.app','<span class="pill ok">Yes</span>','aoun@gmail.com','Invoice · Receipt','Arabic','<span class="pill ok">Small line</span>',del()],
     ['Chtaura Wholesale','system@chtaurawholesale.com','<span class="pill ok">Yes</span>','rima@chtaura.com','All','English','<span class="pill mu">No</span>',del()]],{min:1150}),
     addBtn('Set up sending','domf'))+
@@ -4837,7 +4837,7 @@ buildTree(); paint();
 <script>
 /* ══════════ MY SUBSCRIPTION — in the business application, where the subscriber can reach it ══════════ */
 const SUBSCR=[
- {who:'Marounc Group',plan:'Own use',owner:1,price:'—',cycle:'—',start:'01/01/2027',renew:'—',
+ {who:'Computop Group',plan:'Own use',owner:1,price:'—',cycle:'—',start:'01/01/2027',renew:'—',
   users:[12,'unlimited'],comp:[3,8],br:[2,'unlimited'],wh:[4,'unlimited'],dev:[5,'unlimited'],store:'4.1 GB'},
  {who:'Aoun Supermarket',plan:'Retail',owner:0,price:'1,200.00',cycle:'Yearly',start:'01/03/2026',renew:'01/03/2027',
   users:[6,5],comp:[1,1],br:[1,1],wh:[2,2],dev:[3,1],store:'1.2 GB'}];
@@ -4867,7 +4867,7 @@ S.mysub=()=>{
     {l:'Renew automatically',t:'chk',v:A.owner?0:1},
     {l:'Paid by',v:A.owner?'—':'Bank transfer',ro:1},
     {l:'Invoices go to',v:A.owner?'—':'ziad@aounsupermarket.com',ro:1},
-    {l:'Your web address',v:A.owner?'erp.marounc.com':'aoun.ctop.app',ro:1},
+    {l:'Your web address',v:A.owner?'erp.computop.com':'aoun.ctop.app',ro:1},
     {l:'Version you are running',v:'1.0.4',ro:1},
     {l:'Support',v:'+961 3 690 898 · WhatsApp',ro:1}],3),
     A.owner?pill('ok','Own use'):pill('ok','Active'))}
@@ -5152,8 +5152,8 @@ S.lic=()=>{
 /* ══════════ sign out ══════════ */
 Object.assign(F,{
 logout:{t:'Sign out',btns:['Stay signed in','Sign out'],s:[
- {h:'Before you go',f:[{l:'Signed in as',v:'admin · Yorgo',ro:1},
-  {l:'Company',v:'Marounc Trading',ro:1},{l:'Branch',v:'Zahle',ro:1},
+ {h:'Before you go',f:[{l:'Signed in as',v:'admin · George',ro:1},
+  {l:'Company',v:'Computop Trading',ro:1},{l:'Branch',v:'Zahle',ro:1},
   {l:'Signed in since',v:'today 09:12',ro:1},
   {l:'Drafts not yet saved',v:'None',ro:1},
   {l:'Devices still syncing',v:'2 — they finish on their own',ro:1}]},
@@ -5214,7 +5214,7 @@ S.tenant1=()=>{
     {l:'Industry',t:'sel',o:['Retail shop','Restaurant','Wholesale']},
     {l:'Contact person',v:'Ziad Aoun'},{l:'Phone',v:'+961 3 220 118'},{l:'Email',v:'ziad@aounsupermarket.com'},
     {l:'Tax number',v:'2233445-601'},{l:'Customer since',v:'01/03/2026',ro:1},
-    {l:'Hosting region',t:'sel',o:['Beirut','Frankfurt']},{l:'Account manager',t:'sel',o:['Yorgo','—']}],3))}
+    {l:'Hosting region',t:'sel',o:['Beirut','Frankfurt']},{l:'Account manager',t:'sel',o:['George','—']}],3))}
    ${pane('Quick actions','<div class="keys" style="grid-template-columns:repeat(2,1fr)">'+
      [['Extend the licence','lic'],['Add users or devices','lic'],['Turn a module on','lic'],
       ['Issue a new licence file','lic'],['Ask to assist him','assist'],['Send him a message','announcef'],
@@ -5361,19 +5361,19 @@ S.tenant1=()=>{
     ['6','It ends by itself. There is no way to extend it quietly']]),
     addBtn('Ask to assist him','assist'))}
    ${pane('Past assisted sessions',tbl([C('When'),C('Who'),C('Why'),C('Allowed'),C('Lasted')],[
-    ['02/08/2026','Yorgo','Second till not printing','Read only · 1 hour','18 min'],
-    ['12/04/2026','Yorgo','Setting up his opening balances','Full · 4 hours','2 h 10 min']]))}
+    ['02/08/2026','George','Second till not printing','Read only · 1 hour','18 min'],
+    ['12/04/2026','George','Setting up his opening balances','Full · 4 hours','2 h 10 min']]))}
    </div>
    ${note('This is the honest way to do support.','You told his customers you cannot read his books. Assisted access is the one exception, and it only exists with his permission, with a banner on his screen, for a time he chose, written down on both sides.')}`;
  } else {
   body=pane('Everything you have done to this account',
    tbl([C('When'),C('Who'),C('Action'),C('Before'),C('After'),C('Reason given')],[
-    ['29/08 11:02','Yorgo','Viewed the account','—','—','—'],
-    ['02/08 14:20','Yorgo','Assisted access ended','—','—','Ticket T-0164'],
-    ['02/08 14:02','Yorgo','Assisted access granted by Ziad','—','Read only · 1 hour','Second till not printing'],
-    ['14/05 09:40','Yorgo','Added a device slot','2','3','He bought a laptop'],
-    ['15/03 10:00','Yorgo','Trial ended, plan started','Trial','Retail · yearly','Paid'],
-    ['01/03 09:15','Yorgo','Account created','—','Retail plan','New customer']],{min:1050}))+
+    ['29/08 11:02','George','Viewed the account','—','—','—'],
+    ['02/08 14:20','George','Assisted access ended','—','—','Ticket T-0164'],
+    ['02/08 14:02','George','Assisted access granted by Ziad','—','Read only · 1 hour','Second till not printing'],
+    ['14/05 09:40','George','Added a device slot','2','3','He bought a laptop'],
+    ['15/03 10:00','George','Trial ended, plan started','Trial','Retail · yearly','Paid'],
+    ['01/03 09:15','George','Account created','—','Retail plan','New customer']],{min:1050}))+
    `<div class="g g2">
    ${pane('His own system health',tbl([C('Signal'),C('Now'),C('Trend')],[
     ['Backups','<span class="pill ok">Green 41 days</span>','steady'],
@@ -5444,7 +5444,7 @@ S.conteam=()=>head('Console team & access','Who can reach this panel, and what e
   [btn('Print'),addBtn('Add someone','consoleuser')])+scope('own')+
  note('This is the most powerful screen in the whole system.','Everyone listed here can reach every subscriber’s account. Two-factor is not optional, and every action any of them takes is written down with their name on it.')+
  pane('People',tbl([C('Name'),C('Role'),C('Two-factor'),C('Can assist customers'),C('Can change licences'),C('Can change prices'),C('Can add people here'),C('Last signed in'),C('From'),C('State'),C('')],[
-  ['Yorgo','Owner','<span class="pill ok">On</span>','<span class="pill ok">Yes</span>','<span class="pill ok">Yes</span>','<span class="pill ok">Yes</span>','<span class="pill ok">Yes</span>','today 09:12','Zahle','<span class="pill ok">Active</span>',''],
+  ['George','Owner','<span class="pill ok">On</span>','<span class="pill ok">Yes</span>','<span class="pill ok">Yes</span>','<span class="pill ok">Yes</span>','<span class="pill ok">Yes</span>','today 09:12','Zahle','<span class="pill ok">Active</span>',''],
   ['Rania','Billing','<span class="pill ok">On</span>','—','<span class="pill ok">Yes</span>','—','—','today 08:40','Zahle','<span class="pill ok">Active</span>',del()],
   ['Support agent 1','Support','<span class="pill ok">On</span>','<span class="pill ok">With permission</span>','—','—','—','yesterday','Beirut','<span class="pill ok">Active</span>',del()],
   ['Former developer','Support','<span class="pill ba">Off</span>','—','—','—','—','94 days ago','—','<span class="pill ba">Switched off</span>','']],{min:1350}))+
@@ -5466,16 +5466,16 @@ S.ownaudit=()=>head('Owner audit log','Every action anyone on your side has take
  `<div class="g g4">${kpi('Actions this month','142','')}${kpi('Assisted sessions','3','all with permission','u')}
   ${kpi('Licence changes','11','')}${kpi('Anything unexplained','0','','u')}</div>
  ${pane('Filter',fgrid([{l:'From',v:'01/08/2026'},{l:'To',v:'29/08/2026'},
-  {l:'Person',t:'sel',o:['Everyone','Yorgo','Rania','Support agent 1']},
+  {l:'Person',t:'sel',o:['Everyone','George','Rania','Support agent 1']},
   {l:'Subscriber',t:'sel',o:['All','Aoun Supermarket','Bekaa Restaurant']},
   {l:'Kind',t:'sel',o:['All','Assisted access','Licence','Billing','Platform','Sign in']}],5))}
  ${pane('',tbl([C('When'),C('Who'),C('Subscriber'),C('Action'),C('Before'),C('After'),C('Reason'),C('From')],[
-  ['29/08 11:02','Yorgo','Aoun Supermarket','Opened the account','—','—','—','Zahle'],
+  ['29/08 11:02','George','Aoun Supermarket','Opened the account','—','—','—','Zahle'],
   ['29/08 09:20','Rania','Bekaa Restaurant','Sent a renewal quotation','—','900.00','Expires 15/09','Zahle'],
   ['28/08 16:40','Support agent 1','Chtaura Wholesale','Asked to assist — refused by the customer','—','—','Ticket T-0187','Beirut'],
-  ['22/08 10:15','Yorgo','Everyone','Released version 1.0.4','1.0.3','1.0.4','Ring 3','Zahle'],
-  ['14/05 09:40','Yorgo','Aoun Supermarket','Added a device slot','2','3','He bought a laptop','Zahle'],
-  ['02/08 14:02','Yorgo','Aoun Supermarket','Assisted access granted by Ziad','—','Read only · 1 h','Till not printing','Zahle'],
+  ['22/08 10:15','George','Everyone','Released version 1.0.4','1.0.3','1.0.4','Ring 3','Zahle'],
+  ['14/05 09:40','George','Aoun Supermarket','Added a device slot','2','3','He bought a laptop','Zahle'],
+  ['02/08 14:02','George','Aoun Supermarket','Assisted access granted by Ziad','—','Read only · 1 h','Till not printing','Zahle'],
   ['01/08 09:00','Rania','Saida Traders','Suspended for non-payment','Active','Read only','28 days overdue, 3 reminders','Zahle']],{min:1350}))}
  ${note('Two logs, not one.','Anything you do to a customer’s account appears here and in his own audit log, in the same words. He can always see what was done to his system and by whom — including the things he asked you to do.')}`;
 
@@ -6306,7 +6306,7 @@ $('.strip').innerHTML = ic('info','ic-14')+
 (function(){
  const nav=$('#nav');
  $('.logo').innerHTML=`<div class="m" id="brandmark">C</div>
-   <div><div class="t" data-t="brand">CTOP Suite</div><div class="s" data-t="brandS">Marounc Group</div></div>`;
+   <div><div class="t" data-t="brand">CTOP Suite</div><div class="s" data-t="brandS">Computop Group</div></div>`;
  $('.navsearch').innerHTML=`<input id="mfilter" placeholder="Find a screen…" data-tph="findPh" autocomplete="off">`;
  $('#mfilter').addEventListener('input',e=>filterMenu(e.target.value));
  if(!$('#navfoot')){
@@ -6348,7 +6348,7 @@ $('.strip').innerHTML = ic('info','ic-14')+
     <button class="tbtn" onclick="openHelp()" aria-label="Help">${ic('help')}</button>
     <div style="position:relative">
       <button class="ctxchip" id="ctxb" onclick="togglePop('ctxpop')" aria-haspopup="true">
-        ${ic('building','ic-14')}<b id="ctxco">Marounc Trading</b>
+        ${ic('building','ic-14')}<b id="ctxco">Computop Trading</b>
         <span class="sep">/</span><span class="brv" id="ctxbr">Zahle</span>
         <span class="sep">/</span><span class="cuv" id="ctxcu">USD</span>${ic('chevD','ic-14')}</button>
       <div class="ds-pop" id="ctxpop" style="min-width:290px"></div>
@@ -6686,7 +6686,7 @@ function setApp(a){
   document.documentElement.setAttribute('data-app',a);
   $$('.appsw button').forEach(b=>b.classList.toggle('on',b.dataset.app===a));
   $('.logo .t').textContent = a==='own'?'CTOP Console':'CTOP Suite';
-  $('.logo .s').textContent = a==='own'?'Owner · the platform':'Marounc Group';
+  $('.logo .s').textContent = a==='own'?'Owner · the platform':'Computop Group';
   $('#brandmark').innerHTML = a==='own'?ic('shield','ic-18'):'C';
   $('#ctxb').style.display = a==='own'?'none':'';
   if(a==='own') openTab('tenants','Subscribers','المشتركون');
@@ -6825,7 +6825,7 @@ function dsKpi(icon,label,value,unit,delta,tone,go){
    <div class="kv">${value}${unit?`<small>${esc(unit)}</small>`:''}</div>
    <div class="kd ${tone||''}">${delta||''}</div></div>`;
 }
-S.dash=()=>head('Overview','Friday 29 August 2026 · Marounc Trading · Zahle branch',
+S.dash=()=>head('Overview','Friday 29 August 2026 · Computop Trading · Zahle branch',
   [seg('dashper',['Today','This month','This year']),btn('Print')])+
  `<div class="g g5">
    ${dsKpi('wallet','Cash position','10,300','USD','Cash boxes and banks · +LBP 412m','',
@@ -7595,9 +7595,9 @@ const LICENCE={
  1:{id:'CTOP-2026-004821',status:'Active',plan:'Retail',cycle:'billed yearly',to:'Aoun Supermarket',
     from:'01 Mar 2026',until:'01 Mar 2027',issued:'01 Mar 2026',days:184,allowed:1,
     file:'ctop-aoun-supermarket-2026.lic',running:'1.0.4'},
- 0:{id:'CTOP-2026-000001',status:'Active',plan:'Own use',cycle:'not billed',to:'Marounc Group',
+ 0:{id:'CTOP-2026-000001',status:'Active',plan:'Own use',cycle:'not billed',to:'Computop Group',
     from:'01 Jan 2026',until:'—',issued:'01 Jan 2026',days:null,allowed:5,
-    file:'ctop-marounc-group-2026.lic',running:'1.0.4'}
+    file:'ctop-computop-group-2026.lic',running:'1.0.4'}
 };
 let DEVICES={
  1:[{n:'Shop PC',t:'Windows desktop',a:'12 Mar 2026',s:'2 minutes ago',v:'1.0.4',st:'active',cur:true},
@@ -7929,7 +7929,7 @@ S.mysub=()=>{
     {l:'Renew automatically',t:'chk',v:A.owner?0:1},
     {l:'Paid by',v:A.owner?'—':'Bank transfer',ro:1},
     {l:'Invoices go to',v:A.owner?'—':'ziad@aounsupermarket.com',ro:1},
-    {l:'Your web address',v:A.owner?'erp.marounc.com':'aoun.ctop.app',ro:1},
+    {l:'Your web address',v:A.owner?'erp.computop.com':'aoun.ctop.app',ro:1},
     {l:'Version you are running',v:L.running,ro:1},
     {l:'Support',v:'+961 3 690 898 · WhatsApp',ro:1}],3),
     A.owner?pill('ok','Own use'):pill('ok','Active'))}
@@ -8528,7 +8528,7 @@ function syncStatusBar(){
  const c=tenantCtx();
  if(!c||c.mode==='plat'){
   if(lbl) lbl.textContent=ar?'الشركة:':'Company:';
-  el.textContent=APP==='own'?(ar?'شاشة المالك · المنصة':'Owner console · platform'):'Marounc Trading';
+  el.textContent=APP==='own'?(ar?'شاشة المالك · المنصة':'Owner console · platform'):'Computop Trading';
   el.style.color=''; el.style.fontWeight='';
  } else {
   if(lbl) lbl.textContent=c.mode==='imp'?(ar?'جلسة مساعدة داخل:':'Assist session inside:'):(ar?'تعرض المشترك:':'Viewing tenant:');
@@ -14112,7 +14112,7 @@ paint();
    fold. That is a real fault on a till, but every fix for it is a layout
    decision — shrink the header, drop the duplicate pay row, or fix the
    screen to the terminal height — and the answer depends on the size of the
-   screens Yorgo's tills actually run. Raised with him rather than guessed.
+   screens George's tills actually run. Raised with him rather than guessed.
    ─────────────────────────────────────────────────────────────────────── */
 </style>
 <style>
