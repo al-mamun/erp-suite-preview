@@ -7,11 +7,10 @@
 <meta name="googlebot" content="noindex, nofollow">
 <title>ERP Suite Prototype</title>
 <style>
-  :root{color-scheme:light dark}
-  html,body{margin:0}
-  body{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#fafaf9}
-  img{max-width:100%}
-  [hidden]{display:none!important}
+:root{color-scheme:light dark}
+html,body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -14079,6 +14078,43 @@ Object.assign(AR, { 'what this role may do':'ما يمكن لهذا الدور �
 Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
 paint();
 </script>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE TILL PANEL PADDING — the thing circled in the screenshot
+
+   A "flush" pane sets `padding:0` on its body. That is correct when the body
+   is a table, because table cells bring their own padding. But the Totals list
+   and the keypad are NOT tables and have no padding of their own — so every
+   label and every figure sat hard against the pane border. Measured: content
+   ran 1204→1598 inside a box of 1202→1600. Two pixels.
+
+   The previous pass added `padding-inline:2px`, which was a gesture, not a
+   fix. The right answer is the same 16px (--s4) every other pane in the
+   product already uses, so the till matches the system instead of
+   approximating it. Now: 1218→1584 inside 1202→1600.
+
+   Affects the three screens that put a totals block or a keypad in a flush
+   pane — POS, Restaurant POS, Production — and nothing else. Verified: the
+   dashboards put their totals in a normally-padded pane, so they are
+   untouched and cannot double-pad.
+   ═══════════════════════════════════════════════════════════════════════ */
+.pb.f > .tot{padding:var(--s4,16px) var(--s4,16px) 0}
+.pb.f > .keys{padding:var(--s4,16px)}
+
+/* the 2px stopgap from the previous pass now does nothing but mislead anyone
+   reading the stylesheet */
+.tot .l{padding-inline:0}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   STILL OPEN, deliberately not patched here: the till column is ~750px of
+   content (receipt + totals + keypad + pay buttons) sitting below a ~380px
+   page header, so on a 900px screen the bottom keypad row falls below the
+   fold. That is a real fault on a till, but every fix for it is a layout
+   decision — shrink the header, drop the duplicate pay row, or fix the
+   screen to the terminal height — and the answer depends on the size of the
+   screens Yorgo's tills actually run. Raised with him rather than guessed.
+   ─────────────────────────────────────────────────────────────────────── */
+</style>
 
 </body>
 </html>
