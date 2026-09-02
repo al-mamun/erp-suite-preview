@@ -496,7 +496,7 @@ supp:{t:'New supplier',s:[
 item:{t:'New item',s:[
  {h:'Identity',f:[{l:'Item number',v:'IT-0919',req:1},{l:'Barcode'},{l:'Name',req:1},
   {l:'Latin name'},{l:'Arabic name'},{l:'Category',t:'sel',o:['Laptops','Desktop','Accessories','Paper','Solar'],req:1},
-  {l:'Sub category',t:'sel',o:['Open box','Used','New']},{l:'Item type',t:'sel',o:['Product','Service','Kit']}]},
+  {l:'Sub category',t:'sel',o:['Open box','Used','New']},{l:'Item type',t:'sel',o:['Normal','Product','Service','Kit']}]},
  {h:'Units & packaging',f:[{l:'Base unit',t:'sel',o:['Piece','Kg','Litre','Metre'],req:1,hint:'Stock is always counted in this'},
   {l:'Default package',t:'sel',o:['Piece','Box (12)','Large box (72)']},
   {l:'Track',t:'sel',o:['Nothing','Serial numbers','Batches & expiry']},{l:'Weighed item',t:'chk'}]},
@@ -1653,7 +1653,7 @@ S.item1=()=>head('Item card','HP 17T-CN400 Core 5 · IT-0919',
   ${pane('Details',fgrid([{l:'Item number',v:'IT-0919',ro:1},{l:'Name',v:'HP 17T-CN400 Core 5'},
    {l:'Arabic name',v:'لابتوب HP'},{l:'Latin name',v:'HP 17T-CN400'},
    {l:'Category',t:'sel',o:['Laptops']},{l:'Sub category',t:'sel',o:['New','Open box','Used']},
-   {l:'Manufacturer',t:'sel',o:['HP','Dell','Generic']},{l:'Item type',t:'sel',o:['Product','Service','Kit']},
+   {l:'Manufacturer',t:'sel',o:['HP','Dell','Generic']},{l:'Item type',t:'sel',o:['Normal','Product','Service','Kit']},
    {l:'Base unit',t:'sel',o:['Piece']},{l:'Costing method',t:'sel',o:['Moving average','FIFO','Last price']},
    {l:'Taxable',t:'sel',o:['Yes — 11%','No']},{l:'Track',t:'sel',o:['Serial numbers','Batches & expiry','Nothing']},
    {l:'Minimum quantity',t:'num',v:'6'},{l:'Reorder quantity',t:'num',v:'12'},
@@ -2623,7 +2623,7 @@ S.item1=()=>{
   body=pane('Details',fgrid([{l:'Item number',v:'IT-0919',ro:1},{l:'Name',v:'HP 17T-CN400 Core 5'},
    {l:'Arabic name',v:'لابتوب HP'},{l:'Latin name',v:'HP 17T-CN400'},
    {l:'Category',t:'sel',o:['Laptops']},{l:'Sub category',t:'sel',o:['New','Open box','Used']},
-   {l:'Manufacturer',t:'sel',o:['HP','Dell','Generic']},{l:'Item type',t:'sel',o:['Product','Service','Kit']},
+   {l:'Manufacturer',t:'sel',o:['HP','Dell','Generic']},{l:'Item type',t:'sel',o:['Normal','Product','Service','Kit']},
    {l:'Base unit',t:'sel',o:['Piece']},{l:'Costing method',t:'sel',o:['Moving average','FIFO','Last price']},
    {l:'Taxable',t:'sel',o:['Yes — 11%','No']},{l:'Track',t:'sel',o:['Serial numbers','Batches & expiry','Nothing']},
    {l:'Minimum quantity',t:'num',v:'6'},{l:'Reorder quantity',t:'num',v:'12'},
@@ -14425,6 +14425,520 @@ Object.assign(AR, {
  'Stock':'المخزون','Cash box':'الصندوق','Rounding':'التقريب'
 });
 Object.keys(AR).forEach(k => { if(!TT[k]) TT[k] = [k, AR[k]]; });
+paint();
+</script>
+<style>
+.stkw{display:grid;gap:var(--sp-10,12px)}
+.stkacc{font-family:var(--mo);font-size:11.5px;color:var(--c-text-2)}
+.stkq{border-inline-start:3px solid var(--c-warn,#b8860b);padding-inline-start:10px}
+</style>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   CR-071 — STOCK IN, STOCK OUT, OPENING STOCK
+
+   George: "stock in and stock out and stock opening screen with acount to
+   transfer charges".
+
+   WHY THESE ARE NEW, NOT A PORT. Trend's own permission table lists all 31
+   screens it has. Stock in, stock out and opening stock are not among them.
+   The only ways stock can move in Trend are a Procurement Invoice, a
+   Manufacturing Invoice, a Sales Invoice and a Transfer Invoice — every one of
+   which needs a supplier, a customer or another warehouse. There is no way to
+   say "four boxes were damaged" without inventing a document that lies about
+   why. So this is not a missing screen; it is a missing capability, and the
+   likely current workaround is a purchase invoice to a dummy supplier, which
+   quietly corrupts supplier balances and the purchase reports.
+
+   WHAT "ACCOUNT TO TRANSFER CHARGES" MEANS, AND WHY IT IS THE WHOLE POINT.
+   On a purchase invoice the other side of the entry is obvious — the supplier.
+   On a stock in there is no supplier, so somebody has to say where the value
+   comes from; on a stock out, where it goes. That is the account picker on
+   each of these screens. Stock cannot appear from nothing: every quantity
+   change has a matching value change, and that value must land in a named
+   account or the trial balance stops balancing.
+
+   READ THIS AS A PROPOSED READING, NOT A SETTLED ONE. "Account to transfer
+   charges" could instead mean freight and handling charges added to the cost
+   of the goods. That question is open with him — it is marked on screen and
+   in the blueprint rather than silently decided.
+
+   THE DEFAULT COMES FROM THE MAP, NOT FROM THE CODE. Each screen starts on the
+   account the Linked accounts screen names for its purpose — stock_diff for
+   in and out, opening_equity for the opening — and the user can override it
+   per document. Same rule as every other document in the product (ADR-013).
+
+   OPENING STOCK IS NOT A FEATURE, IT IS THE MIGRATION. Eight companies go
+   live on 01/01/2027. Without this screen there is no way to load a starting
+   quantity or a starting value, so nothing else can be tested with real
+   numbers. It belongs early in the plan, not late.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── two new purposes on the same map every other document reads ─────────── */
+Object.assign(LINKACC, {
+ stock_diff:     '6037',   /* Stock differences and losses */
+ opening_equity: '111'     /* Brought forward from last year */
+});
+Object.assign(PURPOSE, {
+ stock_diff:     'Stock differences',
+ opening_equity: 'Opening balance'
+});
+
+/* ── CR-070: "normal also" ───────────────────────────────────────────────────
+   Trend's installer seeds tblItemType with exactly two rows — 'Normal' and
+   'Product' — and makes Normal id 1, the column default. So most of his
+   catalogue is type Normal, and the list I invented (Product / Service / Kit)
+   dropped the one type his data actually uses. He said "normal also", so it is
+   added, not substituted.
+
+   Done as a loop over every form rather than three edits, so a fourth Item
+   type field added later cannot fall out of step. In the built product this is
+   a lookup table, not a hard-coded list — see the blueprint.
+   ────────────────────────────────────────────────────────────────────────── */
+var ITEMTYPES = ['Normal','Product','Service','Kit'];
+(function fixItemTypes(){
+ var n = 0;
+ Object.keys(F).forEach(function(k){
+  (F[k].s || []).forEach(function(sec){
+   (sec.f || []).forEach(function(fld){
+    if(fld && fld.l === 'Item type'){ fld.o = ITEMTYPES.slice(); n++; }
+   });
+  });
+ });
+ window.__itemTypeFields = n;
+})();
+
+/* ── the three documents ─────────────────────────────────────────────────────
+   Sample figures, but the totals and the journal entry are COMPUTED from the
+   line array below — not typed twice. Change a quantity here and the screen,
+   the total and the accounting impact all move together, which is the same
+   rule the sales invoice follows.
+   ────────────────────────────────────────────────────────────────────────── */
+var STKDOC = {
+ stkin: {
+  no:'SIN-2026-0032', date:'29/08/2026', wh:'Zahle main',
+  reason:'Found at inventory count', acc:'6037', cur:'USD', rate:90000,
+  voucher:'JV-2026-2231',
+  lines:[
+   {no:'IT-0431', nm:'HP 250 G9 laptop',        pkg:'Piece',          qty:3,  cost:412.00},
+   {no:'IT-0912', nm:'A4 paper 80g',            pkg:'Box (5 reams)',  qty:12, cost:18.50},
+   {no:'IT-0655', nm:'Solar cable 6mm',         pkg:'Roll (100m)',    qty:2,  cost:96.00}
+  ]
+ },
+ stkout: {
+  no:'SOUT-2026-0028', date:'29/08/2026', wh:'Beirut',
+  reason:'Damaged in the warehouse', acc:'6037', cur:'USD', rate:90000,
+  voucher:'JV-2026-2232',
+  lines:[
+   {no:'IT-0912', nm:'A4 paper 80g',            pkg:'Box (5 reams)',  qty:4,  cost:18.50},
+   {no:'IT-0207', nm:'Toner cartridge 12A',     pkg:'Piece',          qty:2,  cost:41.00}
+  ]
+ },
+ stkopen: {
+  no:'OPEN-2027-001', date:'31/12/2026', wh:'Zahle main',
+  reason:'Opening balance on go-live', acc:'111', cur:'USD', rate:90000,
+  voucher:'JV-2027-0001',
+  lines:[
+   {no:'IT-0431', nm:'HP 250 G9 laptop',        pkg:'Piece',          qty:46,  cost:409.00},
+   {no:'IT-0912', nm:'A4 paper 80g',            pkg:'Box (5 reams)',  qty:220, cost:18.10},
+   {no:'IT-0655', nm:'Solar cable 6mm',         pkg:'Roll (100m)',    qty:35,  cost:94.50},
+   {no:'IT-0207', nm:'Toner cartridge 12A',     pkg:'Piece',          qty:88,  cost:40.25}
+  ]
+ }
+};
+
+function stkTotals(k){
+ var d = STKDOC[k], units = 0, value = 0;
+ d.lines.forEach(function(l){ units += (+l.qty || 0); value += (+l.qty || 0) * (+l.cost || 0); });
+ return {units:units, value:Math.round(value * 100) / 100};
+}
+function stkSet(k, field, val){ STKDOC[k][field] = val; paint(); }
+
+/* the reason lists differ, because the reasons genuinely differ */
+var STKREASON = {
+ stkin:  ['Found at inventory count','Returned from a customer without an invoice',
+          'Correction of a past error','Goods received with no supplier document'],
+ stkout: ['Damaged in the warehouse','Expired','Sample given to a customer',
+          'Taken for own use','Missing at inventory count'],
+ stkopen:['Opening balance on go-live']
+};
+
+/* ── the account picker — every postable account in the chart ─────────────── */
+function stkAccSel(k){
+ var d = STKDOC[k];
+ var codes = (typeof accPostable === 'function') ? accPostable() : [d.acc];
+ if(codes.indexOf(d.acc) === -1) codes = [d.acc].concat(codes);
+ return '<select class="in" onchange="stkSet(\'' + k + '\',\'acc\',this.value)">' +
+  codes.map(function(c){
+   var nm = (typeof accName === 'function') ? accName(c) : '';
+   return '<option value="' + esc(c) + '"' + (c === d.acc ? ' selected' : '') + '>' +
+          esc(c + (nm ? ' · ' + nm : '')) + '</option>';
+  }).join('') + '</select>';
+}
+function stkSel(k, field, opts){
+ var d = STKDOC[k];
+ return '<select class="in" onchange="stkSet(\'' + k + '\',\'' + field + '\',this.value)">' +
+  opts.map(function(o){
+   return '<option value="' + esc(o) + '"' + (o === d[field] ? ' selected' : '') + '>' +
+          esc(tr(o)) + '</option>';
+  }).join('') + '</select>';
+}
+
+/* ── one renderer, three screens ─────────────────────────────────────────────
+   They differ in direction and in one rule, so they share everything else.
+   ────────────────────────────────────────────────────────────────────────── */
+function stkScreen(k, menuEn, menuAr){
+ var d = STKDOC[k];
+ var t = stkTotals(k);
+ var isOut = (k === 'stkout');
+ var isOpen = (k === 'stkopen');
+ var base = renderList(k, menuEn, menuAr);
+
+ var rows = d.lines.map(function(l){
+  return [esc(l.no), esc(tr(l.nm)), esc(tr(l.pkg)),
+          invM0(l.qty), invM(l.cost), invM(l.qty * l.cost)];
+ });
+ rows.push(['<b>' + esc(tr('Total')) + '</b>','','',
+            '<b>' + invM0(t.units) + '</b>','',
+            '<b>' + invM(t.value) + '</b>']);
+
+ var fields =
+  '<div class="fs f4">' +
+   '<div><label>' + esc(tr('Document number')) + '</label><input class="in" value="' + esc(d.no) + '" readonly></div>' +
+   '<div><label>' + esc(tr('Date')) + '</label><input class="in" value="' + esc(d.date) + '" readonly></div>' +
+   '<div><label>' + esc(tr('Warehouse')) + '</label>' +
+     stkSel(k, 'wh', ['Zahle main','Beirut','Van — Elie']) + '</div>' +
+   '<div><label>' + esc(tr('Reason')) + '</label>' +
+     stkSel(k, 'reason', STKREASON[k]) + '</div>' +
+  '</div>' +
+  '<div class="fs f4" style="margin-top:var(--s3,10px)">' +
+   '<div style="grid-column:span 2"><label>' +
+     esc(tr(isOpen ? 'Account the opening value comes from' : 'Account to charge the value to')) +
+     '</label>' + stkAccSel(k) + '</div>' +
+   '<div><label>' + esc(tr('Currency')) + '</label><input class="in" value="' + esc(d.cur) + '" readonly></div>' +
+   '<div><label>' + esc(tr('Rate stamped on this document')) + '</label><input class="in" value="' +
+     invM0(d.rate) + '" readonly></div>' +
+  '</div>';
+
+ /* the one rule that differs and matters */
+ var rule = isOut
+  ? '<div class="fmsg hintmsg"><span>' + esc(tr(
+      'The unit cost is what the system says these goods cost, not a number anyone types. Letting a user price goods on the way out is how stock losses get hidden.')) +
+    '</span></div>'
+  : (isOpen
+     ? '<div class="fmsg hintmsg"><span>' + esc(tr(
+         'One opening document per warehouse per company. Once it is posted the period before go-live is locked and it cannot be edited — only corrected by a dated stock in or stock out.')) +
+       '</span></div>'
+     : '<div class="fmsg hintmsg"><span>' + esc(tr(
+         'The cost entered here becomes the cost of these goods. It affects the value of everything already on the shelf, because the costing method is moving average.')) +
+       '</span></div>');
+
+ var body = pane(tr(isOpen ? 'Opening quantities and values' : (isOut ? 'Goods leaving without a sale' : 'Goods arriving without a purchase')),
+   fields + rule +
+   tbl([C('Item number'), C('Name'), C('Package'), n(tr('Quantity')),
+        n(tr('Unit cost') + ' ' + d.cur), n(tr('Value') + ' ' + d.cur)],
+       rows, {min:820}),
+   '<button class="b p">' + esc(tr(isOpen ? 'Post the opening balance' : 'Post the document')) + '</button>');
+
+ /* what it will do to the books - stated on the screen, not hidden in a manual */
+ var accLabel = d.acc + ((typeof accName === 'function' && accName(d.acc)) ? ' · ' + accName(d.acc) : '');
+ var stockLabel = LA('inventory');
+ var entry = isOut
+  ? esc(tr('Debit')) + ' ' + esc(accLabel) + ' — ' + esc(tr('Credit')) + ' ' + esc(stockLabel)
+  : esc(tr('Debit')) + ' ' + esc(stockLabel) + ' — ' + esc(tr('Credit')) + ' ' + esc(accLabel);
+
+ var expl = pane(tr('What this does to the books'),
+   '<div style="padding:var(--s4,16px)">' +
+     '<div class="stkacc">' + entry + ' · ' + esc(d.cur) + ' ' + invM(t.value) + '</div>' +
+     '<div class="impx">' +
+       (typeof impactBtn === 'function' ? impactBtn(k) : '') +
+     '</div>' +
+   '</div>');
+
+ return base + body + expl +
+  note(tr(isOpen
+    ? 'This screen is the migration.'
+    : 'Stock cannot appear from nothing.'),
+   tr(isOpen
+    ? 'Eight companies go live on 01/01/2027, and every one of them needs its starting quantities and starting values loaded before a single invoice can be raised. The account on the right is where the other side of that value sits until the first real trading period begins.'
+    : 'Every quantity that changes changes a value too, and that value has to land in an account somebody named. That is what the account field above is for: the system will not let you move stock into a void. The account it starts on is the one the Linked accounts screen gives for this purpose, and you can override it document by document.')) +
+  note(tr('Still to confirm with George.'),
+   tr('"Account to transfer charges" is read here as the account the value is transferred to. It could instead mean freight and handling charges added to the cost of the goods, which is a different feature. Asked, not assumed.'));
+}
+
+S.stkin   = function(){ return stkScreen('stkin',   'Stock in',      'إدخال مخزون'); };
+S.stkout  = function(){ return stkScreen('stkout',  'Stock out',     'إخراج مخزون'); };
+S.stkopen = function(){ return stkScreen('stkopen', 'Opening stock', 'مخزون افتتاحي'); };
+
+/* ── the lists these screens sit on ──────────────────────────────────────────
+   Defined as getters, not as fixed objects. renderList drops `sub` and every
+   row cell straight into the page without translating them, so a list built
+   once in English stays English after the language switch. Rebuilding the
+   object on read means the Arabic is live — switch language and the reasons,
+   the statuses and the item names all follow.
+
+   Warehouse names, document numbers and dates stay as they are: those are
+   data, and the product treats them the same way everywhere else.
+   ────────────────────────────────────────────────────────────────────────── */
+function stkDefList(id, build){
+ Object.defineProperty(L, id, {configurable:true, enumerable:true, get:build});
+}
+
+stkDefList('stkin', function(){ return {
+ t:'Stock in', sub:esc(tr('Goods into the warehouse with no purchase invoice behind them')),
+ add:'stkinf', addT:'New stock in', tools:['Excel'],
+ cols:[C('Number'),C('Date'),C('Warehouse'),C('Reason'),n('Lines'),n('Value USD'),C('Account'),C('Status'),C('')],
+ rows:[
+  ['SIN-2026-0032','29/08/2026','Zahle main',tr('Found at inventory count'),'3','1,650.00','6037',pill('ok',tr('Posted')),del()],
+  ['SIN-2026-0031','24/08/2026','Beirut',tr('Correction of a past error'),'1','96.00','6037',pill('ok',tr('Posted')),del()],
+  ['SIN-2026-0030','19/08/2026','Zahle main',tr('Goods received with no supplier document'),'6','2,410.00','6037',pill('',tr('Draft')),del()]]}; });
+
+stkDefList('stkout', function(){ return {
+ t:'Stock out', sub:esc(tr('Goods out of the warehouse with no sales invoice behind them')),
+ add:'stkoutf', addT:'New stock out', tools:['Excel'],
+ cols:[C('Number'),C('Date'),C('Warehouse'),C('Reason'),n('Lines'),n('Value USD'),C('Account'),C('Status'),C('')],
+ rows:[
+  ['SOUT-2026-0028','29/08/2026','Beirut',tr('Damaged in the warehouse'),'2','156.00','6037',pill('ok',tr('Posted')),del()],
+  ['SOUT-2026-0027','26/08/2026','Zahle main',tr('Sample given to a customer'),'1','412.00','6234',pill('ok',tr('Posted')),del()],
+  ['SOUT-2026-0026','21/08/2026','Zahle main',tr('Missing at inventory count'),'4','318.40','6037',pill('ok',tr('Posted')),del()]]}; });
+
+stkDefList('stkopen', function(){ return {
+ t:'Opening stock', sub:esc(tr('The starting quantities and values each company goes live with')),
+ add:'stkopenf', addT:'New opening document', tools:['Excel','Import'],
+ kpis:[[tr('Companies to load'),'8','','biz'],[tr('Loaded so far'),'0','','biz'],
+       [tr('Go-live'),'01/01/2027','','biz'],[tr('Locks after posting'),tr('Yes'),'','biz']],
+ cols:[C('Number'),C('Company'),C('Warehouse'),C('As at'),n('Items'),n('Value USD'),C('Account'),C('Status'),C('')],
+ rows:[
+  ['OPEN-2027-001','Computop','Zahle main','31/12/2026','4','29,645.50','111',pill('',tr('Draft')),del()],
+  ['OPEN-2027-002','Computop','Beirut','31/12/2026','0','0.00','111',pill('',tr('Not started')),del()],
+  ['OPEN-2027-003','Computop','Van — Elie','31/12/2026','0','0.00','111',pill('',tr('Not started')),del()]]}; });
+
+/* the three "new document" forms behind the + buttons */
+F.stkinf = {t:'New stock in', s:[
+ {h:'Document', f:[{l:'Document number', v:'SIN-2026-0033', req:1},{l:'Date', v:'29/08/2026', req:1},
+  {l:'Warehouse', t:'sel', o:['Zahle main','Beirut','Van — Elie'], req:1},
+  {l:'Reason', t:'sel', o:STKREASON.stkin, req:1},
+  {l:'Account to charge the value to', t:'sel', o:['6037 · Stock differences and losses','6011 · Cost of goods sold','108 · Owner’s current account'], req:1,
+   hint:'Starts on the account Linked accounts gives for this purpose'},
+  {l:'Notes'}]}]};
+F.stkoutf = {t:'New stock out', s:[
+ {h:'Document', f:[{l:'Document number', v:'SOUT-2026-0029', req:1},{l:'Date', v:'29/08/2026', req:1},
+  {l:'Warehouse', t:'sel', o:['Zahle main','Beirut','Van — Elie'], req:1},
+  {l:'Reason', t:'sel', o:STKREASON.stkout, req:1},
+  {l:'Account to charge the value to', t:'sel', o:['6037 · Stock differences and losses','6234 · Samples and gifts','108 · Owner’s current account'], req:1,
+   hint:'Damage, samples and own use rarely belong in the same account'},
+  {l:'Notes'}]}]};
+F.stkopenf = {t:'New opening document', s:[
+ {h:'Document', f:[{l:'Document number', v:'OPEN-2027-004', req:1},
+  {l:'Company', t:'sel', o:['Computop'], req:1},
+  {l:'Warehouse', t:'sel', o:['Zahle main','Beirut','Van — Elie'], req:1},
+  {l:'As at', v:'31/12/2026', req:1, hint:'The day before go-live'},
+  {l:'Account the opening value comes from', t:'sel', o:['111 · Brought forward from last year','101 · Share capital'], req:1},
+  {l:'Load from file', t:'sel', o:['Excel','From the old system']}]}]};
+
+/* ── into the menu, under Stocking, right after Stock on hand ─────────────── */
+(function addToMenu(){
+ var g = MENU.filter(function(x){ return x.en === 'Stocking'; })[0];
+ if(!g) return;
+ var at = -1;
+ g.items.forEach(function(it, i){ if(it[0] === 'soh') at = i; });
+ var add = [
+  ['stkin','Stock in','إدخال مخزون'],
+  ['stkout','Stock out','إخراج مخزون'],
+  ['stkopen','Opening stock','مخزون افتتاحي']
+ ];
+ /* never add twice, however many times this file is appended */
+ add = add.filter(function(a){
+  return !g.items.some(function(it){ return it[0] === a[0]; });
+ });
+ if(!add.length) return;
+ g.items.splice(at > -1 ? at + 1 : g.items.length, 0, add[0], add[1], add[2]);
+})();
+
+/* ── the accounting impact of all three, computed from the same lines ────── */
+IMPACTDOCS.push('stkin','stkout','stkopen');
+
+impactDoc = (function(base){
+ return function(k){
+  if(k === 'stkin' || k === 'stkout' || k === 'stkopen'){
+   var d = STKDOC[k], t = stkTotals(k);
+   var isOut = (k === 'stkout');
+   var isOpen = (k === 'stkopen');
+   var purpose = isOpen ? 'opening_equity' : 'stock_diff';
+
+   /* the chosen account overrides the map for this one document, exactly as
+      the screen says it does - so the entry must show what was chosen */
+   var chosen = d.acc;
+   var chosenLabel = chosen +
+     ((typeof accName === 'function' && accName(chosen)) ? ' · ' + accName(chosen) : '');
+
+   var stockLine = iL('inventory',
+     isOut ? 'Goods leaving the warehouse' : 'Goods arriving in the warehouse, at cost',
+     '', isOut ? 0 : t.value, isOut ? t.value : 0);
+
+   var otherLine = {
+    p: purpose,
+    why: isOpen ? 'The value the company starts with'
+       : (isOut ? 'Where the value of the goods went'
+                : 'Where the value of the goods came from'),
+    party: '',
+    dr: isOut ? t.value : 0,
+    cr: isOut ? 0 : t.value,
+    override: chosenLabel
+   };
+
+   return {
+    title: isOpen ? 'Opening stock' : (isOut ? 'Stock out' : 'Stock in'),
+    no: d.no, date: d.date, cur: d.cur, rate: d.rate,
+    voucher: d.voucher, back: k, live: true,
+    lines: isOut ? [otherLine, stockLine] : [stockLine, otherLine]
+   };
+  }
+  return base(k);
+ };
+})(impactDoc);
+
+/* The impact table names the account from the purpose map. On these three the
+   user may have overridden it, so LA() has to answer with what was actually
+   chosen or the screen would show one account and the ledger another. */
+LA = (function(base){
+ return function(p){
+  var k = IMPACTOF;
+  if((k === 'stkin' || k === 'stkout' || k === 'stkopen') &&
+     (p === 'stock_diff' || p === 'opening_equity')){
+   var c = STKDOC[k].acc;
+   var nm = (typeof accName === 'function') ? accName(c) : '';
+   return c + (nm ? ' · ' + nm : '');
+  }
+  return base(p);
+ };
+})(LA);
+
+/* ── CR-072: the login window ────────────────────────────────────────────────
+   George: "define specific time that users can login to the system".
+
+   Trend cannot do this. Its tblUser holds userId, userName, userPassword,
+   isAdmin, userTypeId, safeId, salesManId, storeId and nothing else - there is
+   no time column anywhere on the user. So this is new, and the defaults below
+   are proposals for him to correct, not decisions taken on his behalf.
+
+   Three things this has to get right to be worth having:
+     - the clock is the SERVER's, never the device's, or changing the tablet
+       clock defeats it;
+     - somebody already signed in when the window closes is warned and allowed
+       to finish the document in front of them, not cut off mid-invoice;
+     - the owner is never locked out of his own system.
+   ────────────────────────────────────────────────────────────────────────── */
+(function addLoginWindow(){
+ var acc = (F.user.s || []).filter(function(s){ return s.h === 'Access'; })[0];
+ if(!acc) return;
+ if(acc.f.some(function(f){ return f.l === 'Sign-in days'; })) return;
+ acc.f.push(
+  {l:'Sign-in days', t:'sel', o:['Every day','Monday to Friday','Monday to Saturday','Custom'],
+   hint:'Server clock, not the device clock'},
+  {l:'Sign-in from', v:'08:00'},
+  {l:'Sign-in until', v:'20:00'},
+  {l:'Finish the open document after hours', t:'chk', v:1,
+   hint:'Warn and allow the current document to be saved rather than cutting the session'}
+ );
+ /* the list has to show it, or nobody can audit it */
+ var i = L.users.cols.length - 1;
+ L.users.cols.splice(i, 0, C('Sign-in window'));
+ var win = ['Any time','Mon–Fri 07:00–19:00','Mon–Sat 07:00–18:00','Mon–Sat 09:00–22:00'];
+ L.users.rows.forEach(function(r, n){ r.splice(i, 0, win[n] || 'Any time'); });
+})();
+
+/* ── translations ────────────────────────────────────────────────────────── */
+Object.assign(AR, {
+ 'Stock in':'إدخال مخزون',
+ 'Stock out':'إخراج مخزون',
+ 'Opening stock':'مخزون افتتاحي',
+ 'Goods into the warehouse with no purchase invoice behind them':'بضاعة تدخل المستودع بلا فاتورة شراء',
+ 'Goods out of the warehouse with no sales invoice behind them':'بضاعة تخرج من المستودع بلا فاتورة مبيع',
+ 'The starting quantities and values each company goes live with':'الكميات والقيم الابتدائية لكل شركة عند الانطلاق',
+ 'Goods arriving without a purchase':'بضاعة تصل بلا شراء',
+ 'Goods leaving without a sale':'بضاعة تخرج بلا بيع',
+ 'Opening quantities and values':'الكميات والقيم الافتتاحية',
+ 'Document number':'رقم المستند',
+ 'Date':'التاريخ',
+ 'Warehouse':'المستودع',
+ 'Reason':'السبب',
+ 'Currency':'العملة',
+ 'Rate stamped on this document':'سعر الصرف المثبّت على هذا المستند',
+ 'Account to charge the value to':'الحساب الذي تُحمّل عليه القيمة',
+ 'Account the opening value comes from':'الحساب الذي تأتي منه القيمة الافتتاحية',
+ 'Package':'التعبئة',
+ 'Quantity':'الكمية',
+ 'Unit cost':'كلفة الوحدة',
+ 'Value':'القيمة',
+ 'Lines':'السطور',
+ 'Value USD':'القيمة دولار',
+ 'Items':'الأصناف',
+ 'Company':'الشركة',
+ 'As at':'كما في',
+ 'Number':'الرقم',
+ 'Status':'الحالة',
+ 'Draft':'مسودة',
+ 'Not started':'لم يبدأ',
+ 'Post the document':'ترحيل المستند',
+ 'Post the opening balance':'ترحيل الرصيد الافتتاحي',
+ 'What this does to the books':'أثر هذا على الدفاتر',
+ 'New stock in':'إدخال مخزون جديد',
+ 'New stock out':'إخراج مخزون جديد',
+ 'New opening document':'مستند افتتاحي جديد',
+ 'Found at inventory count':'زيادة ظهرت في الجرد',
+ 'Returned from a customer without an invoice':'مرتجع من زبون بلا فاتورة',
+ 'Correction of a past error':'تصحيح خطأ سابق',
+ 'Goods received with no supplier document':'بضاعة وردت بلا مستند من المورد',
+ 'Damaged in the warehouse':'تلف في المستودع',
+ 'Expired':'منتهي الصلاحية',
+ 'Sample given to a customer':'عينة لزبون',
+ 'Taken for own use':'استهلاك ذاتي',
+ 'Missing at inventory count':'نقص ظهر في الجرد',
+ 'Opening balance on go-live':'رصيد افتتاحي عند الانطلاق',
+ 'Stock differences':'فروقات المخزون',
+ 'Opening balance':'الرصيد الافتتاحي',
+ 'The value the company starts with':'القيمة التي تبدأ بها الشركة',
+ 'Where the value of the goods went':'إلى أين ذهبت قيمة البضاعة',
+ 'Where the value of the goods came from':'من أين أتت قيمة البضاعة',
+ 'Companies to load':'شركات للتحميل',
+ 'Loaded so far':'حُمّلت حتى الآن',
+ 'Go-live':'الانطلاق',
+ 'Locks after posting':'يُقفل بعد الترحيل',
+ 'Sign-in window':'نافذة الدخول',
+ 'Sign-in days':'أيام الدخول',
+ 'Sign-in from':'الدخول من',
+ 'Sign-in until':'الدخول حتى',
+ 'Every day':'كل يوم',
+ 'Monday to Friday':'من الاثنين إلى الجمعة',
+ 'Monday to Saturday':'من الاثنين إلى السبت',
+ 'Custom':'مخصص',
+ 'Finish the open document after hours':'إنهاء المستند المفتوح بعد الدوام',
+ 'Normal':'عادي',
+ 'Product':'منتج',
+ 'Service':'خدمة',
+ 'Kit':'طقم',
+ 'Posted':'مُرحّل',
+ 'Yes':'نعم',
+ /* item and package names are data, and the product carries an Arabic name
+    for each - these are the Arabic names of the sample lines */
+ 'HP 250 G9 laptop':'لابتوب HP 250 G9',
+ 'A4 paper 80g':'ورق A4 قياس 80 غرام',
+ 'Solar cable 6mm':'كابل طاقة شمسية 6 مم',
+ 'Toner cartridge 12A':'خرطوشة حبر 12A',
+ 'Piece':'حبة',
+ 'Box (5 reams)':'صندوق (5 رزم)',
+ 'Roll (100m)':'لفة (100 م)',
+ 'Stock cannot appear from nothing.':'المخزون لا يظهر من العدم.',
+ 'This screen is the migration.':'هذه الشاشة هي عملية الترحيل نفسها.',
+ 'Still to confirm with George.':'بانتظار تأكيد جورج.',
+ 'The unit cost is what the system says these goods cost, not a number anyone types. Letting a user price goods on the way out is how stock losses get hidden.':'كلفة الوحدة هي ما يقوله النظام، لا رقماً يكتبه أحد. السماح بتسعير البضاعة عند الخروج هو الطريقة التي تُخفى بها خسائر المخزون.',
+ 'One opening document per warehouse per company. Once it is posted the period before go-live is locked and it cannot be edited — only corrected by a dated stock in or stock out.':'مستند افتتاحي واحد لكل مستودع في كل شركة. بعد ترحيله تُقفل الفترة السابقة للانطلاق ولا يمكن تعديله — بل تصحيحه بإدخال أو إخراج مخزون مؤرّخ.',
+ 'The cost entered here becomes the cost of these goods. It affects the value of everything already on the shelf, because the costing method is moving average.':'الكلفة المدخلة هنا تصبح كلفة هذه البضاعة، وتؤثر في قيمة كل ما هو على الرف أصلاً، لأن طريقة التكلفة هي المتوسط المتحرك.',
+ 'Every quantity that changes changes a value too, and that value has to land in an account somebody named. That is what the account field above is for: the system will not let you move stock into a void. The account it starts on is the one the Linked accounts screen gives for this purpose, and you can override it document by document.':'كل كمية تتغير تغير معها قيمة، وهذه القيمة يجب أن تستقر في حساب سمّاه أحد. هذا هو عمل حقل الحساب أعلاه: النظام لن يسمح بتحريك مخزون إلى الفراغ. والحساب الذي يبدأ به هو ما تعطيه شاشة الحسابات المرتبطة لهذا الغرض، ويمكن تجاوزه مستنداً بمستند.',
+ 'Eight companies go live on 01/01/2027, and every one of them needs its starting quantities and starting values loaded before a single invoice can be raised. The account on the right is where the other side of that value sits until the first real trading period begins.':'ثماني شركات تنطلق في 01/01/2027، وكل واحدة منها تحتاج إلى تحميل كمياتها وقيمها الابتدائية قبل إصدار أول فاتورة. الحساب المختار هو حيث يستقر الطرف الآخر من تلك القيمة حتى تبدأ أول فترة تشغيل حقيقية.',
+ '"Account to transfer charges" is read here as the account the value is transferred to. It could instead mean freight and handling charges added to the cost of the goods, which is a different feature. Asked, not assumed.':'تمت قراءة عبارة "الحساب لتحويل المصاريف" هنا على أنها الحساب الذي تُحوّل إليه القيمة. وقد تعني بدلاً من ذلك مصاريف الشحن والمناولة المُضافة إلى كلفة البضاعة، وهي ميزة مختلفة. سُئل ولم يُفترض.'
+});
+Object.keys(AR).forEach(function(k){ if(!TT[k]) TT[k] = [k, AR[k]]; });
 paint();
 </script>
 

@@ -1401,6 +1401,33 @@ footer p{max-width:64ch}
       card, on the point-of-sale tile, on the salesperson's screen, and on a printed price list.
       Anyone allowed to edit the item may change it.</p></div>
   </div>
+
+  <div class="mod">
+    <h3>Item types, including Normal <span class="tag have">Corrected</span></h3>
+    <div class="beat"><p class="beat-label">What you told us</p>
+      <p>You looked at the item type list in the prototype and said <strong>“normal also”</strong>.
+      You were right, and the reason is in your own system: Trend creates its item type list with
+      exactly two entries — <strong>Normal</strong> and <strong>Product</strong> — and makes Normal
+      the default that every item gets unless somebody changes it. So most of your catalogue is
+      type Normal, and the list we had shown you left it out.</p></div>
+    <div class="beat"><p class="beat-label">What changes</p>
+      <ul>
+        <li>The list is now <strong>Normal, Product, Service, Kit</strong>, with Normal first
+        because that is what most items are</li>
+        <li>It is a <strong>list you can edit</strong>, not four choices fixed inside the program —
+        exactly as it is in your system today, where the types live in a table. If you want a fifth
+        type next year you add it yourself</li>
+        <li>The type drives behaviour, not just a label: a <strong>Service</strong> holds no stock
+        and never appears in a stock count, and a <strong>Kit</strong> is sold as one line but
+        leaves the warehouse as its parts</li>
+      </ul></div>
+    <div class="beat"><p class="beat-label">One question back to you</p>
+      <p>In your system, what is the difference between <strong>Normal</strong> and
+      <strong>Product</strong>? The likely answer is that a Product is something you make and a
+      Normal item is something you buy and resell as it is — but your system does not say so
+      anywhere, and we would rather ask than assume. Your answer decides whether a Product is
+      simply a type or a thing with a recipe behind it.</p></div>
+  </div>
 </section>
 
 <section id="s10">
@@ -1433,6 +1460,52 @@ footer p{max-width:64ch}
       <p>It behaves like any other transfer after that: until the receiving side confirms, the value
       sits in the <strong>goods-in-transit</strong> account rather than in either warehouse, so the
       stock figure is never briefly wrong in two places at once.</p></div>
+  </div>
+
+  <div class="mod">
+    <h3>Stock in and stock out <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What you asked for</p>
+      <p>“Stock in and stock out … with account to transfer charges.” Two documents that move goods
+      into or out of a warehouse when there is <strong>no invoice behind the movement</strong>:
+      four boxes damaged, a sample given away, goods found at a count, a past mistake corrected.</p></div>
+    <div class="beat"><p class="beat-label">Why this is new rather than copied</p>
+      <p>Your current system cannot do this. Stock can only move in Trend through a purchase
+      invoice, a manufacturing invoice, a sales invoice or a transfer — and every one of those needs
+      a supplier, a customer or another warehouse. There is no way to say “this was damaged”. So
+      today the only way to correct stock is to raise a document that says something untrue, most
+      likely a purchase invoice to a supplier who never sold you anything, which then sits in that
+      supplier's balance and in your purchase reports for ever.</p></div>
+    <div class="beat"><p class="beat-label">The account, which is the important part</p>
+      <p>On a purchase invoice the other side of the entry is obvious — the supplier. On a stock in
+      there is no supplier, so <strong>somebody has to say where the value came from</strong>; on a
+      stock out, where it went. That is the account field on both screens, and it is the difference
+      between a system that stays balanced and one that quietly does not.</p>
+      <div class="tw"><table>
+        <thead><tr><th>Document</th><th>What the books do</th><th>Account it starts on</th></tr></thead>
+        <tbody>
+          <tr><td>Stock in</td><td>Stock goes up, and the value comes from the account you choose</td><td>Stock differences and losses</td></tr>
+          <tr><td>Stock out</td><td>Stock goes down, and the value is charged to the account you choose</td><td>Stock differences and losses</td></tr>
+          <tr><td>Stock out — sample</td><td>The same, charged somewhere you can see it separately</td><td>Samples and gifts</td></tr>
+        </tbody>
+      </table></div>
+      <p>The account it starts on comes from the linked-accounts screen, not from inside the
+      program, and you can change it on any single document. Damage, samples and goods taken for
+      own use rarely belong in the same account, and at the year end that difference is what your
+      accountant asks about.</p></div>
+    <div class="beat"><p class="beat-label">Two rules that protect you</p>
+      <ul>
+        <li>On the way <strong>out</strong>, the cost is what the system says these goods cost —
+        not a number anyone types. Letting a user price goods on the way out is exactly how stock
+        losses get hidden</li>
+        <li>Every one of these documents needs a <strong>reason</strong>, and the reason is on the
+        report. “Stock went down by 400 dollars” is not useful; “damaged, Beirut, by Nabil, on the
+        14th” is</li>
+      </ul></div>
+    <div class="beat"><p class="beat-label">One question back to you</p>
+      <p>We have read <strong>“account to transfer charges”</strong> as the account the value is
+      transferred to. It could instead mean the <strong>freight and handling charges</strong> that
+      get added to the cost of the goods. Those are two different features, so tell us which you
+      meant and we will build that one.</p></div>
   </div>
 </section>
 
@@ -2451,6 +2524,33 @@ footer p{max-width:64ch}
       because an average of three can mean everybody shrugged or half loved it and half hated it.</p>
       <p>The number worth acting on is always the low one.</p></div>
   </div>
+
+  <div class="mod">
+    <h3>When each user may sign in <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">What you asked for</p>
+      <p>“Define specific time that users can login to the system.” Each user gets the days and the
+      hours he is allowed to sign in — a cashier from eight to eight, an accountant on weekdays,
+      the owner at any time.</p></div>
+    <div class="beat"><p class="beat-label">Why it is worth having</p>
+      <p>Most of what goes wrong in a warehouse or a till happens when nobody is watching. A
+      sign-in window means a document cannot be raised at two in the morning by someone who should
+      have gone home at eight, and it works together with the locked accounting periods: one stops
+      work at the wrong <em>time</em>, the other stops it in the wrong <em>month</em>.</p></div>
+    <div class="beat"><p class="beat-label">Three things it has to get right</p>
+      <ul>
+        <li><strong>The clock is the server's, never the device's.</strong> If the check ran on the
+        tablet, changing the tablet clock would defeat it in ten seconds</li>
+        <li><strong>Nobody is cut off mid-invoice.</strong> Someone already working when the window
+        closes is warned and allowed to finish and save what is in front of him — the alternative
+        is lost work and a user who learns to distrust the system</li>
+        <li><strong>You cannot lock yourself out.</strong> The owner account is never restricted</li>
+      </ul></div>
+    <div class="beat"><p class="beat-label">What we assumed, for you to correct</p>
+      <p>We have built it <strong>per user</strong> rather than per role, since your salesmen and
+      your cashiers do not keep the same hours. Days and hours are both set, and the whole thing is
+      off by default so no one is restricted until you say so. Say the word if you would rather set
+      it once per role.</p></div>
+  </div>
 </section>
 
 <section id="s23">
@@ -3110,6 +3210,30 @@ footer p{max-width:64ch}
         </tbody>
       </table></div></div>
   </div>
+
+  <div class="mod">
+    <h3>Opening stock <span class="tag new">New</span></h3>
+    <div class="beat"><p class="beat-label">Why this has its own screen</p>
+      <p>On the first day of 2027 every one of your companies has to start with the quantities and
+      the values it actually holds. Until those are loaded, nothing can be tested with real
+      numbers — not a sale, not a cost, not a profit figure. Your current system has no screen for
+      this at all, which is part of why starting a new company in it is painful.</p></div>
+    <div class="beat"><p class="beat-label">How it works</p>
+      <ul>
+        <li><strong>One document per warehouse per company</strong>, dated the day before you go
+        live, loaded from Excel or read from your old database</li>
+        <li>Each line carries a quantity <em>and</em> a cost, because stock with no value is not
+        an opening balance, it is a list</li>
+        <li>The other side of the value goes to <strong>brought forward from last year</strong>, so
+        the opening entry balances like everything else</li>
+        <li>Once posted, <strong>the period before go-live is locked</strong>. After that a mistake
+        is corrected by a dated stock in or stock out, which leaves a trail, rather than by quietly
+        editing history</li>
+      </ul></div>
+    <div class="beat"><p class="beat-label">What it means for the plan</p>
+      <p>This is not a feature at the end of the list — it is the first thing each of the eight
+      companies needs, and it gates their go-live. It is scheduled early for that reason.</p></div>
+  </div>
 </section>
 
 <section id="s30">
@@ -3258,8 +3382,8 @@ footer p{max-width:64ch}
 
 <section id="s32">
   <h2><span class="num">Section 32</span>What we still need from you</h2>
-  <p class="lede">Six things. The first two change how the database is built, so they are the
-  urgent ones.</p>
+  <p class="lede">Eight things. The first two change how the database is built, so they are the
+  urgent ones. The last two are new, from your messages this week.</p>
 
   <div class="tw"><table>
     <thead><tr><th>#</th><th>What we need</th><th>Why it matters</th></tr></thead>
@@ -3270,6 +3394,9 @@ footer p{max-width:64ch}
       <tr><td class="num">4</td><td><strong>Which business needs the restaurant screen</strong>, and is it needed at the start or later?</td><td>It is a second application sharing the same accounting, so it is planned separately</td></tr>
       <tr><td class="num">5</td><td><strong>How you handle cheques today</strong> — do you sometimes pass a customer's cheque to a supplier, and what happens in your books when one bounces?</td><td>So we build it the way you actually work, not the way a textbook says</td></tr>
       <tr><td class="num">6</td><td><strong>What goes on a payslip</strong> in your companies — and do you need attendance and leave, or only the salary calculation?</td><td>“Simple payroll” means different things to different people</td></tr>
+    
+      <tr><td class="num">7</td><td><strong>What is the difference between a Normal item and a Product</strong> in your system? Is a Product something you manufacture?</td><td>It decides whether item type is only a label or something with a recipe behind it</td></tr>
+      <tr><td class="num">8</td><td><strong>“Account to transfer charges”</strong> on the stock screens — do you mean the account the value of the goods is transferred to, or freight and handling charges added to their cost?</td><td>Two different features. We have built the first and will change it if you meant the second</td></tr>
     </tbody>
   </table></div>
 
