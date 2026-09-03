@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Trend — Phase 1 Scope</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+<style>
+:root{
+  --paper:#FBFAF8; --paper-2:#F3F2EE; --paper-3:#EAE9E4;
+  --ink:#161A1F; --ink-2:#3E464E; --ink-3:#6B7480;
+  --rule:#DEDDD7; --rule-2:#C9C8C1;
+  --accent:#15604E; --accent-soft:#E4EFE9; --accent-ink:#0E4438;
+  --sales:#1F6FB2;  --sales-soft:#E6F0F8;
+  --proc:#8A5A1F;   --proc-soft:#F7EFE3;
+  --fin:#15604E;    --fin-soft:#E4EFE9;
+  --stock:#6B3FA0;  --stock-soft:#EFE8F7;
+  --brand-navy:#11395D; --brand-green:#4D913A;
+  --warn:#8A6410;   --warn-soft:#FBF3E2; --warn-rule:#E8D9B0;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --serif:"Source Serif 4",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#15171A; --paper-2:#1D2024; --paper-3:#262A2F;
+    --ink:#EDEBE6; --ink-2:#BCB9B2; --ink-3:#8B8880;
+    --rule:#32363B; --rule-2:#454A50;
+    --accent:#4FB79C; --accent-soft:#17322B; --accent-ink:#7FD3BC;
+    --sales:#63A8DC;  --sales-soft:#152633;
+    --proc:#C99A54;   --proc-soft:#2E2416;
+    --fin:#4FB79C;    --fin-soft:#17322B;
+    --stock:#A987D6;  --stock-soft:#241C33;
+    --brand-navy:#8FBEE6; --brand-green:#86BB45;
+    --warn:#D5AA55;   --warn-soft:#2C2415; --warn-rule:#4A3D1E;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:16px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{max-width:74rem;margin:0 auto;padding:0 var(--s5)}
+
+/* ── masthead ─────────────────────────────────────────────── */
+.mast{border-bottom:1px solid var(--rule);background:var(--paper-2)}
+.mast .wrap{padding-top:var(--s7);padding-bottom:var(--s6)}
+.eyebrow{font:500 .72rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 var(--s4)}
+h1{font:600 clamp(2rem,5vw,3rem)/1.1 var(--serif);letter-spacing:-.02em;margin:0 0 var(--s3)}
+.lede{font-size:clamp(1.05rem,2.2vw,1.2rem);color:var(--ink-2);max-width:52ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:var(--s5);margin-top:var(--s5);
+  font:.85rem/1.4 var(--sans);color:var(--ink-3)}
+.meta b{display:block;color:var(--ink);font-weight:600}
+
+/* ── nav ──────────────────────────────────────────────────── */
+.toc{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--paper) 92%,transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.toc .wrap{display:flex;gap:var(--s5);overflow-x:auto;padding-top:var(--s3);padding-bottom:var(--s3);
+  scrollbar-width:none}
+.toc .wrap::-webkit-scrollbar{display:none}
+.toc a{color:var(--ink-2);text-decoration:none;font-size:.85rem;white-space:nowrap;
+  padding-bottom:2px;border-bottom:2px solid transparent}
+.toc a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+
+section{padding:var(--s8) 0;border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:0}
+h2{font:600 clamp(1.4rem,3vw,1.9rem)/1.2 var(--serif);letter-spacing:-.01em;margin:0 0 var(--s3)}
+h3{font:600 1.1rem/1.3 var(--sans);margin:var(--s6) 0 var(--s3)}
+.sub{color:var(--ink-2);max-width:62ch;margin:0 0 var(--s5)}
+p{max-width:66ch}
+.num{font:500 .72rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);display:block;margin-bottom:var(--s2)}
+
+/* ── cards ────────────────────────────────────────────────── */
+.grid{display:grid;gap:var(--s4)}
+.g2{grid-template-columns:repeat(auto-fit,minmax(19rem,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}
+.card{background:var(--paper-2);border:1px solid var(--rule);border-radius:10px;padding:var(--s5)}
+.card h4{margin:0 0 var(--s2);font-size:1rem;font-weight:600}
+.card p{margin:0;font-size:.92rem;color:var(--ink-2)}
+
+/* module cards — four equals */
+.mod{background:var(--paper-2);border:1px solid var(--rule);border-radius:12px;
+  padding:var(--s5);border-top:4px solid var(--c);display:flex;flex-direction:column;gap:var(--s3)}
+.mod .tag{font:500 .68rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--c)}
+.mod h3{margin:0;font:600 1.15rem/1.25 var(--sans)}
+.mod .role{font-size:.9rem;color:var(--ink-2);margin:0}
+.mod ul{margin:var(--s2) 0 0;padding-left:1.1rem;font-size:.92rem;color:var(--ink-2)}
+.mod ul li{margin-bottom:var(--s1)}
+.mod .own{margin-top:auto;padding-top:var(--s3);border-top:1px solid var(--rule);
+  font:.78rem/1.4 var(--mono);color:var(--ink-3)}
+.m-sales{--c:var(--sales)} .m-proc{--c:var(--proc)}
+.m-fin{--c:var(--fin)}     .m-stock{--c:var(--stock)}
+
+/* ── pills ────────────────────────────────────────────────── */
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:3px 10px;
+  font:500 .72rem/1.5 var(--sans);border:1px solid transparent;white-space:nowrap}
+.p-in{background:var(--accent-soft);color:var(--accent-ink);border-color:color-mix(in srgb,var(--accent) 30%,transparent)}
+.p-wait{background:var(--warn-soft);color:var(--warn);border-color:var(--warn-rule)}
+.p-later{background:var(--paper-3);color:var(--ink-3);border-color:var(--rule-2)}
+
+/* ── callout ──────────────────────────────────────────────── */
+.note{border-left:3px solid var(--accent);background:var(--accent-soft);
+  padding:var(--s4) var(--s5);border-radius:0 8px 8px 0;margin:var(--s5) 0}
+.note.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.note h4{margin:0 0 var(--s2);font-size:.98rem;font-weight:600}
+.note p{margin:0;font-size:.93rem;color:var(--ink-2)}
+.note p+p{margin-top:var(--s2)}
+
+/* ── table ────────────────────────────────────────────────── */
+.tw{overflow-x:auto;border:1px solid var(--rule);border-radius:10px;margin:var(--s4) 0}
+table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.92rem}
+th,td{text-align:left;padding:var(--s3) var(--s4);border-bottom:1px solid var(--rule);vertical-align:top}
+th{background:var(--paper-2);font-weight:600;font-size:.82rem;letter-spacing:.02em;
+  text-transform:uppercase;color:var(--ink-3)}
+tr:last-child td{border-bottom:0}
+
+/* ── figures ──────────────────────────────────────────────── */
+figure{margin:var(--s5) 0}
+figure svg{display:block;width:100%;height:auto;background:var(--paper-2);
+  border:1px solid var(--rule);border-radius:10px;padding:var(--s4)}
+figcaption{font-size:.85rem;color:var(--ink-3);margin-top:var(--s2);text-align:center}
+.svg-box{fill:var(--paper);stroke:var(--rule-2);stroke-width:1.5}
+.svg-t{font:600 13px var(--sans);fill:var(--ink)}
+.svg-s{font:400 11px var(--sans);fill:var(--ink-3)}
+.svg-line{stroke:var(--rule-2);stroke-width:1.5;fill:none}
+.svg-lbl{font:500 10px var(--mono);fill:var(--ink-3);letter-spacing:.04em}
+
+footer{padding:var(--s7) 0;color:var(--ink-3);font-size:.85rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:var(--s5);justify-content:space-between}
+@media (max-width:640px){
+  section{padding:var(--s7) 0}
+  .wrap{padding:0 var(--s4)}
+}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--s4)"><svg viewBox="0 0 43 53" width="24" height="30" class="tlogo" aria-hidden="true"><defs><linearGradient id="tgN" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0A4067"/><stop offset="1" stop-color="#12204F"/></linearGradient><linearGradient id="tgT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12788E"/><stop offset=".55" stop-color="#0B4B71"/><stop offset="1" stop-color="#11244E"/></linearGradient><linearGradient id="tgG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8DC637"/><stop offset="1" stop-color="#358A2C"/></linearGradient></defs><path d="M0 17h20v35h-7V25H0z" fill="url(#tgN)"/><rect x="23" y="10" width="7" height="42" fill="url(#tgT)"/><path d="M31 18 37 0 43 18h-3v34h-6V18z" fill="url(#tgG)"/></svg><p class="eyebrow" style="margin:0"><span style="color:var(--brand-navy);font-size:1.05rem;font-weight:600;letter-spacing:-.01em;text-transform:none;font-family:var(--sans)">Trend</span><span style="color:var(--brand-green);margin-left:8px">Business solutions</span><span style="margin-left:10px">· Phase 1</span></p></div>
+    <h1>What we build first</h1>
+    <p class="lede">The foundation the whole system stands on, and the first four business modules —
+      Sales, Procurement, Finance &amp; Accounting, and Stock. In plain language, so you can tell us
+      what is missing before it is built.</p>
+    <div class="meta">
+      <div><b>Prepared for</b>George · Computop</div>
+      <div><b>Replaces</b>Your current system, across eight companies</div>
+      <div><b>Target go-live</b>01/01/2027</div>
+      <div><b>Document</b>Phase 1 scope · v1.0</div>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#why">Why phases</a>
+    <a href="#foundation">The foundation</a>
+    <a href="#modules">Four modules</a>
+    <a href="#detail">What is in each</a>
+    <a href="#stock">Stock Movement</a>
+    <a href="#boundaries">Boundaries</a>
+    <a href="#integrate">Integration</a>
+    <a href="#pending">Needs your decision</a>
+    <a href="#after">After Phase 1</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ── 1 ─────────────────────────────────────────────────── -->
+<section id="why">
+  <span class="num">Section 1</span>
+  <h2>Why the system is built in phases</h2>
+  <p class="sub">Eight companies move onto this system. Building everything at once and switching it
+    all on in one day is how ERP projects fail.</p>
+
+  <div class="grid g3">
+    <div class="card">
+      <h4>You see it early</h4>
+      <p>Each phase ends with something you can open and use. Changing a screen you have seen costs
+        an afternoon. Changing one already carrying a year of data costs a great deal more.</p>
+    </div>
+    <div class="card">
+      <h4>The foundation is built once</h4>
+      <p>Login, companies, users, permissions and the safety layer underneath are built before any
+        business screen. Every module afterwards inherits them rather than reinventing them.</p>
+    </div>
+    <div class="card">
+      <h4>Your companies move one at a time</h4>
+      <p>As you proposed. One company goes live, is reconciled, and only then does the next begin.
+        A problem affects one business, not eight.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <h4>Phase 1 is the working core of the business</h4>
+    <p>By the end of it you can sell, buy, take and make payments, see your chart of accounts and a
+      statement for any account, and control stock — with users, roles and permissions around all of
+      it. That is a system a company can run on.</p>
+  </div>
+</section>
+
+<!-- ── 2 ─────────────────────────────────────────────────── -->
+<section id="foundation">
+  <span class="num">Section 2</span>
+  <h2>The foundation, before any module</h2>
+  <p class="sub">None of this is visible as a feature, and all of it decides whether the system is
+    still safe to change in three years.</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <h4>Getting in — securely</h4>
+      <p><b>Login and authentication</b> · registration and onboarding for a new company ·
+        password security · protection against repeated guessing · optional two-step login for
+        finance and administrator accounts.</p>
+    </div>
+    <div class="card">
+      <h4>Setting up your organisation</h4>
+      <p><b>Company setup</b> · branches · currencies and rates · number series for your documents ·
+        the settings that make the system yours rather than generic.</p>
+    </div>
+    <div class="card">
+      <h4>Administration</h4>
+      <p><b>Users, roles and permissions</b> · who may see cost prices, who may give a discount,
+        who may post · company settings · the sign-in window per user you asked for.</p>
+    </div>
+    <div class="card">
+      <h4>The part you never see</h4>
+      <p><b>Separation between companies</b> · a full audit trail of who did what and when ·
+        error handling · automated testing · secure configuration. This is the layer that makes
+        everything above it trustworthy.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <h4>Each business gets its own separate database</h4>
+    <p>Not a shared one with a label on each row. When you resell this system, two customers who
+      compete with each other are not sitting in the same tables — their data is in different
+      databases entirely. A query for one business physically cannot reach another's.</p>
+    <p>It also means a single company can be backed up, restored or moved on its own, which is what
+      makes migrating your eight companies one at a time practical.</p>
+  </div>
+</section>
+
+<!-- ── 3 ─────────────────────────────────────────────────── -->
+<section id="modules">
+  <span class="num">Section 3</span>
+  <h2>Four modules, each standing on its own</h2>
+  <p class="sub">These are four separate parts of the system with their own screens, their own rules
+    and their own boundaries. They talk to each other — none of them is inside another.</p>
+
+  <div class="grid g4" style="margin-top:var(--s5)">
+    <div class="mod m-sales">
+      <span class="tag">Module 1</span>
+      <h3>Sales</h3>
+      <p class="role">Everything that goes out to a customer and the money that comes back.</p>
+      <ul><li>Sales Invoice</li><li>Sales Return</li><li>Receipt Voucher</li></ul>
+      <div class="own">Owns: customers' documents, prices, what was sold</div>
+    </div>
+    <div class="mod m-proc">
+      <span class="tag">Module 2</span>
+      <h3>Procurement</h3>
+      <p class="role">Everything that comes in from a supplier and the money that goes out.</p>
+      <ul><li>Purchase Invoice</li><li>Purchase Return</li><li>Payment Voucher</li></ul>
+      <div class="own">Owns: suppliers' documents, purchase cost, what was bought</div>
+    </div>
+    <div class="mod m-fin">
+      <span class="tag">Module 3</span>
+      <h3>Finance &amp; Accounting</h3>
+      <p class="role">The books. Where every transaction in the business ends up as a number.</p>
+      <ul><li>Chart of Accounts</li><li>Statement of Account</li></ul>
+      <div class="own">Owns: accounts, balances, the ledger</div>
+    </div>
+    <div class="mod m-stock">
+      <span class="tag">Module 4</span>
+      <h3>Stock</h3>
+      <p class="role">What you hold, where it is, what it is worth, and every movement of it.</p>
+      <ul><li>Inventory</li><li>Stock Movement</li><li>Stock Balance</li><li>Stock History</li></ul>
+      <div class="own">Owns: quantities, warehouses, stock value</div>
+    </div>
+  </div>
+
+  <div class="note">
+    <h4>Finance &amp; Accounting and Stock are not the same thing</h4>
+    <p>They are often confused because stock has a value and that value appears in the accounts.
+      But <b>Stock owns the quantities</b> — how many boxes are in Zahle — and <b>Finance owns the
+      money</b>. They exchange information; neither lives inside the other.</p>
+    <p>Keeping them apart is what lets you change how stock is counted without touching the books,
+      and change the chart of accounts without touching the warehouse.</p>
+  </div>
+</section>
+
+<!-- ── 4 ─────────────────────────────────────────────────── -->
+<section id="detail">
+  <span class="num">Section 4</span>
+  <h2>What is in each module</h2>
+  <p class="sub">Everything below is Phase 1. Where something depends on a decision that has not
+    been made yet, it says so rather than pretending.</p>
+
+  <h3 style="color:var(--sales)">Sales</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Screen</th><th>What it does</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><b>Sales Invoice</b></td><td>Sell to a customer. Items, quantities, prices, discount, VAT, totals in dollars and pounds. Print or send.</td><td><span class="pill p-in">Phase 1</span></td></tr>
+      <tr><td><b>Sales Return</b></td><td>Goods come back. Linked to the original invoice so the return can never exceed what was sold.</td><td><span class="pill p-in">Phase 1</span></td></tr>
+      <tr><td><b>Receipt Voucher</b></td><td>Money received from a customer, allocated against named invoices rather than dropped on a balance.</td><td><span class="pill p-in">Phase 1</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 style="color:var(--proc)">Procurement</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Screen</th><th>What it does</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><b>Purchase Invoice</b></td><td>Buy from a supplier. Goods arrive, cost is recorded, the supplier is owed.</td><td><span class="pill p-in">Phase 1</span></td></tr>
+      <tr><td><b>Purchase Return</b></td><td>Goods go back to the supplier, linked to the original purchase.</td><td><span class="pill p-in">Phase 1</span></td></tr>
+      <tr><td><b>Payment Voucher</b></td><td>Money paid to a supplier, allocated against named bills.</td><td><span class="pill p-in">Phase 1</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 style="color:var(--fin)">Finance &amp; Accounting</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Screen</th><th>What it does</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><b>Chart of Accounts</b></td><td>Your account tree — assets, liabilities, income, expenses. Add, edit, organise. Each business gets its own; it is not fixed inside the program.</td><td><span class="pill p-wait">Needs your chart</span></td></tr>
+      <tr><td><b>Statement of Account</b></td><td>Every movement on any account, between two dates, with a running balance. The screen your accountant lives in.</td><td><span class="pill p-in">Phase 1</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 style="color:var(--stock)">Stock</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Screen</th><th>What it does</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><b>Inventory</b></td><td>Your items — codes, names in both languages, units, packaging, categories.</td><td><span class="pill p-in">Phase 1</span></td></tr>
+      <tr><td><b>Stock Movement</b></td><td>One screen for Opening Stock, Stock In and Stock Out. See section 5.</td><td><span class="pill p-in">Phase 1</span></td></tr>
+      <tr><td><b>Stock Balance</b></td><td>What is on hand right now, by item and by warehouse.</td><td><span class="pill p-in">Phase 1</span></td></tr>
+      <tr><td><b>Stock History</b></td><td>Every movement of an item, in order, with the document behind each one.</td><td><span class="pill p-in">Phase 1</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ── 5 ─────────────────────────────────────────────────── -->
+<section id="stock">
+  <span class="num">Section 5</span>
+  <h2>Stock Movement — one screen, three kinds of movement</h2>
+  <p class="sub">You asked whether Opening Stock, Stock In and Stock Out could be managed from one
+    place. They can, and they should — but they stay three distinct transactions underneath.</p>
+
+  <figure>
+    <svg viewBox="0 0 900 300" role="img" aria-label="One Stock Movement screen with three tabs — Opening Stock, Stock In, Stock Out — each remaining a separate transaction type with its own rules, all feeding one stock history">
+      <rect class="svg-box" x="20" y="20" width="860" height="80" rx="8"/>
+      <text class="svg-t" x="40" y="52">One screen — Stock Movement</text>
+      <text class="svg-s" x="40" y="74">Same layout, same buttons, same place in the menu. You switch with a tab.</text>
+
+      <g>
+        <rect class="svg-box" x="40" y="130" width="250" height="90" rx="8" style="stroke:#6B3FA0"/>
+        <text class="svg-t" x="60" y="158">Opening Stock</text>
+        <text class="svg-s" x="60" y="180">What you start with on day one</text>
+        <text class="svg-s" x="60" y="198">Once per warehouse · then locked</text>
+      </g>
+      <g>
+        <rect class="svg-box" x="325" y="130" width="250" height="90" rx="8" style="stroke:#6B3FA0"/>
+        <text class="svg-t" x="345" y="158">Stock In</text>
+        <text class="svg-s" x="345" y="180">Goods arrive with no purchase</text>
+        <text class="svg-s" x="345" y="198">Found at count · correction</text>
+      </g>
+      <g>
+        <rect class="svg-box" x="610" y="130" width="250" height="90" rx="8" style="stroke:#6B3FA0"/>
+        <text class="svg-t" x="630" y="158">Stock Out</text>
+        <text class="svg-s" x="630" y="180">Goods leave with no sale</text>
+        <text class="svg-s" x="630" y="198">Damage · sample · own use</text>
+      </g>
+
+      <path class="svg-line" d="M165 100 L165 130"/>
+      <path class="svg-line" d="M450 100 L450 130"/>
+      <path class="svg-line" d="M735 100 L735 130"/>
+
+      <path class="svg-line" d="M165 220 L165 250 L735 250 L735 220"/>
+      <path class="svg-line" d="M450 220 L450 250"/>
+      <rect class="svg-box" x="330" y="252" width="240" height="34" rx="6" style="stroke:#6B3FA0"/>
+      <text class="svg-t" x="450" y="274" text-anchor="middle">One Stock History</text>
+    </svg>
+    <figcaption>Convenient on the surface. Three separate transaction types underneath.</figcaption>
+  </figure>
+
+  <div class="grid g3">
+    <div class="card">
+      <h4>Why one screen</h4>
+      <p>Your storekeeper does one job — correcting what the shelf says. Making him find three
+        different menu items to do it is the kind of design that gets worked around.</p>
+    </div>
+    <div class="card">
+      <h4>Why three transactions</h4>
+      <p>They are not the same event. An opening balance is once and then locked. Damage is a loss.
+        A correction is neither. If all three were one record, no report could ever tell them apart.</p>
+    </div>
+    <div class="card">
+      <h4>Every movement has a reason</h4>
+      <p>"Stock went down by $400" is not useful. "Damaged, Beirut, by Nabil, on the 14th" is —
+        and it is what the report shows.</p>
+    </div>
+  </div>
+
+  <div class="note warn">
+    <h4>One question still open on these screens</h4>
+    <p>You wrote <i>"with account to transfer charges."</i> We have read that as <b>the account the
+      value of the goods is transferred to</b> — so when four boxes are damaged, you choose where
+      that loss lands in the accounts.</p>
+    <p>It could instead mean <b>freight and handling charges added to the cost of the goods</b>.
+      Those are two different features. Tell us which you meant and we build that one.</p>
+  </div>
+</section>
+
+<!-- ── 6 ─────────────────────────────────────────────────── -->
+<section id="boundaries">
+  <span class="num">Section 6</span>
+  <h2>Where one module ends and the next begins</h2>
+  <p class="sub">Each module owns its own information. No module reaches into another's.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Module</th><th>Owns</th><th>Never owns</th></tr></thead>
+    <tbody>
+      <tr><td><b style="color:var(--sales)">Sales</b></td><td>Customer documents, selling prices, what left on which invoice</td><td>The account those sales land in · the stock quantity itself</td></tr>
+      <tr><td><b style="color:var(--proc)">Procurement</b></td><td>Supplier documents, purchase cost, what arrived on which bill</td><td>The stock valuation method · the supplier's account balance</td></tr>
+      <tr><td><b style="color:var(--fin)">Finance &amp; Accounting</b></td><td>The account tree, balances, the ledger, the statement</td><td>How many boxes are on the shelf · what a customer was quoted</td></tr>
+      <tr><td><b style="color:var(--stock)">Stock</b></td><td>Quantities, warehouses, movements, stock value</td><td>Which account a stock loss is charged to · a customer's credit limit</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <h4>Why this matters to you, not just to us</h4>
+    <p>It is what makes the next change cheap. Adding Point of Sale later touches Sales and Stock —
+      not Procurement, not the chart of accounts. Adding Payroll touches Finance only.
+      <b>A new module should not require opening files all over the system.</b></p>
+  </div>
+</section>
+
+<!-- ── 7 ─────────────────────────────────────────────────── -->
+<section id="integrate">
+  <span class="num">Section 7</span>
+  <h2>They work together without becoming one thing</h2>
+  <p class="sub">Integration means modules exchange agreed information at agreed points. It does not
+    mean merging them.</p>
+
+  <figure>
+    <svg viewBox="0 0 900 340" role="img" aria-label="Sales, Procurement and Stock each send information to Finance and Accounting through defined contracts; Sales and Procurement also exchange stock movements with Stock. No module reaches inside another.">
+      <rect class="svg-box" x="30" y="30" width="220" height="70" rx="8" style="stroke:#1F6FB2"/>
+      <text class="svg-t" x="140" y="60" text-anchor="middle">Sales</text>
+      <text class="svg-s" x="140" y="80" text-anchor="middle">invoice · return · receipt</text>
+
+      <rect class="svg-box" x="650" y="30" width="220" height="70" rx="8" style="stroke:#8A5A1F"/>
+      <text class="svg-t" x="760" y="60" text-anchor="middle">Procurement</text>
+      <text class="svg-s" x="760" y="80" text-anchor="middle">invoice · return · payment</text>
+
+      <rect class="svg-box" x="340" y="30" width="220" height="70" rx="8" style="stroke:#6B3FA0"/>
+      <text class="svg-t" x="450" y="60" text-anchor="middle">Stock</text>
+      <text class="svg-s" x="450" y="80" text-anchor="middle">quantities · movements</text>
+
+      <rect class="svg-box" x="290" y="240" width="320" height="76" rx="8" style="stroke:#15604E"/>
+      <text class="svg-t" x="450" y="272" text-anchor="middle">Finance &amp; Accounting</text>
+      <text class="svg-s" x="450" y="294" text-anchor="middle">accounts · balances · statement</text>
+
+      <path class="svg-line" d="M140 100 L140 200 L300 240"/>
+      <path class="svg-line" d="M760 100 L760 200 L600 240"/>
+      <path class="svg-line" d="M450 100 L450 240"/>
+      <path class="svg-line" d="M250 65 L340 65"/>
+      <path class="svg-line" d="M560 65 L650 65"/>
+
+      <text class="svg-lbl" x="150" y="185">WHAT WAS SOLD</text>
+      <text class="svg-lbl" x="640" y="185">WHAT WAS BOUGHT</text>
+      <text class="svg-lbl" x="462" y="175">VALUE OF GOODS MOVED</text>
+      <text class="svg-lbl" x="262" y="55">GOODS OUT</text>
+      <text class="svg-lbl" x="572" y="55">GOODS IN</text>
+    </svg>
+    <figcaption>Each arrow is an agreed hand-over. Nothing reaches inside anything else.</figcaption>
+  </figure>
+
+  <div class="grid g2">
+    <div class="card">
+      <h4>What a hand-over looks like</h4>
+      <p>Sales finishes an invoice and says: <i>"this was sold, to this customer, for this much,
+        and these goods left the warehouse."</i> Stock reduces the quantity. Finance records the
+        money. Neither of them had to know how a sales invoice works.</p>
+    </div>
+    <div class="card">
+      <h4>What it never looks like</h4>
+      <p>Sales writing directly into the accounts, or Stock changing a customer's balance.
+        Every module that did that would grow its own private version of the accounting rules —
+        and removing that later is not a tidy-up, it is a rebuild.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 8 ─────────────────────────────────────────────────── -->
+<section id="pending">
+  <span class="num">Section 8</span>
+  <h2>What still needs a decision from you</h2>
+  <p class="sub">These are not delays we are hiding. Each one changes how something is built, and
+    guessing would cost far more than asking.</p>
+
+  <div class="note warn">
+    <h4>The automatic bookkeeping is designed but not yet approved</h4>
+    <p>Every screen in Phase 1 will be built. But <b>the part that turns a sales invoice into
+      accounting entries automatically</b> — which account, in which direction, for which amount —
+      is written down and waiting for a qualified accountant to review and sign it.</p>
+    <p><b>Until that signature, we do not code a single posting rule.</b> A wrong accounting rule
+      is invisible: it ships, the reports look right, and an auditor finds it a year later across
+      eight companies. This is the one place where being slow is the cheap option.</p>
+  </div>
+
+  <div class="tw"><table>
+    <thead><tr><th>What we need</th><th>Why it matters</th><th>Who</th></tr></thead>
+    <tbody>
+      <tr><td><b>An accountant to review the posting rules</b></td><td>Nothing that writes to the accounts can be built until this is signed. It is the single biggest gate on the project</td><td>A Lebanese accountant</td></tr>
+      <tr><td><b>Your real chart of accounts</b>, exported from your current system</td><td>The Chart of Accounts screen and the migration are both built against it. Without it we would be inventing your accounts</td><td>You</td></tr>
+      <tr><td><b>What a cost centre means to you</b> — branch, department, vehicle, project?</td><td>It becomes a column on every transaction. Decided now it costs almost nothing; added later it can never be filled in for past data</td><td>You</td></tr>
+      <tr><td><b>Your VAT rules, in writing</b></td><td>The only item on this list where being wrong has a legal cost rather than a commercial one</td><td>Your accountant</td></tr>
+      <tr><td><b>"Account to transfer charges"</b> — which meaning?</td><td>See section 5. Two different features</td><td>You</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <h4>What happens meanwhile</h4>
+    <p>The foundation, the screens, the module structure and the safety layer are all being built
+      now — none of them wait on the answers above. The work that is gated is specifically the
+      automatic accounting behind the documents, and the chart itself.</p>
+  </div>
+</section>
+
+<!-- ── 9 ─────────────────────────────────────────────────── -->
+<section id="after">
+  <span class="num">Section 9</span>
+  <h2>After Phase 1</h2>
+  <p class="sub">Listed for shape, not committed to dates. Each becomes a real plan when Phase 1
+    is accepted and the questions above are answered.</p>
+
+  <div class="grid g3">
+    <div class="card">
+      <h4>Point of Sale <span class="pill p-later">Later</span></h4>
+      <p>The till screen, shifts, cash drawer, and offline selling when the internet is down.
+        Uses the same Sales and Stock modules — not a second product.</p>
+    </div>
+    <div class="card">
+      <h4>Warehouse depth <span class="pill p-later">Later</span></h4>
+      <p>Transfers between warehouses, inventory counts with approval, reorder lists, cost layers
+        and valuation reporting.</p>
+    </div>
+    <div class="card">
+      <h4>Accounting depth <span class="pill p-later">Later</span></h4>
+      <p>Journal vouchers, trial balance, aging, period close and year end, VAT returns —
+        all downstream of the signed posting rules.</p>
+    </div>
+    <div class="card">
+      <h4>Migration <span class="pill p-later">Later</span></h4>
+      <p>Your eight companies, one at a time, each reconciled against your current system before it goes live.</p>
+    </div>
+    <div class="card">
+      <h4>Desktop and offline <span class="pill p-later">Later</span></h4>
+      <p>The installed version for tills and vans, sharing the same logic as the web — one product,
+        two ways in.</p>
+    </div>
+    <div class="card">
+      <h4>Selling it on <span class="pill p-later">Later</span></h4>
+      <p>The owner console for managing your own subscribers, since you intend to resell this.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Trend · Phase 1 scope · prepared for George</span>
+    <span>Prepared by Abdullah Al Mamun</span>
+  </div>
+</footer>
+
+</body>
+</html>

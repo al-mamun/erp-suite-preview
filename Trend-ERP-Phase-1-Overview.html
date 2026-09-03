@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trend ERP — Phase 1 Overview</title>
+<style>
+:root{
+  --navy:#12204F;--navy2:#0A4067;--teal:#0B4B71;--teal2:#12788E;--green:#358A2C;--green2:#8DC637;
+  --wordmark:#11395D;--tagline:#4D913A;
+  --bg:#F4F6F9;--surface:#fff;--ink:#1B2540;--muted:#5A6472;--faint:#8A93A2;--line:#E4E8EE;
+  --confirmed:#2E7D32;--confirmed-bg:#E7F4E8;--platform:#12788E;--platform-bg:#E1F0F3;
+  --planned:#B26A00;--planned-bg:#FBEFD9;--future:#5A6472;--future-bg:#EEF1F5;--open:#C0392B;--open-bg:#FBE7E4;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.65 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:920px;margin:0 auto;padding:0 22px}
+h1,h2,h3{line-height:1.25;letter-spacing:-.3px}
+a{color:var(--teal2)}
+/* header */
+header.top{background:linear-gradient(135deg,var(--navy),#0c1836 70%);color:#eaf0fa;padding:44px 0 40px;border-bottom:4px solid var(--green2)}
+.brandrow{display:flex;align-items:center;gap:13px;margin-bottom:26px}
+.brandrow .bt b{font-size:21px;color:#fff;display:block;line-height:1}
+.brandrow .bt span{font-size:11px;letter-spacing:1.5px;color:var(--green2);text-transform:uppercase}
+header.top .eyebrow{font-size:12.5px;letter-spacing:2px;text-transform:uppercase;color:var(--green2);font-weight:600}
+header.top h1{font-size:34px;margin:8px 0 12px;color:#fff}
+header.top p{font-size:16.5px;color:#c4d0e6;max-width:64ch;margin:0}
+header.top .meta{margin-top:22px;display:flex;gap:22px;flex-wrap:wrap;font-size:13px;color:#9fb0cf}
+header.top .meta b{color:#dce6f6;font-weight:600}
+/* legend */
+.legend{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:-26px 0 30px;
+  box-shadow:0 8px 30px rgba(16,24,40,.09);position:relative;z-index:2}
+.legend h4{margin:0 0 10px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--faint)}
+.legend .row{display:flex;gap:9px 22px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:3px 11px;border-radius:999px}
+.tag .d{width:7px;height:7px;border-radius:50%;background:currentColor}
+.tag.confirmed{color:var(--confirmed);background:var(--confirmed-bg)}
+.tag.platform{color:var(--platform);background:var(--platform-bg)}
+.tag.planned{color:var(--planned);background:var(--planned-bg)}
+.tag.future{color:var(--future);background:var(--future-bg)}
+.tag.open{color:var(--open);background:var(--open-bg)}
+/* toc */
+.toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px;margin-bottom:34px}
+.toc ol{margin:0;padding:0;list-style:none;counter-reset:s;columns:2;column-gap:20px}
+.toc li{counter-increment:s;padding:6px 10px;font-size:13.5px;break-inside:avoid}
+.toc li::before{content:counter(s);display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;
+  background:var(--navy);color:#fff;font-size:11px;font-weight:700;margin-inline-end:9px}
+.toc a{color:var(--ink);text-decoration:none}.toc a:hover{color:var(--teal2)}
+/* sections */
+section{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px 30px;margin-bottom:20px;
+  box-shadow:0 1px 2px rgba(16,24,40,.04)}
+section .num{font-size:12px;font-weight:700;color:var(--teal2);letter-spacing:1.5px}
+section h2{font-size:23px;margin:6px 0 14px}
+section p{color:#2b3446;margin:0 0 14px}
+section h3{font-size:16px;margin:20px 0 8px;color:var(--navy)}
+.lead{font-size:17px;color:#2b3446}
+ul.clean{list-style:none;padding:0;margin:0 0 8px}
+ul.clean li{padding:8px 0 8px 26px;position:relative;border-bottom:1px solid var(--line)}
+ul.clean li:last-child{border-bottom:0}
+ul.clean li::before{content:"";position:absolute;left:4px;top:15px;width:8px;height:8px;border-radius:2px;background:var(--green)}
+ul.clean li b{color:var(--navy)}
+.feat{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.feat:last-child{border-bottom:0}
+.feat .ft{flex:1}.feat .ft b{color:var(--navy)}.feat .ft small{display:block;color:var(--muted);font-size:13.5px}
+.feat .tag{flex:0 0 auto;white-space:nowrap}
+.callout{border-inline-start:3px solid var(--teal2);background:var(--platform-bg);border-radius:0 10px 10px 0;padding:13px 16px;margin:14px 0;font-size:14.5px}
+.callout.open{border-color:var(--open);background:var(--open-bg)}
+.callout.deferred{border-color:var(--future);background:var(--future-bg)}
+.callout b{color:var(--navy)}
+/* module cards */
+.mods{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:6px 0}
+.mod{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:linear-gradient(180deg,#fff,#fbfcfe)}
+.mod .mh{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.mod .mi{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:#fff}
+.mod.sales .mi{background:linear-gradient(135deg,var(--teal2),var(--navy))}
+.mod.proc .mi{background:linear-gradient(135deg,var(--green2),var(--green))}
+.mod.fin .mi{background:linear-gradient(135deg,var(--navy2),var(--navy))}
+.mod.stock .mi{background:linear-gradient(135deg,var(--teal2),var(--teal))}
+.mod h4{margin:0;font-size:15px}.mod .mi svg{width:19px;height:19px;stroke:#fff;fill:none;stroke-width:2}
+.mod ul{margin:8px 0 0;padding-inline-start:18px;font-size:13.5px;color:var(--muted)}
+.mod ul li{margin:3px 0}
+/* diagram */
+.diagram{border:1px dashed var(--line);border-radius:14px;padding:22px;background:#fbfcfe;margin:8px 0 4px}
+.layer{display:flex;align-items:center;gap:12px;margin:0 0 12px;flex-wrap:wrap}
+.layer:last-child{margin-bottom:0}
+.layer .lname{flex:0 0 118px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);text-align:end}
+.box{flex:1;min-width:90px;border-radius:9px;padding:9px 12px;font-size:13px;font-weight:600;text-align:center;border:1px solid}
+.box.p{background:var(--platform-bg);border-color:#bfe0e7;color:var(--platform)}
+.box.d{background:#EEF3FA;border-color:#d4e0f0;color:var(--navy)}
+.box.m{background:var(--confirmed-bg);border-color:#c4e5c6;color:var(--confirmed)}
+.box.b{background:var(--open-bg);border-color:#f0cdc8;color:var(--open)}
+.arrowdown{text-align:center;color:var(--faint);margin:2px 0;font-size:18px}
+table.simple{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0}
+table.simple th,table.simple td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}
+table.simple th{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);font-weight:600}
+table.simple td b{color:var(--navy)}
+footer{padding:34px 0 60px;color:var(--muted);font-size:13px;text-align:center}
+.pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.5px;padding:2px 9px;border-radius:999px;background:var(--navy);color:#fff}
+@media(max-width:680px){.mods{grid-template-columns:1fr}.toc ol{columns:1}header.top h1{font-size:27px}.layer .lname{flex-basis:100%;text-align:start}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brandrow">
+    <svg viewBox="0 0 43 53" width="30" height="37" aria-hidden="true">
+      <defs>
+        <linearGradient id="n" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f6ea0"/><stop offset="1" stop-color="#9fb6d6"/></linearGradient>
+        <linearGradient id="tt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#39b9d0"/><stop offset="1" stop-color="#7fb0c2"/></linearGradient>
+        <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a6d84a"/><stop offset="1" stop-color="#6fb03a"/></linearGradient>
+      </defs>
+      <path d="M0 17h20v35h-7V25H0z" fill="url(#n)"/><rect x="23" y="10" width="7" height="42" fill="url(#tt)"/>
+      <path d="M31 18 37 0 43 18h-3v34h-6V18z" fill="url(#g)"/>
+    </svg>
+    <div class="bt"><b>Trend</b><span>Business Solutions</span></div>
+  </div>
+  <div class="eyebrow">Phase 1 — Platform Foundation &amp; Core Business Operations</div>
+  <h1>What we are building first</h1>
+  <p>Trend is a brand-new business management system built from the ground up for companies that sell, buy and
+  manage stock. This document explains — in plain language — exactly what the first phase delivers, what is
+  prepared for the future, and the few decisions we still need from you before some parts can be finalised.</p>
+  <div class="meta"><span><b>Prepared for</b> George</span><span><b>Product</b> Trend · Business Solutions</span><span><b>Prepared</b> 3 September 2026</span></div>
+</div></header>
+
+<div class="wrap">
+
+<div class="legend">
+  <h4>How to read this document</h4>
+  <div class="row">
+    <span class="tag confirmed"><span class="d"></span>Confirmed</span>
+    <span class="tag platform"><span class="d"></span>Platform foundation</span>
+    <span class="tag planned"><span class="d"></span>Planned</span>
+    <span class="tag future"><span class="d"></span>Future</span>
+    <span class="tag open"><span class="d"></span>Needs your confirmation</span>
+  </div>
+  <p style="margin:12px 0 0;font-size:13px;color:var(--muted)">
+  <b>Confirmed</b> — you asked for it and it is in Phase 1. &nbsp;<b>Platform foundation</b> — the groundwork every
+  business needs, so Trend is solid and secure. &nbsp;<b>Planned</b> — designed and ready, switched on a little later.
+  &nbsp;<b>Future</b> — possible later, not part of this phase. &nbsp;<b>Needs your confirmation</b> — we need
+  something from you before this can be finalised.</p>
+</div>
+
+<nav class="toc"><ol>
+  <li><a href="#s1">Executive summary</a></li>
+  <li><a href="#s2">What Phase 1 means</a></li>
+  <li><a href="#s3">What is included</a></li>
+  <li><a href="#s4">Platform foundation</a></li>
+  <li><a href="#s5">Tenant &amp; subscription foundation</a></li>
+  <li><a href="#s6">Company setup</a></li>
+  <li><a href="#s7">Users &amp; permissions</a></li>
+  <li><a href="#s8">Master data</a></li>
+  <li><a href="#s9">Sales module</a></li>
+  <li><a href="#s10">Procurement module</a></li>
+  <li><a href="#s11">Finance &amp; Accounting module</a></li>
+  <li><a href="#s12">Stock module</a></li>
+  <li><a href="#s13">How the modules work together</a></li>
+  <li><a href="#s14">What happens after Phase 1</a></li>
+  <li><a href="#s15">What is deliberately deferred</a></li>
+  <li><a href="#s16">What we need you to confirm</a></li>
+</ol></nav>
+
+<section id="s1"><div class="num">SECTION 1</div><h2>Executive summary</h2>
+<p class="lead">Phase 1 gives Trend a complete, secure foundation and the everyday screens your team uses to run
+sales, purchasing and stock — all designed as one clean, modern system.</p>
+<p>Think of Phase 1 in two halves. The first half is the <b>foundation</b>: secure sign-in, companies and branches,
+users and permissions, and the shared services (document numbering, activity history, search) that everything else
+relies on. The second half is the <b>daily work</b>: customers and suppliers, your item catalogue, and the sales,
+purchase and stock documents your staff create every day.</p>
+<p>One part — the <b>accounting engine</b> that turns those documents into official financial records — is
+intentionally handled with extra care. We build the screens, but we do not switch on the automatic accounting until
+your accountant has confirmed the rules. This protects you: a wrong accounting rule is the most expensive kind of
+mistake to fix later, so we get it right before it goes live, not after.</p>
+</section>
+
+<section id="s2"><div class="num">SECTION 2</div><h2>What Phase 1 means</h2>
+<p>Trend will grow into a large system over time. Rather than build everything at once, we deliver it in phases so
+you see real progress early and nothing is rushed. <b>Phase 1 is the first working version</b> — the foundation plus
+the core business screens.</p>
+<p>Everything in Phase 1 is built to be reused. Because Trend is designed to serve many businesses, the foundation is
+multi-company and multi-branch from day one, works in <b>English and Arabic</b>, and handles <b>US Dollar and
+Lebanese Pound</b> side by side. Nothing is hard-wired to a single company.</p>
+<div class="callout"><b>A note on the prototype.</b> Alongside this document you have an interactive prototype — a
+clickable preview of the real screens. It uses sample data and saves nothing; it is there so you can see and feel the
+product before a single line of the final system is written.</div>
+</section>
+
+<section id="s3"><div class="num">SECTION 3</div><h2>What is included</h2>
+<p>At a glance, Phase 1 covers twelve areas. The four business modules — <b>Sales, Procurement, Finance &amp;
+Accounting, and Stock</b> — are kept as four separate, clearly-owned modules that work together but never blur into
+one another.</p>
+<div class="feat"><div class="ft"><b>Secure sign-in &amp; access control</b><small>Login, sessions, and sign-in time windows per user</small></div><span class="tag confirmed"><span class="d"></span>Confirmed</span></div>
+<div class="feat"><div class="ft"><b>Companies, branches &amp; warehouses</b><small>Set up your eight companies and their locations</small></div><span class="tag confirmed"><span class="d"></span>Confirmed</span></div>
+<div class="feat"><div class="ft"><b>Users, roles &amp; permissions</b><small>Control who can see and do what, by branch and warehouse</small></div><span class="tag confirmed"><span class="d"></span>Confirmed</span></div>
+<div class="feat"><div class="ft"><b>Master data</b><small>Customers, suppliers, items, and units of measure</small></div><span class="tag confirmed"><span class="d"></span>Confirmed</span></div>
+<div class="feat"><div class="ft"><b>Sales, Procurement &amp; Stock documents</b><small>Invoices, returns, vouchers, and stock movements</small></div><span class="tag confirmed"><span class="d"></span>Confirmed</span></div>
+<div class="feat"><div class="ft"><b>Shared services</b><small>Document numbering, activity history, attachments, search</small></div><span class="tag platform"><span class="d"></span>Platform foundation</span></div>
+<div class="feat"><div class="ft"><b>Tenant &amp; subscription management</b><small>The controls that let Trend serve many businesses</small></div><span class="tag platform"><span class="d"></span>Platform foundation</span></div>
+<div class="feat"><div class="ft"><b>Automatic accounting (posting)</b><small>Screens built now; switched on once the rules are confirmed</small></div><span class="tag open"><span class="d"></span>Needs your confirmation</span></div>
+</section>
+
+<section id="s4"><div class="num">SECTION 4</div><h2>Platform foundation</h2>
+<p>This is the invisible groundwork that makes Trend trustworthy. Most of it your staff never see directly, but
+everything depends on it.</p>
+<ul class="clean">
+<li><b>Secure sign-in.</b> Modern password protection, secure sessions, and the ability to set <b>the exact hours a
+user is allowed to log in</b> — a feature you specifically asked for.</li>
+<li><b>Activity history.</b> Every important action is recorded — who did what and when — so nothing is a mystery.</li>
+<li><b>Document numbering.</b> Clean, consistent, official numbers for every invoice and voucher, with the right
+reset rules.</li>
+<li><b>Search &amp; attachments.</b> The groundwork so you can find records quickly and attach files such as an item
+photo.</li>
+<li><b>Reliability &amp; monitoring.</b> The system watches itself, so problems are caught early.</li>
+</ul>
+<div class="callout"><b>Why foundation matters.</b> A house is only as good as what is under it. By building this first,
+every screen we add later is automatically secure, consistent and reliable — instead of each part reinventing it.</div>
+</section>
+
+<section id="s5"><div class="num">SECTION 5</div><h2>Tenant &amp; subscription foundation</h2>
+<p>Because Trend is designed so it can be offered to more than one business, it needs a control layer that keeps each
+business's data completely separate and manages who has access to what.</p>
+<div class="feat"><div class="ft"><b>Business (tenant) management</b><small>Create, activate, suspend a business, with its data kept fully separate</small></div><span class="tag platform"><span class="d"></span>Platform foundation</span></div>
+<div class="feat"><div class="ft"><b>Subscription &amp; plan controls</b><small>The mechanism to manage plans and what each includes</small></div><span class="tag planned"><span class="d"></span>Planned</span></div>
+<div class="feat"><div class="ft"><b>Feature availability</b><small>Turn features on or off per business</small></div><span class="tag planned"><span class="d"></span>Planned</span></div>
+<div class="callout open"><b>To be decided together.</b> What the actual plans are called, what each includes, and any pricing
+is a business decision that has not been set yet. Trend builds the machinery; the commercial details are yours to
+define when you are ready.</div>
+</section>
+
+<section id="s6"><div class="num">SECTION 6</div><h2>Company setup</h2>
+<p>Trend is multi-company from the start. You will be able to set up each of your <b>eight companies</b>, their
+branches, and their warehouses, and configure each company's own settings.</p>
+<ul class="clean">
+<li><b>Companies &amp; branches</b> — each with its own details and users.</li>
+<li><b>Warehouses &amp; locations</b> — the places your stock lives.</li>
+<li><b>Per-company settings</b> — currency, fiscal year, and whether <b>VAT applies to that company</b> (you can
+turn VAT on or off per company).</li>
+</ul>
+</section>
+
+<section id="s7"><div class="num">SECTION 7</div><h2>Users &amp; permissions</h2>
+<p>You decide exactly who can see and do what — and you can be very precise about it.</p>
+<ul class="clean">
+<li><b>Users</b> — add your staff and control their access.</li>
+<li><b>Roles</b> — group permissions into sensible roles such as Accountant, Sales, or Warehouse.</li>
+<li><b>Fine-grained permissions</b> — scoped by branch and warehouse, so a Tripoli salesperson sees Tripoli, and
+whether someone can <b>see cost prices or not</b> is fully under your control.</li>
+</ul>
+</section>
+
+<section id="s8"><div class="num">SECTION 8</div><h2>Master data</h2>
+<p>The shared lists your daily documents draw from. Get these right once, and every invoice and stock movement uses
+them automatically.</p>
+<div class="feat"><div class="ft"><b>Customers</b><small>The people you sell to</small></div><span class="tag confirmed"><span class="d"></span>Confirmed</span></div>
+<div class="feat"><div class="ft"><b>Suppliers</b><small>The people you buy from</small></div><span class="tag confirmed"><span class="d"></span>Confirmed</span></div>
+<div class="feat"><div class="ft"><b>Items / products</b><small>Your catalogue — with item type as a list you maintain yourself</small></div><span class="tag confirmed"><span class="d"></span>Confirmed</span></div>
+<div class="feat"><div class="ft"><b>Units of measure</b><small>Pieces, boxes, litres, and packaging factors between them</small></div><span class="tag confirmed"><span class="d"></span>Confirmed</span></div>
+</section>
+
+<section id="s9"><div class="num">SECTION 9</div><h2>Sales module</h2>
+<p>Everything your team needs to record a sale. The screens are built and fully usable for capturing documents.</p>
+<div class="mod sales" style="margin-bottom:6px"><div class="mh"><div class="mi"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.5 13h11l2-9H6"/></svg></div><h4>Sales</h4></div>
+<ul><li>Sales Invoice — customer, items, quantities, prices, discounts, VAT and totals</li><li>Sales Return</li><li>Receipt Voucher</li></ul></div>
+<div class="callout"><b>What "built now, switched on later" means here.</b> You can create and print these documents. The step
+that turns a sale into an official accounting entry is the one part we hold until your accountant confirms the rules
+(see Section 11 and 16). This keeps your books correct from day one.</div>
+</section>
+
+<section id="s10"><div class="num">SECTION 10</div><h2>Procurement module</h2>
+<p>The buying side, mirroring Sales, kept as its own separate module.</p>
+<div class="mod proc" style="margin-bottom:6px"><div class="mh"><div class="mi"><svg viewBox="0 0 24 24"><path d="M3 6h11v9H3z"/><path d="M14 9h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg></div><h4>Procurement</h4></div>
+<ul><li>Purchase Invoice</li><li>Purchase Return</li><li>Payment Voucher</li></ul></div>
+<p>As with Sales, the documents are fully usable for capture; the automatic accounting waits on the confirmed rules.</p>
+</section>
+
+<section id="s11"><div class="num">SECTION 11</div><h2>Finance &amp; Accounting module</h2>
+<p>This is the heart of your books, and the one we treat most carefully. Finance &amp; Accounting is its <b>own
+separate module</b> — never mixed into Stock or Sales.</p>
+<div class="mod fin" style="margin-bottom:10px"><div class="mh"><div class="mi"><svg viewBox="0 0 24 24"><path d="M4 4a2 2 0 0 1 2-2h13v18H6a2 2 0 0 0-2 2z"/><path d="M6 2v16"/></svg></div><h4>Finance &amp; Accounting</h4></div>
+<ul><li>Chart of Accounts</li><li>Linked Accounts — your per-company accounting routing, so each entry posts to the account you choose (not fixed in the software)</li><li>Statement of Account</li><li>The posting engine — the single, controlled place that writes to your books</li></ul></div>
+<div class="callout open"><b>Why this waits.</b> Accounting rules must come from your accountant, not be guessed by
+software. Two things unlock this module: <b>your real chart of accounts</b>, and <b>your accountant's written
+confirmation of the VAT and posting rules</b>. Until then, we build the screens but never invent a number — a blank,
+honest screen is far safer than a plausible wrong one.</div>
+</section>
+
+<section id="s12"><div class="num">SECTION 12</div><h2>Stock module</h2>
+<p>Full visibility of what you hold and every movement in and out — a separate module from Finance.</p>
+<div class="mod stock" style="margin-bottom:6px"><div class="mh"><div class="mi"><svg viewBox="0 0 24 24"><path d="m7 8 4-2 4 2-4 2z"/><path d="M3 16l4-2 4 2-4 2z"/><path d="M13 16l4-2 4 2-4 2z"/></svg></div><h4>Stock</h4></div>
+<ul><li>Inventory overview and item detail</li><li>Opening Stock, Stock In, Stock Out — kept as distinct transaction types</li><li>A unified Stock Movement screen for easy viewing</li></ul></div>
+<div class="callout"><b>One screen, distinct workflows.</b> You will see a single, convenient Stock Movement view — but
+behind it, Opening Stock, Stock In and Stock Out stay separate transaction types, so the data is always precise.</div>
+</section>
+
+<section id="s13"><div class="num">SECTION 13</div><h2>How the modules work together</h2>
+<p>The modules are separate, but they connect. Here is the shape of it, from the ground up:</p>
+<div class="diagram">
+  <div class="layer"><div class="lname">Foundation</div><div class="box p">Secure sign-in</div><div class="box p">Companies &amp; branches</div><div class="box p">Users &amp; permissions</div><div class="box p">Shared services</div></div>
+  <div class="arrowdown">↓</div>
+  <div class="layer"><div class="lname">Master data</div><div class="box m">Customers</div><div class="box m">Suppliers</div><div class="box m">Items &amp; units</div><div class="box m">Warehouses</div></div>
+  <div class="arrowdown">↓</div>
+  <div class="layer"><div class="lname">Daily documents</div><div class="box d">Sales</div><div class="box d">Procurement</div><div class="box d">Stock</div></div>
+  <div class="arrowdown">↓</div>
+  <div class="layer"><div class="lname">Books</div><div class="box b">Finance &amp; Accounting — switched on once the rules are confirmed</div></div>
+</div>
+<p style="margin-top:14px">Each layer rests on the one above it. Documents use your master data; the accounting layer
+turns confirmed documents into official records — which is exactly why it comes last and waits for your sign-off.</p>
+</section>
+
+<section id="s14"><div class="num">SECTION 14</div><h2>What happens after Phase 1</h2>
+<p>Phase 1 is built so it can grow smoothly. Once it is approved and the accounting rules are confirmed, later work
+naturally follows: switching on automatic accounting, richer reports and dashboards, and — over time — additional
+areas you may want.</p>
+<table class="simple"><thead><tr><th>Area</th><th>When</th><th>Status</th></tr></thead><tbody>
+<tr><td><b>Automatic accounting (posting)</b></td><td>As soon as the rules are confirmed</td><td><span class="tag open"><span class="d"></span>Needs confirmation</span></td></tr>
+<tr><td><b>Reports &amp; dashboards</b></td><td>After the books are live</td><td><span class="tag planned"><span class="d"></span>Planned</span></td></tr>
+<tr><td><b>Offline / desktop use</b></td><td>A later phase</td><td><span class="tag future"><span class="d"></span>Future</span></td></tr>
+<tr><td><b>Other modules</b> (e.g. POS, CRM, payroll)</td><td>Only if and when you want them</td><td><span class="tag future"><span class="d"></span>Future</span></td></tr>
+</tbody></table>
+<p>The foundation is deliberately designed so these can be added without rebuilding what already works.</p>
+</section>
+
+<section id="s15"><div class="num">SECTION 15</div><h2>What is deliberately deferred</h2>
+<p>To keep Phase 1 focused and safe, a few things are intentionally <b>not</b> in it. This is by design, not an
+oversight:</p>
+<div class="callout deferred"><b>Automatic accounting entries</b> — the screens are ready; the automatic posting waits for
+your accountant's confirmed rules.</div>
+<div class="callout deferred"><b>Commercial plans &amp; pricing</b> — the subscription machinery is built; what the plans are and cost is your decision, later.</div>
+<div class="callout deferred"><b>Offline / desktop application</b> — planned for a later phase; Phase 1 prepares for it but does not include it.</div>
+<div class="callout deferred"><b>Additional modules</b> — POS, CRM, payroll, manufacturing and similar are future possibilities, not part of this phase.</div>
+</section>
+
+<section id="s16"><div class="num">SECTION 16</div><h2>What we need you to confirm</h2>
+<p>A few items need your input before the accounting parts can be finalised. None of these hold up the foundation or
+the daily screens — they specifically unlock the <b>books</b>.</p>
+<div class="feat"><div class="ft"><b>Your chart of accounts</b><small>An export of your real accounts, so we seed the correct structure — not a guessed one</small></div><span class="tag open"><span class="d"></span>Needs you</span></div>
+<div class="feat"><div class="ft"><b>Your accountant's VAT &amp; posting rules</b><small>Written confirmation of how sales, purchases and VAT should post</small></div><span class="tag open"><span class="d"></span>Needs you</span></div>
+<div class="feat"><div class="ft"><b>A few sample documents</b><small>Screenshots of a taxable purchase, a supplier payment and a return, so the rules match reality</small></div><span class="tag open"><span class="d"></span>Needs you</span></div>
+<div class="feat"><div class="ft"><b>Approval of this Phase 1 plan</b><small>Your go-ahead on the scope and the prototype, so we can begin building</small></div><span class="tag open"><span class="d"></span>Needs you</span></div>
+<div class="callout"><b>Nothing is stuck.</b> While these are being gathered, the foundation, master data, and the sales,
+purchase and stock screens can all move ahead. The confirmations above simply let us switch on the accounting safely
+when the time comes.</div>
+</section>
+
+<footer>Trend · Business Solutions — Phase 1 Overview · Prepared 3 September 2026 · This document describes a plan;
+it is not a contract or a final specification.</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,1652 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trend ERP — Phase 1 Prototype</title>
+<style>
+/* ============================================================= TOKENS */
+:root{
+  --brand-navy:#12204F; --brand-navy-2:#0A4067; --brand-teal:#0B4B71; --brand-teal-2:#12788E;
+  --brand-green:#358A2C; --brand-green-2:#8DC637; --wordmark:#11395D;
+  --bg:#F7F8FA; --surface:#FFFFFF; --surface-2:#F0F2F5; --surface-3:#E9ECF1;
+  --border:#E2E5EA; --border-strong:#CDD3DC;
+  --text:#12204F; --text-2:#3B4658; --muted:#5A6472; --faint:#8A93A2;
+  --primary:#12204F; --primary-ink:#FFFFFF; --accent:#12788E;
+  --success:#2E7D32; --success-bg:#E6F4E7; --warning:#B26A00; --warning-bg:#FBEFD9;
+  --danger:#C0392B; --danger-bg:#FBE7E4; --info:#12788E; --info-bg:#E2F0F3;
+  --ring:rgba(18,120,142,.35);
+  --r-sm:6px; --r:10px; --r-lg:14px; --pill:999px;
+  --sh-1:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.05);
+  --sh-2:0 8px 28px rgba(16,24,40,.14);
+  --nav-w:248px; --nav-w-collapsed:64px; --top-h:56px;
+  --fs:14px; --font:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --font-ar:"Segoe UI","Tahoma",system-ui,sans-serif;
+  --dur:.18s;
+}
+:root[data-theme="dark"]{
+  --bg:#0E1117; --surface:#161B22; --surface-2:#1C222B; --surface-3:#232B36;
+  --border:#2A313C; --border-strong:#3A4350;
+  --text:#E6EAF0; --text-2:#C3CBD6; --muted:#9AA4B2; --faint:#6C7686;
+  --primary:#3A63B8; --primary-ink:#FFFFFF; --accent:#3FA3B8; --wordmark:#CFE0F5;
+  --success:#4CAF50; --success-bg:#12301A; --warning:#E0A030; --warning-bg:#33280F;
+  --danger:#E15B4C; --danger-bg:#331915; --info:#3FA3B8; --info-bg:#0F2A31;
+  --ring:rgba(63,163,184,.4);
+  --sh-1:0 1px 2px rgba(0,0,0,.4); --sh-2:0 10px 34px rgba(0,0,0,.55);
+}
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:var(--fs)/1.5 var(--font);-webkit-font-smoothing:antialiased}
+html[dir="rtl"] body{font-family:var(--font-ar)}
+button{font:inherit;cursor:pointer;color:inherit}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--ring)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.mono{font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace}
+
+/* ============================================================= APP SHELL */
+#app{display:grid;grid-template-columns:var(--nav-w) 1fr;grid-template-rows:var(--top-h) 1fr;
+  grid-template-areas:"side top" "side main";height:100vh;transition:grid-template-columns var(--dur)}
+#app.collapsed{grid-template-columns:var(--nav-w-collapsed) 1fr}
+/* sidebar */
+#side{grid-area:side;background:linear-gradient(180deg,var(--brand-navy),#0c1836);color:#dbe4f2;
+  display:flex;flex-direction:column;overflow:hidden;border-inline-end:1px solid rgba(255,255,255,.06)}
+:root[data-theme="dark"] #side{background:linear-gradient(180deg,#101725,#0a0f18)}
+.brand{display:flex;align-items:center;gap:10px;padding:0 14px;height:var(--top-h);flex:0 0 auto;
+  border-bottom:1px solid rgba(255,255,255,.07)}
+.brand .tlogo{flex:0 0 auto}
+.brand .bt{display:flex;flex-direction:column;line-height:1.05;overflow:hidden;white-space:nowrap}
+.brand .bt b{font-size:15px;letter-spacing:.2px;color:#fff}
+.brand .bt span{font-size:10.5px;color:var(--brand-green-2);letter-spacing:.5px;text-transform:uppercase}
+#app.collapsed .brand .bt{display:none}
+.navwrap{flex:1;overflow-y:auto;padding:8px 8px 20px}
+.navwrap::-webkit-scrollbar{width:8px}.navwrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px}
+.navgroup{margin-top:12px}
+.navgroup>.gl{display:flex;align-items:center;width:100%;gap:6px;font-size:10px;text-transform:uppercase;
+  letter-spacing:.9px;color:#7e8db0;padding:7px 10px 5px;white-space:nowrap;background:transparent;border:0;cursor:pointer}
+.navgroup>.gl:hover{color:#c9d6ef}
+.gl .glc{width:12px;height:12px;margin-inline-start:auto;opacity:.55;transition:transform .18s;stroke-width:2.4}
+.navgroup.col .gl .glc{transform:rotate(-90deg)}
+html[dir="rtl"] .navgroup.col .gl .glc{transform:rotate(90deg)}
+.navitems{overflow:hidden}
+#app:not(.collapsed) .navgroup.col .navitems{display:none}
+#app.collapsed .navgroup>.gl{opacity:0;height:6px;padding:0;pointer-events:none}
+.navitem{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:8px;color:#c3cfe6;
+  white-space:nowrap;position:relative;transition:background var(--dur),color var(--dur);font-size:13.5px}
+.navitem svg{flex:0 0 18px;width:18px;height:18px;stroke-width:1.9}
+.navitem .lbl{overflow:hidden;text-overflow:ellipsis}
+.navitem:hover{background:rgba(255,255,255,.07);color:#fff}
+.navitem.active{background:rgba(255,255,255,.13);color:#fff}
+.navitem.active::before{content:"";position:absolute;inset-inline-start:0;top:7px;bottom:7px;width:3px;border-radius:3px;background:var(--brand-green-2)}
+.navitem .tag{margin-inline-start:auto;font-size:9px;padding:1px 6px;border-radius:var(--pill);background:rgba(255,255,255,.14);color:#dfe8f6}
+#app.collapsed .navitem .lbl,#app.collapsed .navitem .tag{display:none}
+#app.collapsed .navitem{justify-content:center;padding:9px 0}
+/* topbar */
+#top{grid-area:top;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;padding:0 14px;z-index:20}
+.icbtn{width:34px;height:34px;display:inline-grid;place-items:center;border:1px solid transparent;border-radius:8px;
+  background:transparent;color:var(--muted);position:relative}
+.icbtn:hover{background:var(--surface-2);color:var(--text)}
+.icbtn svg{width:18px;height:18px;stroke-width:1.9}
+.ctxpick{display:flex;align-items:center;gap:8px;padding:5px 10px;border:1px solid var(--border);border-radius:8px;
+  background:var(--surface);min-width:0}
+.ctxpick:hover{background:var(--surface-2)}
+.ctxpick .co{display:flex;flex-direction:column;line-height:1.15;min-width:0;text-align:start}
+.ctxpick .co b{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctxpick .co small{font-size:10.5px;color:var(--muted)}
+.searchbtn{flex:1;max-width:420px;display:flex;align-items:center;gap:9px;height:34px;padding:0 12px;
+  border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--muted);font-size:13px}
+.searchbtn:hover{border-color:var(--border-strong)}
+.searchbtn .kbd{margin-inline-start:auto;font-size:10.5px;border:1px solid var(--border);border-radius:5px;
+  padding:1px 6px;background:var(--surface);color:var(--faint)}
+.spacer{flex:1}
+.dot{position:absolute;top:6px;inset-inline-end:6px;width:7px;height:7px;border-radius:50%;background:var(--danger);border:2px solid var(--surface)}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--brand-teal-2),var(--brand-navy));
+  color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+/* main */
+#main{grid-area:main;overflow-y:auto;position:relative}
+.page{padding:20px 24px 60px;max-width:1400px;margin:0 auto;animation:fade var(--dur) ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.crumbs{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12px;margin-bottom:6px;flex-wrap:wrap}
+.crumbs svg{width:13px;height:13px;opacity:.6}
+.phead{display:flex;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.phead h1{margin:0;font-size:22px;letter-spacing:-.3px}
+.phead p{margin:3px 0 0;color:var(--muted);font-size:13px;max-width:70ch}
+.phead .acts{margin-inline-start:auto;display:flex;gap:8px;flex-wrap:wrap}
+
+/* ============================================================= PRIMITIVES */
+.btn{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:8px;
+  border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:500;
+  transition:background var(--dur),border-color var(--dur),transform var(--dur)}
+.btn:hover{background:var(--surface-2)}.btn:active{transform:translateY(1px)}
+.btn svg{width:16px;height:16px;stroke-width:2}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{border-color:transparent;background:transparent}.btn.ghost:hover{background:var(--surface-2)}
+.btn.danger{color:var(--danger);border-color:var(--border)}.btn.danger:hover{background:var(--danger-bg)}
+.btn.sm{height:28px;padding:0 9px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 9px;border-radius:var(--pill);
+  background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);white-space:nowrap}
+.badge .bd{width:6px;height:6px;border-radius:50%;background:currentColor}
+.badge.success{color:var(--success);background:var(--success-bg);border-color:transparent}
+.badge.warning{color:var(--warning);background:var(--warning-bg);border-color:transparent}
+.badge.danger{color:var(--danger);background:var(--danger-bg);border-color:transparent}
+.badge.info{color:var(--info);background:var(--info-bg);border-color:transparent}
+.badge.ni{color:var(--faint);background:transparent;border:1px dashed var(--border-strong);font-weight:500}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--border);
+  border-radius:var(--pill);background:var(--surface);font-size:12px;color:var(--text-2)}
+.chip.on{background:var(--info-bg);border-color:transparent;color:var(--info)}
+.chip svg{width:15px;height:15px;flex:0 0 15px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-1)}
+.card .ch{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card .ch h3{margin:0;font-size:14px}.card .ch .sub{font-size:12px;color:var(--muted)}
+.card .cb{padding:16px}
+.grid{display:grid;gap:14px}
+.banner{display:flex;align-items:flex-start;gap:11px;padding:11px 14px;border-radius:var(--r);font-size:12.5px;margin-bottom:16px}
+.banner svg{width:17px;height:17px;flex:0 0 17px;margin-top:1px}
+.banner.warn{background:var(--warning-bg);color:var(--warning)}
+.banner.block{background:var(--danger-bg);color:var(--danger)}
+.banner.info{background:var(--info-bg);color:var(--info)}
+.banner b{font-weight:700}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 15px;box-shadow:var(--sh-1)}
+.kpi .kl{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
+.kpi .kl svg{width:15px;height:15px}
+.kpi .kv{font-size:25px;font-weight:650;letter-spacing:-.5px;margin-top:6px}
+.kpi .kd{font-size:11.5px;margin-top:3px;display:flex;align-items:center;gap:5px;color:var(--muted)}
+.kpi .kd.up{color:var(--success)}.kpi .kd.down{color:var(--danger)}
+.kpi .kv.na{color:var(--faint);font-weight:500;font-size:20px}
+
+/* TABLE */
+.tbar{display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.tinput{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border:1px solid var(--border);
+  border-radius:8px;background:var(--surface-2);min-width:180px}
+.tinput svg{width:15px;height:15px;color:var(--muted)}
+.tinput input{border:0;background:transparent;outline:0;color:var(--text);width:100%;font:inherit;font-size:13px}
+.selbar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--info-bg);color:var(--info);
+  font-size:12.5px;border-bottom:1px solid var(--border)}
+.tscroll{overflow-x:auto}
+table.dt{width:100%;border-collapse:collapse;font-size:13px}
+.dt th,.dt td{padding:9px 14px;text-align:start;white-space:nowrap;border-bottom:1px solid var(--border)}
+.dt th{position:sticky;top:0;background:var(--surface-2);color:var(--muted);font-weight:600;font-size:11.5px;
+  text-transform:uppercase;letter-spacing:.4px;z-index:1;user-select:none}
+.dt th.sortable{cursor:pointer}.dt th.sortable:hover{color:var(--text)}
+.dt th .sar{opacity:.4;margin-inline-start:4px}.dt th.asc .sar,.dt th.desc .sar{opacity:1;color:var(--accent)}
+.dt tbody tr{transition:background var(--dur)}
+.dt tbody tr:hover{background:var(--surface-2)}
+.dt tbody tr.sel{background:var(--info-bg)}
+.dt td.num{text-align:end;font-variant-numeric:tabular-nums}
+.dt td.rowact{text-align:end}
+.chkbx{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+.rowbtn{opacity:0;width:28px;height:28px;border-radius:6px;display:inline-grid;place-items:center;border:1px solid transparent}
+tr:hover .rowbtn{opacity:1}.rowbtn:hover{background:var(--surface-3)}
+.tfoot{display:flex;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid var(--border);font-size:12.5px;color:var(--muted)}
+.pager{margin-inline-start:auto;display:flex;align-items:center;gap:4px}
+.pgn{min-width:30px;height:30px;padding:0 7px;border:1px solid var(--border);border-radius:7px;background:var(--surface);font-size:12.5px}
+.pgn:hover{background:var(--surface-2)}.pgn.on{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.pgn:disabled{opacity:.4}
+/* states */
+.state{padding:46px 20px;text-align:center;color:var(--muted)}
+.state svg{width:38px;height:38px;opacity:.5;margin-bottom:10px}
+.state h4{margin:0 0 4px;color:var(--text);font-size:15px}
+.state p{margin:0 0 14px;font-size:13px}
+.skel{height:13px;border-radius:6px;background:linear-gradient(90deg,var(--surface-2),var(--surface-3),var(--surface-2));
+  background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{from{background-position:200% 0}to{background-position:-200% 0}}
+
+/* FORM */
+.frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:2px}
+.field>label{font-size:12px;font-weight:600;color:var(--text-2)}
+.field>label .req{color:var(--danger)}
+.inp,.sel,textarea.inp{height:36px;padding:0 11px;border:1px solid var(--border);border-radius:8px;background:var(--surface);
+  color:var(--text);font:inherit;font-size:13px;outline:0;transition:border-color var(--dur),box-shadow var(--dur);width:100%}
+textarea.inp{height:auto;padding:9px 11px;resize:vertical;min-height:64px}
+.inp:focus,.sel:focus,textarea.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
+.field.err .inp,.field.err .sel{border-color:var(--danger);box-shadow:0 0 0 3px var(--danger-bg)}
+.field .msg{font-size:11.5px;color:var(--danger);display:none}
+.field.err .msg{display:block}
+.field .hint{font-size:11px;color:var(--faint)}
+.switch{position:relative;width:38px;height:22px;border-radius:var(--pill);background:var(--border-strong);transition:background var(--dur);flex:0 0 auto}
+.switch::after{content:"";position:absolute;top:2px;inset-inline-start:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:inset-inline-start var(--dur)}
+.switch.on{background:var(--accent)}.switch.on::after{inset-inline-start:18px}
+html[dir="rtl"] .switch.on::after{inset-inline-start:2px;inset-inline-end:18px}
+
+/* DRAWER + DIALOG + PALETTE */
+.scrim{position:fixed;inset:0;background:rgba(10,16,32,.44);backdrop-filter:blur(1px);z-index:60;opacity:0;transition:opacity var(--dur)}
+.scrim.show{opacity:1}
+.drawer{position:fixed;top:0;inset-inline-end:0;height:100vh;width:min(560px,94vw);background:var(--surface);z-index:61;
+  box-shadow:var(--sh-2);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s ease}
+html[dir="rtl"] .drawer{inset-inline-end:0;transform:translateX(-100%)}
+.drawer.show{transform:none}
+.drawer .dh{display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--border)}
+.drawer .dh h3{margin:0;font-size:16px}.drawer .db{padding:18px;overflow-y:auto;flex:1}
+.drawer .df{padding:13px 18px;border-top:1px solid var(--border);display:flex;gap:9px;justify-content:flex-end}
+.dialog{position:fixed;z-index:62;top:50%;left:50%;transform:translate(-50%,-48%);width:min(440px,94vw);
+  background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--sh-2);padding:22px;opacity:0;transition:opacity var(--dur),transform var(--dur)}
+.dialog.show{opacity:1;transform:translate(-50%,-50%)}
+.dialog h3{margin:0 0 7px;font-size:17px}.dialog p{margin:0 0 18px;color:var(--muted);font-size:13.5px}
+.dialog .da{display:flex;gap:9px;justify-content:flex-end}
+.palette{position:fixed;z-index:62;top:76px;left:50%;transform:translateX(-50%) scale(.98);width:min(600px,94vw);
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-2);overflow:hidden;opacity:0;transition:opacity var(--dur),transform var(--dur)}
+.palette.show{opacity:1;transform:translateX(-50%) scale(1)}
+.palette .pin{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.palette .pin svg{width:18px;height:18px;color:var(--muted)}
+.palette .pin input{flex:1;border:0;outline:0;background:transparent;font:inherit;font-size:15px;color:var(--text)}
+.plist{max-height:52vh;overflow-y:auto;padding:6px}
+.pitem{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:8px;font-size:13.5px}
+.pitem .pg{margin-inline-start:auto;font-size:11px;color:var(--faint)}
+.pitem svg{width:16px;height:16px;color:var(--muted)}
+.pitem.cur,.pitem:hover{background:var(--surface-2)}
+.pitem.cur{outline:1px solid var(--border-strong)}
+/* menu (user / notif) */
+.menu{position:fixed;z-index:62;min-width:220px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);box-shadow:var(--sh-2);padding:6px;font-size:13px;opacity:0;transform:translateY(-4px);transition:opacity var(--dur),transform var(--dur)}
+.menu.show{opacity:1;transform:none}
+.menu .mi{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px}
+.menu .mi:hover{background:var(--surface-2)}.menu .mi svg{width:16px;height:16px;color:var(--muted)}
+.menu .sep{height:1px;background:var(--border);margin:5px 2px}
+.menu .mt{padding:8px 10px 4px;font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px}
+.notif{display:flex;gap:10px;padding:9px 10px;border-radius:8px}
+.notif:hover{background:var(--surface-2)}
+.notif .ni{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:0 0 30px}
+.notif small{color:var(--muted);font-size:11.5px}
+/* toasts */
+#toasts{position:fixed;z-index:70;bottom:18px;inset-inline-end:18px;display:flex;flex-direction:column;gap:9px}
+.toast{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-inline-start:3px solid var(--accent);
+  border-radius:10px;box-shadow:var(--sh-2);padding:11px 14px;font-size:13px;min-width:250px;max-width:360px;
+  transform:translateX(120%);transition:transform .24s ease}
+html[dir="rtl"] .toast{transform:translateX(-120%)}
+.toast.show{transform:none}
+.toast.success{border-inline-start-color:var(--success)}.toast.danger{border-inline-start-color:var(--danger)}
+.toast svg{width:17px;height:17px;flex:0 0 17px}
+
+/* charts */
+.bars{display:flex;align-items:flex-end;gap:8px;height:150px;padding-top:8px}
+.bars .bar{flex:1;background:linear-gradient(180deg,var(--brand-teal-2),var(--brand-navy));border-radius:5px 5px 0 0;min-height:3px;
+  position:relative;transition:filter var(--dur)}
+.bars .bar:hover{filter:brightness(1.15)}
+.bars .bar span{position:absolute;bottom:-19px;left:0;right:0;text-align:center;font-size:10.5px;color:var(--muted)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:26px}
+.legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-inline-end:5px}
+.donut{width:132px;height:132px;flex:0 0 132px}
+.two{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}
+.act{display:flex;gap:11px;padding:9px 4px;border-bottom:1px solid var(--border);font-size:13px}
+.act:last-child{border:0}
+.act .ai{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:0 0 30px;background:var(--surface-2)}
+.act .ai svg{width:15px;height:15px}
+.act small{color:var(--muted);font-size:11.5px}
+.act .at{margin-inline-start:auto;color:var(--faint);font-size:11.5px;white-space:nowrap}
+.qa{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.qab{display:flex;flex-direction:column;gap:7px;padding:14px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);align-items:flex-start;text-align:start}
+.qab:hover{background:var(--surface-2);border-color:var(--border-strong)}
+.qab .qi{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--info-bg);color:var(--info)}
+.qab .qi svg{width:18px;height:18px}
+.qab b{font-size:13px}.qab small{font-size:11.5px;color:var(--muted)}
+.detgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 22px}
+.dl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.dv{font-size:14px;margin-top:2px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tab{padding:9px 14px;font-size:13px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab:hover{color:var(--text)}.tab.on{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.mobtoggle{display:none}
+@media(max-width:900px){
+  #app{grid-template-columns:0 1fr}
+  #app.mob #side{position:fixed;width:var(--nav-w);z-index:80;height:100vh}
+  #app.mob::after{content:"";position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:79}
+  .mobtoggle{display:inline-grid}
+  .two{grid-template-columns:1fr}
+  .searchbtn .kbd{display:none}
+  #top{gap:6px;padding:0 8px}
+  #collapseBtn{display:none}
+  .ctxpick .co{display:none}
+  .ctxpick{padding:5px 6px}
+  .searchbtn{flex:0 0 auto;max-width:none;width:34px;padding:0;justify-content:center}
+  .searchbtn>span{display:none}
+  .step{min-width:120px}
+}
+/* ---- floorplan additions (Stage B) ---- */
+/* object page */
+.objhdr{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:2px;margin-bottom:2px}
+.oh-main{display:flex;align-items:center;gap:14px;padding:8px 0 12px}
+.oh-av{width:52px;height:52px;border-radius:13px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:19px;flex:0 0 52px;background:linear-gradient(135deg,var(--brand-teal-2),var(--brand-navy))}
+.oh-av svg{width:24px;height:24px;stroke:#fff;fill:none}
+.oh-main h1{margin:0;font-size:22px;letter-spacing:-.3px}
+.oh-sub{color:var(--muted);font-size:13px;margin-top:2px}
+.oh-status{margin-inline-start:6px}
+.oh-actions{margin-inline-start:auto;display:flex;gap:8px;flex-wrap:wrap}
+.oh-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px 20px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-1)}
+.objtabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin:16px 0 18px;overflow-x:auto}
+.objtab{padding:10px 15px;font-size:13.5px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;background:0;border-0;white-space:nowrap}
+.objtab:hover{color:var(--text)}.objtab.on{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.opanel{display:none;animation:fade var(--dur)}.opanel.on{display:block}
+.rel{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;transition:background var(--dur)}
+.rel:hover{background:var(--surface-2)}
+.rel .ri{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--surface-2);flex:0 0 34px}
+.rel .ri svg{width:16px;height:16px;color:var(--muted)}
+.rel .rt{flex:1}.rel .rt b{font-size:13.5px}.rel .rt small{display:block;color:var(--muted);font-size:12px}
+.rel .rm{font-weight:600;font-variant-numeric:tabular-nums}
+.rel .rlink{color:var(--faint)}
+/* workspace cues */
+.cues{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
+.cue{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 15px;cursor:pointer;text-align:start;transition:border-color var(--dur),transform var(--dur);box-shadow:var(--sh-1)}
+.cue:hover{border-color:var(--accent);transform:translateY(-1px)}
+.cue .cl{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+.cue .cl svg{width:15px;height:15px}
+.cue .cv{font-size:26px;font-weight:650;letter-spacing:-.5px;margin-top:6px}
+.cue.warn .cv{color:var(--warning)}.cue.danger .cv{color:var(--danger)}.cue.ok .cv{color:var(--success)}
+.cue .cd{font-size:11.5px;color:var(--faint);margin-top:2px}
+.wsgrid{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}
+@media(max-width:900px){.wsgrid{grid-template-columns:1fr}.oh-actions{margin-inline-start:0;width:100%}}
+/* filter bar + views + columns */
+.fbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.views{display:flex;gap:5px;flex-wrap:wrap}
+.view{height:28px;padding:0 11px;border:1px solid var(--border);border-radius:var(--pill);background:var(--surface);font-size:12px;color:var(--text-2)}
+.view:hover{background:var(--surface-2)}
+.view.on{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.view .vc{opacity:.7;margin-inline-start:4px}
+.colmenu{position:fixed;z-index:62;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-2);padding:6px;min-width:190px}
+.colmenu .cm{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;font-size:13px;cursor:pointer}
+.colmenu .cm:hover{background:var(--surface-2)}
+/* wizard */
+.wizrail{display:flex;flex-direction:column;gap:4px}
+.wizstep{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:10px;font-size:13.5px;color:var(--muted)}
+.wizstep .wc{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--surface-3);flex:0 0 26px}
+.wizstep.done .wc{background:var(--success);color:#fff}.wizstep.cur{background:var(--surface-2);color:var(--text)}.wizstep.cur .wc{background:var(--accent);color:#fff}
+.wizgrid{display:grid;grid-template-columns:230px 1fr;gap:20px}
+@media(max-width:800px){.wizgrid{grid-template-columns:1fr}}
+/* ---- redesign additions ---- */
+.demo{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:var(--pill);background:var(--warning-bg);color:var(--warning);text-transform:uppercase}
+.demo.blue{background:var(--info-bg);color:var(--info)}
+.demo.grey{background:var(--surface-2);color:var(--muted)}
+/* tree */
+.tree{font-size:13px}
+.tnode{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:default}
+.tnode:hover{background:var(--surface-2)}
+.tnode .tw{width:18px;height:18px;display:inline-grid;place-items:center;flex:0 0 18px;border-radius:5px;cursor:pointer;color:var(--muted)}
+.tnode .tw:hover{background:var(--surface-3)}
+.tnode .tw svg{width:13px;height:13px;transition:transform .15s}
+.tnode.col .tw svg{transform:rotate(-90deg)}
+html[dir="rtl"] .tnode.col .tw svg{transform:rotate(90deg)}
+.tnode .tw.leaf{opacity:0;cursor:default}
+.tnode .tcode{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--muted);font-size:12px;min-width:78px}
+.tnode .tname{font-weight:500}
+.tnode.hd .tname{font-weight:700}
+.tnode .ttype{margin-inline-start:auto;font-size:11px;color:var(--faint)}
+.tchild{margin-inline-start:20px;border-inline-start:1px solid var(--border);padding-inline-start:6px}
+.tchild.hide{display:none}
+/* in-drawer tabs */
+.dtabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin:-4px 0 16px}
+.dtab{padding:9px 13px;font-size:13px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;background:0;border-0}
+.dtab.on{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.dpanel{display:none}.dpanel.on{display:block}
+.dhead{display:flex;align-items:center;gap:13px;margin-bottom:16px}
+.dhead .dav{width:46px;height:46px;border-radius:11px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:17px;background:linear-gradient(135deg,var(--brand-teal-2),var(--brand-navy))}
+.dhead h4{margin:0;font-size:17px}.dhead .dsub{color:var(--muted);font-size:12.5px}
+/* stepper */
+.stepper{display:flex;flex-wrap:wrap;gap:0;margin:4px 0 6px}
+.step{display:flex;align-items:center;gap:10px;flex:1;min-width:150px;position:relative;padding:4px 0}
+.step .sc{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;flex:0 0 28px;z-index:1}
+.step.done .sc{background:var(--success);color:#fff}.step.cur .sc{background:var(--accent);color:#fff}
+.step.todo .sc{background:var(--surface-3);color:var(--muted)}
+.step .sl{font-size:12.5px}.step.todo .sl{color:var(--muted)}
+.step .st{font-size:11px;color:var(--faint)}
+.step::after{content:"";position:absolute;top:18px;inset-inline-start:28px;width:calc(100% - 28px);height:2px;background:var(--border)}
+.step.done::after{background:var(--success)}
+.step:last-child::after{display:none}
+/* health tiles */
+.health{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.htile{border:1px solid var(--border);border-radius:var(--r);padding:14px;background:var(--surface);display:flex;gap:11px;align-items:center}
+.htile .hi{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex:0 0 38px}
+.htile .hi svg{width:19px;height:19px}
+.htile b{font-size:14px}.htile small{display:block;color:var(--muted);font-size:12px}
+.hup{background:var(--success-bg);color:var(--success)}.hwarn{background:var(--warning-bg);color:var(--warning)}.hdown{background:var(--danger-bg);color:var(--danger)}
+/* auth gate */
+.authgate{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,#0c1836,#12204F 60%,#0B4B71);display:grid;place-items:center;padding:20px}
+.authcard{width:min(400px,94vw);background:var(--surface);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.4);padding:30px 30px 26px}
+.authcard .abrand{display:flex;align-items:center;gap:11px;margin-bottom:6px}
+.authcard .abrand b{font-size:18px;color:var(--text)}.authcard .abrand span{font-size:10px;letter-spacing:1.4px;color:var(--brand-green);text-transform:uppercase;display:block}
+.authcard h2{margin:16px 0 3px;font-size:20px}.authcard .asub{color:var(--muted);font-size:13px;margin-bottom:18px}
+.authcard .alink{color:var(--accent);font-size:12.5px;cursor:pointer;background:0;border:0;padding:0}
+.authcard .arow{display:flex;align-items:center;justify-content:space-between;margin:4px 0 16px}
+.kpi .kd svg{width:14px;height:14px}
+.searchbtn>svg{width:16px;height:16px;flex:0 0 16px}
+.notif .ni svg{width:15px;height:15px}
+.rowbtn svg{width:15px;height:15px}
+.pgn svg{width:14px;height:14px}
+.pgn[data-pg$=":prev"] svg{transform:rotate(180deg)}
+html[dir="rtl"] .pgn svg{transform:rotate(180deg)}
+html[dir="rtl"] .pgn[data-pg$=":prev"] svg{transform:none}
+.hidden{display:none!important}
+</style>
+</head>
+<body data-app="business">
+<div id="authgate" class="authgate">
+  <div class="authcard" id="authLogin">
+    <div class="abrand">
+      <svg viewBox="0 0 43 53" width="26" height="32" aria-hidden="true">
+        <defs>
+          <linearGradient id="agN" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0A4067"/><stop offset="1" stop-color="#12204F"/></linearGradient>
+          <linearGradient id="agT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12788E"/><stop offset="1" stop-color="#11244E"/></linearGradient>
+          <linearGradient id="agG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8DC637"/><stop offset="1" stop-color="#358A2C"/></linearGradient>
+        </defs>
+        <path d="M0 17h20v35h-7V25H0z" fill="url(#agN)"/><rect x="23" y="10" width="7" height="42" fill="url(#agT)"/><path d="M31 18 37 0 43 18h-3v34h-6V18z" fill="url(#agG)"/>
+      </svg>
+      <div><b>Trend</b><span id="authKind">Business Console</span></div>
+    </div>
+    <h2>Sign in</h2>
+    <div class="asub">Welcome back. Enter your credentials to continue.</div>
+    <div class="field"><label>Email</label><input class="inp" value="amamun@trend.app"></div>
+    <div class="field"><label>Password</label><input class="inp" type="password" value="demo-password"></div>
+    <div class="arow"><label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)"><span class="switch on" data-toggle></span> Remember me</label><button class="alink" id="authForgot">Forgot password?</button></div>
+    <button class="btn primary" id="authSignin" style="width:100%;justify-content:center;height:40px">Sign in</button>
+    <div class="demo grey" style="margin-top:16px">UI prototype · not connected to a backend</div>
+  </div>
+  <div class="authcard hidden" id="authReset">
+    <div class="abrand"><div><b>Trend</b><span>Reset password</span></div></div>
+    <h2>Forgot password</h2>
+    <div class="asub">Enter your email and we'll send a reset link.</div>
+    <div class="field"><label>Email</label><input class="inp" placeholder="you@company.com"></div>
+    <button class="btn primary" id="authSendReset" style="width:100%;justify-content:center;height:40px;margin-top:6px">Send reset link</button>
+    <div class="arow" style="justify-content:center;margin-top:14px"><button class="alink" id="authBack">← Back to sign in</button></div>
+    <div class="demo grey">UI prototype · not connected</div>
+  </div>
+</div>
+<div id="app">
+  <aside id="side">
+    <div class="brand">
+      <svg viewBox="0 0 43 53" width="23" height="28" class="tlogo" aria-hidden="true">
+        <defs>
+          <linearGradient id="tgN" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0A4067"/><stop offset="1" stop-color="#12204F"/></linearGradient>
+          <linearGradient id="tgT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12788E"/><stop offset=".55" stop-color="#0B4B71"/><stop offset="1" stop-color="#11244E"/></linearGradient>
+          <linearGradient id="tgG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8DC637"/><stop offset="1" stop-color="#358A2C"/></linearGradient>
+        </defs>
+        <path d="M0 17h20v35h-7V25H0z" fill="url(#tgN)"/>
+        <rect x="23" y="10" width="7" height="42" fill="url(#tgT)"/>
+        <path d="M31 18 37 0 43 18h-3v34h-6V18z" fill="url(#tgG)"/>
+      </svg>
+      <div class="bt"><b>Trend</b><span data-i18n="brand_sub">Business Solutions</span></div>
+    </div>
+    <nav class="navwrap" id="nav"></nav>
+  </aside>
+
+  <header id="top">
+    <button class="icbtn mobtoggle" id="mobBtn" title="Menu"></button>
+    <button class="icbtn" id="collapseBtn" title="Toggle sidebar"></button>
+    <button class="ctxpick" id="ctxBtn">
+      <div class="avatar" style="width:26px;height:26px;border-radius:7px;font-size:11px">C1</div>
+      <div class="co"><b id="ctxCo">Beirut Trading Co.</b><small id="ctxBr" data-i18n="ctx_branch">Main branch · USD/LBP</small></div>
+    </button>
+    <button class="searchbtn" id="searchBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+      <span data-i18n="search_ph">Search or jump to…</span><span class="kbd">⌘K</span>
+    </button>
+    <div class="spacer"></div>
+    <button class="icbtn" id="langBtn" title="Language"><b style="font-size:12px" id="langLbl">EN</b></button>
+    <button class="icbtn" id="themeBtn" title="Theme"></button>
+    <button class="icbtn" id="notifBtn" title="Notifications"><span class="dot"></span></button>
+    <button class="icbtn" id="userBtn" title="Account"><div class="avatar">AM</div></button>
+  </header>
+
+  <main id="main"><div class="page" id="page"></div></main>
+</div>
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* =================================================================== ICONS */
+const IC = {
+  dash:'<path d="M3 13h8V3H3z"/><path d="M13 21h8V11h-8z"/><path d="M13 3v6h8V3z"/><path d="M3 21h8v-4H3z"/>',
+  building:'<path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M18 21V9h2a1 1 0 0 1 1 1v11"/><path d="M9 7h2M9 11h2M9 15h2"/><path d="M2 21h20"/>',
+  server:'<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/>',
+  users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5.6"/><path d="M21 20a5.5 5.5 0 0 0-4-5.3"/>',
+  shield:'<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/>',
+  key:'<circle cx="8" cy="15" r="4"/><path d="m11 12 8-8 2 2-2 2 2 2-2 2-2-2-2 2"/>',
+  layers:'<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+  cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+  bell:'<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/>',
+  paperclip:'<path d="M21 11l-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 6"/>',
+  hash:'<path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/>',
+  box:'<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"/><path d="m4 7.5 8 4.5 8-4.5M12 21v-9"/>',
+  cart:'<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.5 13h11l2-9H6"/>',
+  truck:'<path d="M3 6h11v9H3z"/><path d="M14 9h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>',
+  wallet:'<path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v10a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2"/><circle cx="17" cy="14" r="1.2"/>',
+  book:'<path d="M4 4a2 2 0 0 1 2-2h13v18H6a2 2 0 0 0-2 2z"/><path d="M6 2v16"/>',
+  scroll:'<path d="M6 3h11v13a3 3 0 0 0 3 3H9a3 3 0 0 1-3-3z"/><path d="M6 16H4v1a3 3 0 0 0 3 3"/><path d="M10 7h6M10 11h6"/>',
+  boxes:'<path d="m7 8 4-2 4 2-4 2z"/><path d="M3 16l4-2 4 2-4 2z"/><path d="M13 16l4-2 4 2-4 2z"/>',
+  gauge:'<path d="M12 14 16 9"/><circle cx="12" cy="14" r="1.5"/><path d="M4 18a8 8 0 1 1 16 0"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  filter:'<path d="M3 5h18l-7 8v5l-4 2v-7z"/>',
+  dots:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+  chevr:'<path d="m9 6 6 6-6 6"/>',
+  chevd:'<path d="m6 9 6 6 6-6"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/>',
+  moon:'<path d="M20 15A8 8 0 1 1 9 4a6 6 0 0 0 11 11z"/>',
+  panel:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
+  inbox:'<path d="M3 12h5l2 3h4l2-3h5"/><path d="M5 5h14l2 7v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/>',
+  check:'<path d="m5 12 5 5 9-11"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  alert:'<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  edit:'<path d="M4 20h4L18 10l-4-4L4 16z"/><path d="m13 5 4 4"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+  trash:'<path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/>',
+  print:'<path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1"/><path d="M8 17h8v4H8z"/>',
+  logout:'<path d="M14 3h5v18h-5"/><path d="M10 12H3m0 0 4-4m-4 4 4 4"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  tag:'<path d="M3 3h8l10 10-8 8L3 11z"/><circle cx="7.5" cy="7.5" r="1.3"/>',
+  ruler:'<rect x="2" y="8" width="20" height="8" rx="1.5"/><path d="M6 8v3M10 8v4M14 8v3M18 8v4"/>',
+  arrowup:'<path d="M12 19V5M5 12l7-7 7 7"/>',
+  arrowdown:'<path d="M12 5v14M5 12l7 7 7-7"/>',
+  trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>',
+};
+function ic(n,cls){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '+(cls?'class="'+cls+'"':'')+'>'+(IC[n]||'')+'</svg>';}
+
+/* =================================================================== I18N */
+const I18N={
+  ar:{
+    brand_sub:"حلول الأعمال", ctx_branch:"الفرع الرئيسي · دولار/ليرة", search_ph:"ابحث أو انتقل…",
+    "Dashboard":"لوحة المعلومات","Owner Console":"لوحة المالك","Platform Activity":"نشاط المنصة",
+    "Tenants":"المستأجرون","Subscriptions":"الاشتراكات","Entitlements":"الصلاحيات",
+    "Login & Sessions":"الدخول والجلسات","Companies":"الشركات","Branches":"الفروع","Warehouses":"المستودعات",
+    "System Settings":"إعدادات النظام","Users":"المستخدمون","Roles":"الأدوار","Permissions":"الصلاحيات",
+    "Audit Log":"سجل التدقيق","Numbering":"الترقيم","Attachments":"المرفقات","Notifications":"الإشعارات",
+    "Customers":"العملاء","Suppliers":"الموردون","Items":"الأصناف","Units":"الوحدات",
+    "Sales Invoices":"فواتير المبيعات","Sales Returns":"مرتجعات المبيعات","Receipt Vouchers":"سندات القبض",
+    "Purchase Invoices":"فواتير الشراء","Purchase Returns":"مرتجعات الشراء","Payment Vouchers":"سندات الصرف",
+    "Chart of Accounts":"شجرة الحسابات","Statement of Account":"كشف الحساب",
+    "Inventory":"المخزون","Stock Movement":"حركة المخزون","Opening Stock":"رصيد افتتاحي",
+    "Stock In":"إدخال مخزون","Stock Out":"إخراج مخزون",
+    "New":"جديد","Export":"تصدير","Search":"بحث","selected":"محدد","Cancel":"إلغاء","Save":"حفظ",
+    "PLATFORM":"المنصة","ADMINISTRATION":"الإدارة","MASTER DATA":"البيانات الأساسية",
+    "SALES":"المبيعات","PROCUREMENT":"المشتريات","FINANCE":"المالية","STOCK":"المخزون",
+  }
+};
+let LANG="en";
+function t(s){ if(LANG==="en")return s; const m=I18N.ar; return (m&&m[s])||s; }
+
+/* =================================================================== DATA */
+const rnd=(a,b)=>Math.floor(a+Math.random()*(b-a+1));
+const money=n=>new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+const pad=(p,n)=>p+String(n).padStart(4,'0');
+function gen(n,f){const a=[];for(let i=0;i<n;i++)a.push(f(i));return a;}
+const CUSTNAMES=["Beirut Trading Co.","Cedar Distributors","Levant Supplies SARL","Phoenicia Wholesale","Mount Lebanon Retail","Tripoli Import Export","Sidon Markets","Zahle Agri Foods","Byblos Hardware","Jounieh Electronics","Baalbek Provisions","Tyre Coastal Trade"];
+const SUPPNAMES=["Global Source Ltd","Anatolia Textiles","Nile Foods Egypt","Gulf Machinery","EuroPack GmbH","Shanghai Components","Damascus Steel Co.","Amman Plastics","Athens Olive Oil","Milano Fashion"];
+const ITEMS=[["Sunflower Oil 5L","Grocery","LTR"],["Basmati Rice 25kg","Grocery","BAG"],["Steel Rebar 12mm","Hardware","TON"],["LED Bulb 9W","Electronics","PCS"],["Cotton Fabric","Textile","MTR"],["Ceramic Tile 60x60","Building","BOX"],["Olive Oil 1L","Grocery","BTL"],["PVC Pipe 4in","Hardware","PCS"],["Detergent 3kg","Household","PCS"],["Copper Wire 2.5mm","Electronics","ROLL"],["Sugar 50kg","Grocery","BAG"],["Cement 50kg","Building","BAG"]];
+const DATA={};
+DATA.customers=gen(12,i=>({id:i+1,code:pad('C',i+1),name:CUSTNAMES[i],phone:"+961 "+rnd(3,81)+" "+rnd(100,999)+" "+rnd(100,999),city:["Beirut","Tripoli","Sidon","Zahle","Jounieh","Byblos"][i%6],balance:rnd(-2000,45000),status:i%7===0?"Suspended":"Active"}));
+DATA.suppliers=gen(10,i=>({id:i+1,code:pad('S',i+1),name:SUPPNAMES[i],phone:"+961 "+rnd(1,7)+" "+rnd(100,999)+" "+rnd(100,999),country:["Turkey","Egypt","UAE","Germany","China","Italy","Lebanon"][i%7],balance:rnd(0,88000),status:"Active"}));
+DATA.items=gen(12,i=>({id:i+1,code:pad('IT',i+1),name:ITEMS[i][0],type:ITEMS[i][1],unit:ITEMS[i][2],price:rnd(3,900)+.5,onhand:rnd(0,1400),status:i%9===0?"Inactive":"Active"}));
+DATA.units=[["PCS","Piece",1],["BOX","Box of 12",12],["BAG","Bag",1],["LTR","Litre",1],["MTR","Metre",1],["TON","Tonne",1000],["BTL","Bottle",1],["ROLL","Roll",1]].map((u,i)=>({id:i+1,code:u[0],name:u[1],factor:u[2]}));
+DATA.warehouses=gen(5,i=>({id:i+1,code:pad('WH',i+1),name:["Main Store — Beirut","Cold Store — Beirut","Tripoli Depot","Zahle Depot","Transit Warehouse"][i],branch:["Main","Main","Tripoli","Zahle","Main"][i],items:rnd(40,320),status:"Active"}));
+DATA.companies=gen(8,i=>({id:i+1,code:pad('CO',i+1),name:["Beirut Trading Co.","Cedar Foods SARL","Levant Hardware","Phoenicia Textile","Mount Retail","Coastal Import","Highland Agri","Metro Distribution"][i],branches:rnd(1,5),users:rnd(3,22),currency:"USD / LBP",vat:i%3!==0,status:i===7?"Setup":"Active"}));
+DATA.branches=gen(6,i=>({id:i+1,code:pad('BR',i+1),name:["Main branch","Tripoli branch","Sidon branch","Zahle branch","Jounieh branch","Warehouse branch"][i],company:"Beirut Trading Co.",users:rnd(2,14),status:"Active"}));
+DATA.users=gen(11,i=>({id:i+1,name:["Abdullah Al Mamun","George Khoury","Rana Haddad","Karim Nasr","Layla Fares","Omar Sleiman","Nour Aziz","Ziad Rahme","Maya Chidiac","Sami Tannous","Hiba Mroue"][i],email:["amamun","gkhoury","rhaddad","knasr","lfares","osleiman","naziz","zrahme","mchidiac","stannous","hmroue"][i]+"@trend.app",role:["Owner","Admin","Accountant","Sales","Sales","Warehouse","Accountant","Admin","Sales","Warehouse","Viewer"][i],lastseen:["2m ago","1h ago","Today 09:14","Yesterday","3d ago","Today 08:02","1h ago","5h ago","Today 10:41","Yesterday","1w ago"][i],status:i===10?"Disabled":"Active"}));
+DATA.roles=[["Owner","Full platform & tenant control",1,32],["Admin","Company administration",3,28],["Accountant","Finance, vouchers, reports",2,17],["Sales","Sales documents & customers",3,11],["Warehouse","Stock movements & inventory",2,9],["Viewer","Read-only across modules",1,6]].map((r,i)=>({id:i+1,name:r[0],desc:r[1],users:r[2],perms:r[3]}));
+DATA.tenants=gen(9,i=>({id:i+1,code:"T-"+pad('',i+1),name:["Beirut Trading Group","Cedar Retail Chain","Levant Wholesale","Phoenicia Foods","Metro Distribution","Highland Agri Co.","Coastal Traders","Summit Hardware","Demo Tenant"][i],plan:["Business","Business","Enterprise","Business","Enterprise","Starter","Business","Starter","Trial"][i],users:rnd(3,40),companies:rnd(1,8),status:["Active","Active","Active","Suspended","Active","Provisioning","Active","Active","Trial"][i],created:["2026-01-12","2026-02-03","2026-02-20","2026-03-08","2026-04-01","2026-08-30","2026-05-14","2026-06-22","2026-08-28"][i]}));
+DATA.audit=gen(14,i=>({id:i+1,when:["09:41:20","09:38:02","09:12:55","08:59:31","08:47:10","08:31:44","08:20:03","Yesterday 17:22","Yesterday 16:58","Yesterday 15:10","Yesterday 11:04","Yesterday 09:30","2d ago 14:12","2d ago 10:05"][i],user:DATA.users[i%11].name,action:["Signed in","Created customer C0012","Updated item IT0004 price","Saved sales invoice draft","Disabled user hmroue","Changed role permissions","Created warehouse WH0005","Signed in","Exported customers","Updated system settings","Created supplier S0010","Signed in","Suspended tenant T-0004","Created company CO0008"][i],scope:["Auth","Master data","Master data","Sales","Users","Roles","Master data","Auth","Master data","Settings","Master data","Auth","Platform","Platform"][i]}));
+function docRows(prefix,names,withVat){return gen(14,i=>{const sub=rnd(120,9800);const vat=withVat?Math.round(sub*.11*100)/100:0;return{id:i+1,no:pad(prefix,140-i),date:"2026-0"+rnd(6,9)+"-"+String(rnd(1,28)).padStart(2,'0'),party:names[i%names.length],sub:sub,vat:vat,total:sub+vat,status:["Draft","Draft","Printed","Draft","Printed","Draft","Draft","Printed","Draft","Draft","Printed","Draft","Draft","Printed"][i]};});}
+DATA.salesInv=docRows('SI-',CUSTNAMES,true);
+DATA.salesRet=docRows('SR-',CUSTNAMES,true);
+DATA.receipts=docRows('RV-',CUSTNAMES,false);
+DATA.purchInv=docRows('PI-',SUPPNAMES,true);
+DATA.purchRet=docRows('PR-',SUPPNAMES,true);
+DATA.payments=docRows('PV-',SUPPNAMES,false);
+DATA.movements=gen(14,i=>({id:i+1,no:pad('SM-',220-i),date:"2026-0"+rnd(7,9)+"-"+String(rnd(1,28)).padStart(2,'0'),type:["Stock In","Stock Out","Opening","Stock In","Stock Out","Stock In","Opening","Stock Out","Stock In","Stock Out","Stock In","Opening","Stock Out","Stock In"][i],item:ITEMS[i%ITEMS.length][0],wh:DATA.warehouses[i%5].name,qty:(["Stock Out","Stock Out","Stock Out"].indexOf(["Stock In","Stock Out","Opening","Stock In","Stock Out","Stock In","Opening","Stock Out","Stock In","Stock Out","Stock In","Opening","Stock Out","Stock In"][i])>=0?-1:1)*rnd(5,400),status:i%4===0?"Draft":"Confirmed"}));
+
+/* =================================================================== NAV MODEL */
+const NAV=[
+ {g:"PLATFORM",items:[
+   {id:"dashboard",label:"Dashboard",icon:"dash"},
+   {id:"owner",label:"Owner Console",icon:"server"},
+   {id:"tenants",label:"Tenants",icon:"layers"},
+   {id:"subscriptions",label:"Subscriptions",icon:"tag",tag:"UI"},
+   {id:"entitlements",label:"Entitlements",icon:"key",tag:"UI"},
+   {id:"sessions",label:"Login & Sessions",icon:"shield"},
+ ]},
+ {g:"ADMINISTRATION",items:[
+   {id:"companies",label:"Companies",icon:"building"},
+   {id:"branches",label:"Branches",icon:"building"},
+   {id:"warehouses",label:"Warehouses",icon:"boxes"},
+   {id:"users",label:"Users",icon:"users"},
+   {id:"roles",label:"Roles",icon:"shield"},
+   {id:"permissions",label:"Permissions",icon:"key"},
+   {id:"settings",label:"System Settings",icon:"cog"},
+   {id:"audit",label:"Audit Log",icon:"scroll"},
+   {id:"numbering",label:"Numbering",icon:"hash"},
+ ]},
+ {g:"MASTER DATA",items:[
+   {id:"customers",label:"Customers",icon:"users"},
+   {id:"suppliers",label:"Suppliers",icon:"truck"},
+   {id:"items",label:"Items",icon:"box"},
+   {id:"units",label:"Units",icon:"ruler"},
+ ]},
+ {g:"SALES",items:[
+   {id:"salesInv",label:"Sales Invoices",icon:"cart",tag:"UI"},
+   {id:"salesRet",label:"Sales Returns",icon:"cart",tag:"UI"},
+   {id:"receipts",label:"Receipt Vouchers",icon:"wallet",tag:"UI"},
+ ]},
+ {g:"PROCUREMENT",items:[
+   {id:"purchInv",label:"Purchase Invoices",icon:"truck",tag:"UI"},
+   {id:"purchRet",label:"Purchase Returns",icon:"truck",tag:"UI"},
+   {id:"payments",label:"Payment Vouchers",icon:"wallet",tag:"UI"},
+ ]},
+ {g:"FINANCE",items:[
+   {id:"coa",label:"Chart of Accounts",icon:"book",tag:"BLK"},
+   {id:"soa",label:"Statement of Account",icon:"scroll",tag:"BLK"},
+ ]},
+ {g:"STOCK",items:[
+   {id:"inventory",label:"Inventory",icon:"boxes"},
+   {id:"movement",label:"Stock Movement",icon:"trend"},
+   {id:"opening",label:"Opening Stock",icon:"box",tag:"UI"},
+   {id:"stockin",label:"Stock In",icon:"arrowdown",tag:"UI"},
+   {id:"stockout",label:"Stock Out",icon:"arrowup",tag:"UI"},
+ ]},
+];
+const SCREENMETA={};NAV.forEach(gp=>gp.items.forEach(it=>SCREENMETA[it.id]={label:it.label,group:gp.g,icon:it.icon,tag:it.tag}));
+
+/* =================================================================== STATE */
+const S={screen:"dashboard",collapsed:false,theme:"light",tstate:{},navcol:new Set()};
+function tstate(id){ if(!S.tstate[id])S.tstate[id]={sort:null,dir:1,q:"",page:1,per:8,sel:new Set(),view:0,hidden:new Set()}; return S.tstate[id]; }
+
+/* =================================================================== COMPONENTS */
+function badge(status){
+  const m={Active:"success",Confirmed:"success",Printed:"info",Draft:"warning",Provisioning:"info",
+    Trial:"info",Suspended:"danger",Disabled:"danger",Inactive:"danger",Setup:"warning"};
+  return '<span class="badge '+(m[status]||'')+'">'+(m[status]?'<span class="bd"></span>':'')+t(status)+'</span>';
+}
+function tagBadge(tag){ if(tag==="UI")return '<span class="badge ni">UI-only</span>'; if(tag==="BLK")return '<span class="badge danger">Blocked</span>'; return ''; }
+function crumbs(arr){return '<div class="crumbs">'+arr.map((c,i)=>(i?ic('chevr'):'')+'<span>'+c+'</span>').join('')+'</div>';}
+function phead(o){
+  return crumbs(o.crumbs)+'<div class="phead"><div><h1>'+t(o.title)+(o.tag?' '+tagBadge(o.tag):'')+'</h1>'+
+    (o.desc?'<p>'+o.desc+'</p>':'')+'</div>'+(o.acts?'<div class="acts">'+o.acts+'</div>':'')+'</div>';
+}
+function kpi(o){
+  const v=o.na?'<div class="kv na">'+o.value+'</div>':'<div class="kv">'+o.value+'</div>';
+  const d=o.delta?'<div class="kd '+(o.dir||'')+'">'+(o.dir==='up'?ic('arrowup'):o.dir==='down'?ic('arrowdown'):'')+o.delta+'</div>':(o.note?'<div class="kd">'+o.note+'</div>':'');
+  return '<div class="kpi"><div class="kl">'+ic(o.icon)+t(o.label)+'</div>'+v+d+'</div>';
+}
+/* Reusable data table: sort/search/paginate/select/states + saved views + column control + object nav */
+const COLREG={};
+function table(cfg){
+  const st=tstate(cfg.id);
+  COLREG[cfg.id]=cfg.cols.map(c=>({key:c.key,label:c.label}));
+  const cols=cfg.cols.filter(c=>!(st.hidden&&st.hidden.has(c.key)));
+  let rows=cfg.rows.slice();
+  if(cfg.state==='loading'){ return tableShell(cfg,'<tbody>'+gen(6,()=>'<tr>'+cols.map(()=>'<td><div class="skel" style="width:'+rnd(40,90)+'%"></div></td>').join('')+'</tr>').join('')+'</tbody>',true); }
+  if(cfg.state==='error'){ return tableShell(cfg,'<tbody><tr><td colspan="'+(cols.length+2)+'"><div class="state">'+ic('alert')+'<h4>Could not load '+t(cfg.title)+'</h4><p>A network error occurred while fetching this data.</p><button class="btn" onclick="rerender()">Retry</button></div></td></tr></tbody>'); }
+  if(cfg.views&&cfg.views[st.view]&&cfg.views[st.view].f){ rows=rows.filter(cfg.views[st.view].f); }
+  if(st.q){ const q=st.q.toLowerCase(); rows=rows.filter(r=>cfg.cols.some(c=>String(typeof c.val==='function'?c.val(r):r[c.key]).toLowerCase().includes(q))); }
+  if(st.sort){ const c=cfg.cols.find(x=>x.key===st.sort); if(c){ rows.sort((a,b)=>{let x=c.raw?c.raw(a):a[c.key],y=c.raw?c.raw(b):b[c.key]; if(typeof x==='number')return (x-y)*st.dir; return String(x).localeCompare(String(y))*st.dir;}); } }
+  const total=rows.length;
+  if(total===0){ return tableShell(cfg,'<tbody><tr><td colspan="'+(cols.length+2)+'"><div class="state">'+ic('inbox')+'<h4>'+(st.q?'No matches':'Nothing here yet')+'</h4><p>'+(st.q?'No '+t(cfg.title).toLowerCase()+' match “'+st.q+'”.':'When you add '+t(cfg.title).toLowerCase()+' they will appear here.')+'</p>'+(st.q||cfg.obj?'':'<button class="btn primary" data-new="'+cfg.id+'">'+ic('plus')+t('New')+'</button>')+'</div></td></tr></tbody>'); }
+  const pages=Math.ceil(total/st.per); if(st.page>pages)st.page=pages; if(st.page<1)st.page=1;
+  const slice=rows.slice((st.page-1)*st.per,st.page*st.per);
+  const openRow=r=>cfg.obj?('data-obj="'+cfg.obj+':'+r.id+'"'):('data-row="'+cfg.id+':'+r.id+'"');
+  const openBtn=r=>cfg.obj?('data-obj="'+cfg.obj+':'+r.id+'"'):('data-open="'+cfg.id+':'+r.id+'"');
+  const head='<thead><tr><th style="width:34px"><input type="checkbox" class="chkbx" data-selall="'+cfg.id+'" aria-label="Select all" '+(slice.length&&slice.every(r=>st.sel.has(r.id))?'checked':'')+'></th>'+
+    cols.map(c=>'<th class="'+(c.num?'num ':'')+'sortable '+(st.sort===c.key?(st.dir>0?'asc':'desc'):'')+'" data-sort="'+c.key+'" data-t="'+cfg.id+'">'+t(c.label)+'<span class="sar">'+(st.sort===c.key?(st.dir>0?'▲':'▼'):'↕')+'</span></th>').join('')+
+    '<th style="width:44px"></th></tr></thead>';
+  const body='<tbody>'+slice.map(r=>{
+    return '<tr class="'+(st.sel.has(r.id)?'sel':'')+'" '+openRow(r)+'>'+
+      '<td><input type="checkbox" class="chkbx" data-selrow="'+cfg.id+':'+r.id+'" aria-label="Select row" '+(st.sel.has(r.id)?'checked':'')+'></td>'+
+      cols.map(c=>{const val=typeof c.val==='function'?c.val(r):r[c.key];return '<td class="'+(c.num?'num':'')+'">'+val+'</td>';}).join('')+
+      '<td class="rowact"><button class="rowbtn" '+openBtn(r)+' title="Open" aria-label="Open">'+ic('eye')+'</button></td></tr>';
+  }).join('')+'</tbody>';
+  const foot='<div class="tfoot"><span>'+((st.page-1)*st.per+1)+'–'+Math.min(st.page*st.per,total)+' of '+total+'</span>'+
+    '<div class="pager"><button class="pgn" data-pg="'+cfg.id+':prev" '+(st.page===1?'disabled':'')+' aria-label="Previous page">'+ic('chevr','')+'</button>'+
+    gen(pages,p=>'<button class="pgn '+(p+1===st.page?'on':'')+'" data-pg="'+cfg.id+':'+(p+1)+'">'+(p+1)+'</button>').join('')+
+    '<button class="pgn" data-pg="'+cfg.id+':next" '+(st.page===pages?'disabled':'')+' aria-label="Next page">'+ic('chevr')+'</button></div></div>';
+  const selbar=st.sel.size?'<div class="selbar">'+ic('check')+'<b>'+st.sel.size+'</b> '+t('selected')+
+    '<button class="btn sm" data-bulk="print:'+cfg.id+'">'+ic('print')+'Print</button>'+
+    '<button class="btn sm" data-bulk="export:'+cfg.id+'">'+ic('paperclip')+'Export</button>'+
+    '<button class="btn sm ghost" data-bulk="clear:'+cfg.id+'">Clear</button></div>':'';
+  return tableShell(cfg,head+body,false,selbar,foot);
+}
+function tableShell(cfg,inner,loading,selbar,foot){
+  const st=tstate(cfg.id);
+  const viewsBar=cfg.views?'<div class="fbar"><div class="views" role="tablist">'+cfg.views.map((v,i)=>{const n=v.f?cfg.rows.filter(v.f).length:cfg.rows.length;return '<button class="view '+(i===st.view?'on':'')+'" data-view="'+cfg.id+':'+i+'">'+v.label+'<span class="vc">'+n+'</span></button>';}).join('')+'</div>'+
+    '<div style="margin-inline-start:auto"><button class="chip" data-colmenu="'+cfg.id+'">'+ic('layers')+'Columns</button></div></div>':'';
+  const bar='<div class="tbar"><div class="tinput">'+ic('search')+'<input placeholder="'+t('Search')+' '+t(cfg.title).toLowerCase()+'…" value="'+(st.q||'')+'" data-search="'+cfg.id+'" aria-label="Search '+t(cfg.title)+'"></div>'+
+    '<button class="chip">'+ic('filter')+t('Filter')+'</button>'+
+    '<div style="margin-inline-start:auto;display:flex;gap:8px">'+
+    (cfg.canNew?'<button class="btn sm primary" data-new="'+cfg.id+'">'+ic('plus')+t('New')+'</button>':'')+
+    '<button class="btn sm" data-bulk="export:'+cfg.id+'">'+ic('paperclip')+t('Export')+'</button></div></div>';
+  return '<div class="card">'+viewsBar+bar+(selbar||'')+'<div class="tscroll"><table class="dt">'+inner+'</table></div>'+(foot||'')+'</div>';
+}
+function money2(n,neg){return '<span class="mono"'+(neg&&n<0?' style="color:var(--danger)"':'')+'>'+(n<0?'('+money(-n)+')':money(n))+'</span>';}
+function bars(vals,labels){const mx=Math.max(...vals);return '<div class="bars">'+vals.map((v,i)=>'<div class="bar" style="height:'+Math.round(v/mx*100)+'%" title="'+labels[i]+': '+v+'"><span>'+labels[i]+'</span></div>').join('')+'</div>';}
+function donut(segs){ // segs=[{v,color,label}]
+  const tot=segs.reduce((a,s)=>a+s.v,0);let off=0;const r=52,c=2*Math.PI*r;
+  const arcs=segs.map(s=>{const len=s.v/tot*c;const el='<circle r="'+r+'" cx="66" cy="66" fill="none" stroke="'+s.color+'" stroke-width="18" stroke-dasharray="'+len+' '+(c-len)+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 66 66)"/>';off+=len;return el;}).join('');
+  return '<svg class="donut" viewBox="0 0 132 132">'+arcs+'<text x="66" y="63" text-anchor="middle" font-size="20" font-weight="700" fill="var(--text)">'+tot+'</text><text x="66" y="80" text-anchor="middle" font-size="10" fill="var(--muted)">total</text></svg>';
+}
+
+/* =================================================================== SCREENS */
+const SCREENS={};
+function listScreen(o){return function(){ const canNew=o.tag!=='BLK'; return phead({crumbs:[o.group,o.title],title:o.title,tag:o.tag,desc:o.desc,
+  acts:(canNew?'<button class="btn primary" data-new="'+o.id+'">'+ic('plus')+t('New')+'</button>':'')})
+  +(o.banner||'')+table({id:o.id,title:o.title,rows:o.rows,cols:o.cols,canNew:canNew}); };}
+
+const uiBanner='<div class="banner warn">'+ic('info')+'<div><b>Document capture only.</b> These screens are UI-only in Phase 1 — posting is not switched on. No entry reaches a ledger and no balance changes. (Gate: decision C-16.)</div></div>';
+
+SCREENS.dashboard=function(){
+  const co=DATA.companies[0];
+  return phead({crumbs:["Platform","Dashboard"],title:"Dashboard",desc:"Operational overview for "+co.name+" — Main branch. Figures below are prototype sample data."})+
+  '<div class="kpis" style="margin-bottom:16px">'+
+    kpi({icon:"cart",label:"Open sales drafts",value:"14",note:"awaiting review"})+
+    kpi({icon:"truck",label:"Open purchase drafts",value:"9",note:"awaiting review"})+
+    kpi({icon:"box",label:"Items tracked",value:"312",delta:"12 new",dir:"up"})+
+    kpi({icon:"book",label:"Ledger balance",value:"— not posted",na:true})+
+  '</div>'+
+  '<div class="two" style="margin-bottom:16px">'+
+    '<div class="card"><div class="ch"><h3>Document activity</h3><span class="sub">last 8 weeks · count of drafts captured</span></div><div class="cb">'+
+      bars([12,18,9,22,16,25,14,20],["W1","W2","W3","W4","W5","W6","W7","W8"])+
+      '<div class="legend"><span><i style="background:var(--brand-navy)"></i>Captured documents</span><span style="color:var(--faint)"><i style="background:var(--border-strong)"></i>Ledger series unavailable until posting is live</span></div></div></div>'+
+    '<div class="card"><div class="ch"><h3>Draft mix</h3></div><div class="cb" style="display:flex;gap:16px;align-items:center">'+
+      donut([{v:14,color:'#12204F'},{v:9,color:'#12788E'},{v:6,color:'#8DC637'}])+
+      '<div class="legend" style="margin:0;flex-direction:column;gap:8px"><span><i style="background:#12204F"></i>Sales</span><span><i style="background:#12788E"></i>Purchase</span><span><i style="background:#8DC637"></i>Stock</span></div></div></div>'+
+  '</div>'+
+  '<div class="two">'+
+    '<div class="card"><div class="ch"><h3>Recent activity</h3><a class="sub" data-go="audit" style="margin-inline-start:auto;cursor:pointer;color:var(--accent)">View audit log</a></div><div class="cb" style="padding-top:6px">'+
+      DATA.audit.slice(0,6).map(a=>'<div class="act"><div class="ai">'+ic('clock')+'</div><div><div>'+a.action+'</div><small>'+a.user+' · '+a.scope+'</small></div><div class="at">'+a.when+'</div></div>').join('')+
+    '</div></div>'+
+    '<div class="card"><div class="ch"><h3>Quick actions</h3></div><div class="cb"><div class="qa">'+
+      [["New sales invoice","cart","salesInv"],["New purchase invoice","truck","purchInv"],["Add customer","users","customers"],["Add item","box","items"],["Stock movement","trend","movement"],["Manage users","shield","users"]].map(q=>'<button class="qab" data-go="'+q[2]+'"><div class="qi">'+ic(q[1])+'</div><b>'+q[0]+'</b><small>'+SCREENMETA[q[2]].group+'</small></button>').join('')+
+    '</div></div></div>'+
+  '</div>';
+};
+
+SCREENS.owner=function(){
+  return phead({crumbs:["Platform","Owner Console"],title:"Owner Console",desc:"Platform-level control across every tenant. This is Mamun's console, not resold to tenants."})+
+  '<div class="kpis" style="margin-bottom:16px">'+
+    kpi({icon:"layers",label:"Total tenants",value:"9",delta:"1 this week",dir:"up"})+
+    kpi({icon:"check",label:"Active",value:"7"})+
+    kpi({icon:"server",label:"Provisioning",value:"1",note:"Highland Agri Co."})+
+    kpi({icon:"alert",label:"Suspended",value:"1",note:"Phoenicia Foods"})+
+  '</div>'+
+  '<div class="card"><div class="ch"><h3>Tenants</h3><span class="sub">every business running Trend</span><button class="btn sm primary" style="margin-inline-start:auto" data-new="tenants">'+ic('plus')+'New tenant</button></div></div>'+
+  '<div style="height:14px"></div>'+
+  table({id:"tenants",title:"Tenants",rows:DATA.tenants,canNew:false,cols:[
+    {key:"code",label:"Code",val:r=>'<span class="mono">'+r.code+'</span>'},
+    {key:"name",label:"Tenant"},
+    {key:"plan",label:"Plan",val:r=>'<span class="badge info">'+r.plan+'</span>'},
+    {key:"companies",label:"Companies",num:true,raw:r=>r.companies},
+    {key:"users",label:"Users",num:true,raw:r=>r.users},
+    {key:"status",label:"Status",val:r=>badge(r.status)},
+    {key:"created",label:"Created"},
+  ]});
+};
+
+SCREENS.tenants=function(){ S.screen='tenants'; return phead({crumbs:["Platform","Tenants"],title:"Tenants",desc:"Tenant lifecycle: create → migrate → verify → activate → suspend (ADR-024)."})+
+  table({id:"tenants",title:"Tenants",rows:DATA.tenants,canNew:true,cols:[
+    {key:"code",label:"Code",val:r=>'<span class="mono">'+r.code+'</span>'},{key:"name",label:"Tenant"},
+    {key:"plan",label:"Plan",val:r=>'<span class="badge info">'+r.plan+'</span>'},
+    {key:"companies",label:"Companies",num:true,raw:r=>r.companies},{key:"users",label:"Users",num:true,raw:r=>r.users},
+    {key:"status",label:"Status",val:r=>badge(r.status)},{key:"created",label:"Created"}]}); };
+
+SCREENS.subscriptions=function(){
+  return phead({crumbs:["Platform","Subscriptions"],title:"Subscriptions",tag:"UI",desc:"Subscription mechanism only. <b>Plans and prices are not defined anywhere</b> and are not invented here (category ④)."})+
+  '<div class="banner warn">'+ic('info')+'<div><b>Mechanism, not commercial model.</b> The plan names below are placeholders to show the surface. No pricing, tier or entitlement set has been approved.</div></div>'+
+  '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">'+
+    [["Starter","—","Placeholder tier"],["Business","—","Placeholder tier"],["Enterprise","—","Placeholder tier"]].map(p=>
+    '<div class="card"><div class="cb"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">'+p[0]+'</h3><span class="badge ni">undefined</span></div>'+
+    '<div style="font-size:30px;font-weight:700;margin:10px 0 2px;color:var(--faint)">'+p[1]+'</div><small style="color:var(--muted)">'+p[2]+'</small>'+
+    '<div style="margin-top:14px;color:var(--muted);font-size:12.5px">Feature set to be decided by the owner.</div></div></div>').join('')+
+  '</div>';
+};
+SCREENS.entitlements=function(){
+  const feats=[["Sales module","Business+",true],["Procurement module","Business+",true],["Finance & Accounting","Enterprise",true],["Multi-warehouse stock","Business+",true],["Offline desktop client","Enterprise",false],["Advanced analytics","Enterprise",false],["API integrations","Enterprise",false],["Custom numbering","Business+",true]];
+  return phead({crumbs:["Platform","Entitlements"],title:"Feature Entitlements",tag:"UI",desc:"Entitlements resolve from a signed licence and are verified server-side (ADR-020). The mapping below is illustrative."})+
+  '<div class="card"><table class="dt"><thead><tr><th>Feature</th><th>Available from</th><th>This tenant</th></tr></thead><tbody>'+
+  feats.map(f=>'<tr><td>'+f[0]+'</td><td><span class="badge">'+f[1]+'</span></td><td>'+(f[2]?'<span class="badge success"><span class="bd"></span>Enabled</span>':'<span class="badge">Not in plan</span>')+'</td></tr>').join('')+
+  '</tbody></table></div>';
+};
+SCREENS.sessions=function(){
+  const rows=DATA.users.slice(0,7).map((u,i)=>({id:u.id,name:u.name,role:u.role,window:i%3===0?"08:00–18:00":i%3===1?"Any time":"07:00–15:00",device:["Chrome · Windows","Edge · Windows","Safari · macOS","Chrome · Android","Chrome · Windows","Firefox · Linux","Chrome · Windows"][i],last:u.lastseen}));
+  return phead({crumbs:["Platform","Login & Sessions"],title:"Login & Sessions",desc:"Per-user sign-in windows (CR-072) and active sessions. Password flows use Argon2id with rotating refresh tokens."})+
+  '<div class="banner info">'+ic('shield')+'<div>Sign-in windows restrict <b>when</b> a user may authenticate. Outside the window, login is refused — a confirmed client requirement (CR-072).</div></div>'+
+  table({id:"sessions",title:"sessions",rows:rows,cols:[
+    {key:"name",label:"User"},{key:"role",label:"Role",val:r=>'<span class="badge">'+r.role+'</span>'},
+    {key:"window",label:"Sign-in window",val:r=>'<span class="mono">'+r.window+'</span>'},
+    {key:"device",label:"Current device"},{key:"last",label:"Last seen"}]});
+};
+
+SCREENS.companies=listScreen({id:"companies",group:"Administration",title:"Companies",desc:"Eight companies configured under this tenant.",rows:DATA.companies,cols:[
+  {key:"code",label:"Code",val:r=>'<span class="mono">'+r.code+'</span>'},{key:"name",label:"Company"},
+  {key:"branches",label:"Branches",num:true,raw:r=>r.branches},{key:"users",label:"Users",num:true,raw:r=>r.users},
+  {key:"currency",label:"Currency"},{key:"vat",label:"VAT",val:r=>r.vat?'<span class="badge success"><span class="bd"></span>On</span>':'<span class="badge">Off</span>'},
+  {key:"status",label:"Status",val:r=>badge(r.status)}]});
+SCREENS.branches=listScreen({id:"branches",group:"Administration",title:"Branches",rows:DATA.branches,cols:[
+  {key:"code",label:"Code",val:r=>'<span class="mono">'+r.code+'</span>'},{key:"name",label:"Branch"},
+  {key:"company",label:"Company"},{key:"users",label:"Users",num:true,raw:r=>r.users},{key:"status",label:"Status",val:r=>badge(r.status)}]});
+SCREENS.warehouses=listScreen({id:"warehouses",group:"Administration",title:"Warehouses",rows:DATA.warehouses,cols:[
+  {key:"code",label:"Code",val:r=>'<span class="mono">'+r.code+'</span>'},{key:"name",label:"Warehouse"},
+  {key:"branch",label:"Branch"},{key:"items",label:"Distinct items",num:true,raw:r=>r.items},{key:"status",label:"Status",val:r=>badge(r.status)}]});
+SCREENS.users=listScreen({id:"users",group:"Administration",title:"Users",desc:"Users, roles, and last activity.",rows:DATA.users,cols:[
+  {key:"name",label:"Name"},{key:"email",label:"Email",val:r=>'<span class="mono" style="font-size:12px">'+r.email+'</span>'},
+  {key:"role",label:"Role",val:r=>'<span class="badge">'+r.role+'</span>'},{key:"lastseen",label:"Last seen"},
+  {key:"status",label:"Status",val:r=>badge(r.status)}]});
+SCREENS.roles=function(){
+  return phead({crumbs:["Administration","Roles"],title:"Roles",desc:"Six roles. Permissions are branch- and warehouse-scoped.",acts:'<button class="btn primary" data-new="roles">'+ic('plus')+t('New')+'</button>'})+
+  '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">'+
+  DATA.roles.map(r=>'<div class="card"><div class="cb"><div style="display:flex;align-items:center;gap:9px"><div class="qi" style="width:32px;height:32px;border-radius:8px;background:var(--info-bg);color:var(--info);display:grid;place-items:center">'+ic('shield')+'</div><h3 style="margin:0;font-size:15px">'+r.name+'</h3></div>'+
+  '<p style="color:var(--muted);font-size:12.5px;margin:9px 0 12px">'+r.desc+'</p>'+
+  '<div style="display:flex;gap:16px;font-size:12.5px;color:var(--muted)"><span><b style="color:var(--text)">'+r.users+'</b> users</span><span><b style="color:var(--text)">'+r.perms+'</b> permissions</span></div>'+
+  '<div style="margin-top:12px;display:flex;gap:7px"><button class="btn sm" data-go="permissions">'+ic('key')+'Permissions</button><button class="btn sm ghost" data-open="roles:'+r.id+'">'+ic('edit')+'Edit</button></div></div></div>').join('')+'</div>';
+};
+SCREENS.permissions=function(){
+  const mods=["Sales","Procurement","Finance","Stock","Master Data","Administration"];const acts=["View","Create","Edit","Delete","Post"];
+  const roles=["Admin","Accountant","Sales","Warehouse"];
+  return phead({crumbs:["Administration","Permissions"],title:"Permissions",desc:"Permission matrix — what each role may do per module. Scoped by branch and warehouse. “Post” stays disabled everywhere in Phase 1 (no posting engine)."})+
+  '<div class="card"><div class="tscroll"><table class="dt"><thead><tr><th>Module</th><th>Action</th>'+roles.map(r=>'<th style="text-align:center">'+r+'</th>').join('')+'</tr></thead><tbody>'+
+  mods.map(m=>acts.map((a,ai)=>'<tr>'+(ai===0?'<td rowspan="'+acts.length+'" style="font-weight:600;vertical-align:top">'+m+'</td>':'')+'<td>'+a+(a==="Post"?' <span class="badge ni">gated</span>':'')+'</td>'+
+    roles.map((r,ri)=>{const on=a!=="Post"&&(a==="View"||((ri+ai)%2===0));const dis=a==="Post";return '<td style="text-align:center">'+(dis?'<span style="color:var(--faint)">—</span>':'<span class="switch '+(on?'on':'')+'" style="display:inline-flex" data-perm="'+m+r+a+'"></span>')+'</td>';}).join('')+'</tr>').join('')).join('')+
+  '</tbody></table></div></div>';
+};
+SCREENS.settings=function(){
+  return phead({crumbs:["Administration","System Settings"],title:"System Settings",desc:"Per-company configuration. VAT is a per-tenant flag."})+
+  '<div class="two"><div class="card"><div class="ch"><h3>General</h3></div><div class="cb">'+
+  '<div class="frow"><div class="field"><label>Company name</label><input class="inp" value="Beirut Trading Co."></div>'+
+  '<div class="field"><label>Fiscal year start</label><select class="sel"><option>1 January</option><option>1 April</option></select></div></div>'+
+  '<div class="frow"><div class="field"><label>Base currency</label><select class="sel"><option>USD</option></select></div>'+
+  '<div class="field"><label>Secondary currency</label><select class="sel"><option>LBP</option></select></div></div>'+
+  '<div class="field"><label style="display:flex;align-items:center;gap:10px"><span class="switch on" data-toggle></span> VAT enabled for this company</label><span class="hint">Turn VAT on or off per tenant — a legitimate, per-company setting.</span></div>'+
+  '</div></div>'+
+  '<div class="card"><div class="ch"><h3>Localization</h3></div><div class="cb">'+
+  '<div class="field"><label>Default language</label><select class="sel"><option>English</option><option>العربية (Arabic)</option></select></div>'+
+  '<div class="field"><label>Number format</label><select class="sel"><option>1,234.56</option></select></div>'+
+  '<div class="field"><label style="display:flex;align-items:center;gap:10px"><span class="switch on" data-toggle></span> Right-to-left support</label></div>'+
+  '<div style="margin-top:14px"><button class="btn primary" data-toast="Settings saved">'+ic('check')+'Save changes</button></div>'+
+  '</div></div></div>';
+};
+SCREENS.audit=listScreen({id:"audit",group:"Administration",title:"Audit Log",tag:null,desc:"Immutable record of who did what. Every write is logged (Constitution §19).",rows:DATA.audit,cols:[
+  {key:"when",label:"When"},{key:"user",label:"User"},{key:"action",label:"Action"},{key:"scope",label:"Scope",val:r=>'<span class="badge">'+r.scope+'</span>'}]});
+SCREENS.numbering=function(){
+  const seq=[["Sales Invoice","SI-",140,"Yearly reset"],["Purchase Invoice","PI-",140,"Yearly reset"],["Receipt Voucher","RV-",140,"Continuous"],["Payment Voucher","PV-",140,"Continuous"],["Stock Movement","SM-",220,"Continuous"]];
+  return phead({crumbs:["Administration","Numbering"],title:"Numbering",desc:"Statutory document numbers are separate from internal UUID keys (ADR-017). Each series has its own format and reset rule."})+
+  '<div class="card"><table class="dt"><thead><tr><th>Document</th><th>Prefix</th><th class="num">Next number</th><th>Reset</th><th></th></tr></thead><tbody>'+
+  seq.map(s=>'<tr><td>'+s[0]+'</td><td><span class="mono">'+s[1]+'</span></td><td class="num mono">'+s[1]+String(s[2]).padStart(4,'0')+'</td><td><span class="badge">'+s[3]+'</span></td><td class="rowact"><button class="rowbtn" data-toast="Editing '+s[0]+' series">'+ic('edit')+'</button></td></tr>').join('')+
+  '</tbody></table></div>';
+};
+
+/* master data */
+SCREENS.customers=listScreen({id:"customers",group:"Master Data",title:"Customers",desc:"Sales depends on these.",rows:DATA.customers,cols:[
+  {key:"code",label:"Code",val:r=>'<span class="mono">'+r.code+'</span>'},{key:"name",label:"Name"},{key:"phone",label:"Phone"},{key:"city",label:"City"},
+  {key:"balance",label:"Balance",num:true,raw:r=>r.balance,val:r=>money2(r.balance,true)},{key:"status",label:"Status",val:r=>badge(r.status)}]});
+SCREENS.suppliers=listScreen({id:"suppliers",group:"Master Data",title:"Suppliers",rows:DATA.suppliers,cols:[
+  {key:"code",label:"Code",val:r=>'<span class="mono">'+r.code+'</span>'},{key:"name",label:"Name"},{key:"phone",label:"Phone"},{key:"country",label:"Country"},
+  {key:"balance",label:"Balance",num:true,raw:r=>r.balance,val:r=>money2(r.balance)},{key:"status",label:"Status",val:r=>badge(r.status)}]});
+SCREENS.items=listScreen({id:"items",group:"Master Data",title:"Items",desc:"Item type is a maintainable lookup list (CR-070), not a fixed enum.",rows:DATA.items,cols:[
+  {key:"code",label:"Code",val:r=>'<span class="mono">'+r.code+'</span>'},{key:"name",label:"Item"},
+  {key:"type",label:"Type",val:r=>'<span class="badge">'+r.type+'</span>'},{key:"unit",label:"Unit"},
+  {key:"price",label:"Price",num:true,raw:r=>r.price,val:r=>money2(r.price)},{key:"onhand",label:"On hand",num:true,raw:r=>r.onhand},{key:"status",label:"Status",val:r=>badge(r.status)}]});
+SCREENS.units=listScreen({id:"units",group:"Master Data",title:"Units",rows:DATA.units,cols:[
+  {key:"code",label:"Code",val:r=>'<span class="mono">'+r.code+'</span>'},{key:"name",label:"Name"},{key:"factor",label:"Base factor",num:true,raw:r=>r.factor}]});
+
+/* business docs */
+function docCols(withVat){const c=[{key:"no",label:"Number",val:r=>'<span class="mono">'+r.no+'</span>'},{key:"date",label:"Date"},{key:"party",label:"Party"},
+  {key:"sub",label:"Subtotal",num:true,raw:r=>r.sub,val:r=>money2(r.sub)}];
+  if(withVat)c.push({key:"vat",label:"VAT",num:true,raw:r=>r.vat,val:r=>money2(r.vat)});
+  c.push({key:"total",label:"Total",num:true,raw:r=>r.total,val:r=>'<b>'+money2(r.total)+'</b>'});
+  c.push({key:"status",label:"Status",val:r=>badge(r.status)});return c;}
+SCREENS.salesInv=listScreen({id:"salesInv",group:"Sales",title:"Sales Invoices",tag:"UI",banner:uiBanner,rows:DATA.salesInv,cols:docCols(true)});
+SCREENS.salesRet=listScreen({id:"salesRet",group:"Sales",title:"Sales Returns",tag:"UI",banner:uiBanner,rows:DATA.salesRet,cols:docCols(true)});
+SCREENS.receipts=listScreen({id:"receipts",group:"Sales",title:"Receipt Vouchers",tag:"UI",banner:uiBanner,rows:DATA.receipts,cols:docCols(false)});
+SCREENS.purchInv=listScreen({id:"purchInv",group:"Procurement",title:"Purchase Invoices",tag:"UI",banner:uiBanner+'<div class="banner block">'+ic('alert')+'<div><b>Purchase-VAT posting is an open hole (D-11).</b> The screen shows VAT; how it would post is undecided and not built.</div></div>',rows:DATA.purchInv,cols:docCols(true)});
+SCREENS.purchRet=listScreen({id:"purchRet",group:"Procurement",title:"Purchase Returns",tag:"UI",banner:uiBanner,rows:DATA.purchRet,cols:docCols(true)});
+SCREENS.payments=listScreen({id:"payments",group:"Procurement",title:"Payment Vouchers",tag:"UI",banner:uiBanner,rows:DATA.payments,cols:docCols(false)});
+
+/* finance — blocked */
+SCREENS.coa=function(){
+  return phead({crumbs:["Finance","Chart of Accounts"],title:"Chart of Accounts",tag:"BLK",desc:"The screen is buildable; its content is blocked."})+
+  '<div class="banner block">'+ic('alert')+'<div><b>Blocked — decision D-03.</b> The real chart of accounts has not been supplied by the client. No account tree is invented here. When the export arrives and the posting rules are signed (D-00), this screen fills with the real chart.</div></div>'+
+  '<div class="card"><div class="state">'+ic('book')+'<h4>No chart loaded</h4><p>The account structure will appear once the client exports their real chart of accounts and it is approved.</p></div></div>';
+};
+SCREENS.soa=function(){
+  return phead({crumbs:["Finance","Statement of Account"],title:"Statement of Account",tag:"BLK",desc:"Reads the ledger — which does not exist yet."})+
+  '<div class="banner block">'+ic('alert')+'<div><b>Blocked.</b> A statement reads posted movements from the ledger. There is no ledger until the posting engine exists (gated on D-00, D-01, C-02), so no statement can be produced. Showing invented balances here would be a fabrication, which the engineering constitution forbids.</div></div>'+
+  '<div class="card"><div class="state">'+ic('scroll')+'<h4>No ledger to read</h4><p>This screen activates when posting goes live.</p></div></div>';
+};
+
+/* stock */
+SCREENS.inventory=function(){
+  return phead({crumbs:["Stock","Inventory"],title:"Inventory",desc:"On-hand quantities across warehouses. Quantities are real stock data; stock valuation is a posting concern and not shown."})+
+  '<div class="kpis" style="margin-bottom:16px">'+
+    kpi({icon:"box",label:"Distinct items",value:"312"})+kpi({icon:"boxes",label:"Warehouses",value:"5"})+
+    kpi({icon:"alert",label:"Below reorder",value:"7",note:"needs attention"})+kpi({icon:"book",label:"Stock value",value:"— not posted",na:true})+
+  '</div>'+
+  table({id:"inventory",title:"inventory",rows:DATA.items,cols:[
+    {key:"code",label:"Code",val:r=>'<span class="mono">'+r.code+'</span>'},{key:"name",label:"Item"},
+    {key:"type",label:"Type",val:r=>'<span class="badge">'+r.type+'</span>'},{key:"unit",label:"Unit"},
+    {key:"onhand",label:"On hand",num:true,raw:r=>r.onhand,val:r=>'<b>'+r.onhand+'</b>'},
+    {key:"status",label:"Status",val:r=>r.onhand<50?'<span class="badge warning"><span class="bd"></span>Low</span>':badge(r.status)}]});
+};
+SCREENS.movement=listScreen({id:"movement",group:"Stock",title:"Stock Movement",desc:"Unified view of every stock movement (CR-071). Opening, In and Out remain distinct transaction types internally — this is one screen for readability, not one merged workflow.",rows:DATA.movements,cols:[
+  {key:"no",label:"Number",val:r=>'<span class="mono">'+r.no+'</span>'},{key:"date",label:"Date"},
+  {key:"type",label:"Type",val:r=>'<span class="badge '+(r.type==="Stock In"?"success":r.type==="Stock Out"?"danger":"info")+'">'+r.type+'</span>'},
+  {key:"item",label:"Item"},{key:"wh",label:"Warehouse"},
+  {key:"qty",label:"Qty",num:true,raw:r=>r.qty,val:r=>'<b style="color:'+(r.qty<0?'var(--danger)':'var(--success)')+'">'+(r.qty>0?'+':'')+r.qty+'</b>'},
+  {key:"status",label:"Status",val:r=>badge(r.status)}]});
+function stockCapture(id,title,type){
+  const rows=DATA.movements.filter(m=>m.type===type);
+  return listScreen({id:id,group:"Stock",title:title,tag:"UI",banner:'<div class="banner warn">'+ic('info')+'<div><b>Document capture only.</b> '+title+' is a distinct transaction type. It records quantities; the accounting effect (contra account, valuation) is gated on the chart of accounts (D-03) and the posting engine. No posting happens here.</div></div>',
+    rows:rows.length?rows:DATA.movements.slice(0,5),cols:[
+    {key:"no",label:"Number",val:r=>'<span class="mono">'+r.no+'</span>'},{key:"date",label:"Date"},
+    {key:"item",label:"Item"},{key:"wh",label:"Warehouse"},
+    {key:"qty",label:"Qty",num:true,raw:r=>Math.abs(r.qty),val:r=>Math.abs(r.qty)},{key:"status",label:"Status",val:r=>badge(r.status)}]})();
+}
+SCREENS.opening=()=>stockCapture("opening","Opening Stock","Opening");
+SCREENS.stockin=()=>stockCapture("stockin","Stock In","Stock In");
+SCREENS.stockout=()=>stockCapture("stockout","Stock Out","Stock Out");
+
+/* =================================================================== DRAWERS (detail / create) */
+function openDrawer(id,rid){
+  const meta=SCREENMETA[id];const gated=meta&&(meta.tag==='UI'||meta.tag==='BLK');
+  let title=(t('New')+' '+t(meta?meta.label:id)).replace(/s$/,'');
+  let body='',rec=null;
+  const src={customers:DATA.customers,suppliers:DATA.suppliers,items:DATA.items,users:DATA.users,tenants:DATA.tenants,warehouses:DATA.warehouses,companies:DATA.companies,branches:DATA.branches}[id];
+  if(rid&&src){rec=src.find(x=>x.id==rid);title=t('Detail')+' · '+(rec.name||rec.no||rec.code);}
+  if(id==='customers'){ body=formCust(rec); }
+  else if(id==='suppliers'){ body=formSupp(rec); }
+  else if(id==='items'){ body=formItem(rec); }
+  else if(['salesInv','salesRet','purchInv','purchRet'].includes(id)){ title=t('New')+' '+t(meta.label).replace(/s$/,''); body=formDoc(id); }
+  else if(['receipts','payments'].includes(id)){ body=formVoucher(id); }
+  else if(rec){ body=recDetail(rec); }
+  else{ body=genericForm(id); }
+  const footer=gated?
+    '<span class="badge ni" style="margin-inline-end:auto">UI-only · no posting</span><button class="btn" data-close>'+t('Cancel')+'</button><button class="btn primary" data-save="draft">'+ic('check')+'Save draft</button>':
+    '<button class="btn" data-close>'+t('Cancel')+'</button><button class="btn primary" data-save="save">'+ic('check')+t('Save')+'</button>';
+  showDrawer(title,body,footer);
+}
+function fld(label,val,req,type){return '<div class="field"><label>'+label+(req?' <span class="req">*</span>':'')+'</label>'+((type==='textarea')?'<textarea class="inp">'+(val||'')+'</textarea>':'<input class="inp" value="'+(val||'')+'">')+'<span class="msg">'+label+' is required</span></div>';}
+function sel(label,opts,val){return '<div class="field"><label>'+label+'</label><select class="sel">'+opts.map(o=>'<option '+(o===val?'selected':'')+'>'+o+'</option>').join('')+'</select></div>';}
+function formCust(r){return '<div class="frow">'+fld('Code',r?r.code:pad('C',13))+fld('Name',r?r.name:'',true)+'</div><div class="frow">'+fld('Phone',r?r.phone:'')+sel('City',["Beirut","Tripoli","Sidon","Zahle","Jounieh","Byblos"],r?r.city:'')+'</div><div class="frow">'+fld('Opening balance',r?money(r.balance):'0.00')+sel('Status',["Active","Suspended"],r?r.status:'')+'</div>'+fld('Notes','','','textarea');}
+function formSupp(r){return '<div class="frow">'+fld('Code',r?r.code:pad('S',11))+fld('Name',r?r.name:'',true)+'</div><div class="frow">'+fld('Phone',r?r.phone:'')+sel('Country',["Turkey","Egypt","UAE","Germany","China","Italy","Lebanon"],r?r.country:'')+'</div>'+fld('Notes','','','textarea');}
+function formItem(r){return '<div class="frow">'+fld('Code',r?r.code:pad('IT',13))+fld('Name',r?r.name:'',true)+'</div><div class="frow">'+sel('Type (lookup)',["Grocery","Hardware","Electronics","Textile","Building","Household"],r?r.type:'')+sel('Unit',DATA.units.map(u=>u.code),r?r.unit:'')+'</div><div class="frow">'+fld('Sale price',r?money(r.price):'0.00')+fld('Reorder level','50')+'</div>'+'<div class="field"><label style="display:flex;align-items:center;gap:10px"><span class="switch on"></span> Track in inventory</label></div>';}
+function formDoc(id){
+  const isSale=id.indexOf('sales')===0;const parties=isSale?CUSTNAMES:SUPPNAMES;
+  const lines=gen(3,i=>({item:ITEMS[i][0],qty:rnd(2,40),price:rnd(5,120)+.5}));
+  const sub=lines.reduce((a,l)=>a+l.qty*l.price,0);const vat=Math.round(sub*.11*100)/100;
+  return '<div class="frow">'+sel(isSale?'Customer':'Supplier',parties)+fld('Date','2026-09-03')+'</div>'+
+  '<div class="frow">'+fld('Document no',pad(isSale?'SI-':'PI-',141))+sel('Warehouse',DATA.warehouses.map(w=>w.name))+'</div>'+
+  '<div class="card" style="margin:6px 0 12px"><div class="ch"><h3 style="font-size:13px">Lines</h3><button class="btn sm" style="margin-inline-start:auto" data-toast="Add line (prototype)">'+ic('plus')+'Add line</button></div><div class="tscroll"><table class="dt"><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Amount</th><th></th></tr></thead><tbody>'+
+  lines.map(l=>'<tr><td>'+l.item+'</td><td class="num">'+l.qty+'</td><td class="num mono">'+money(l.price)+'</td><td class="num mono">'+money(l.qty*l.price)+'</td><td class="rowact"><button class="rowbtn">'+ic('trash')+'</button></td></tr>').join('')+
+  '</tbody></table></div></div>'+
+  '<div style="margin-inline-start:auto;max-width:280px">'+
+    '<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--muted)">Subtotal</span><span class="mono">'+money(sub)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--muted)">VAT 11%</span><span class="mono">'+money(vat)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);font-weight:700"><span>Total</span><span class="mono">'+money(sub+vat)+'</span></div>'+
+  '</div>'+
+  '<div class="banner warn" style="margin-top:8px">'+ic('info')+'<div>Totals are computed for display only. Saving keeps a <b>draft</b>; nothing posts to a ledger.</div></div>';
+}
+function formVoucher(id){const isRec=id==='receipts';return '<div class="frow">'+sel(isRec?'Customer':'Supplier',isRec?CUSTNAMES:SUPPNAMES)+fld('Date','2026-09-03')+'</div><div class="frow">'+fld('Voucher no',pad(isRec?'RV-':'PV-',141))+sel('Method',["Cash","Cheque","Bank transfer"])+'</div><div class="frow">'+fld('Amount','0.00',true)+sel('Currency',["USD","LBP"])+'</div>'+fld('Reference / notes','','','textarea')+'<div class="banner warn" style="margin-top:8px">'+ic('info')+'<div>Records the voucher as a draft. The accounting effect is gated (no posting engine in Phase 1).</div></div>';}
+function genericForm(id){return '<div class="frow">'+fld('Name','',true)+fld('Code','')+'</div>'+fld('Description','','','textarea');}
+function recDetail(r){
+  const rows=Object.entries(r).filter(([k])=>k!=='id').map(([k,v])=>'<div><div class="dl">'+k+'</div><div class="dv">'+(typeof v==='number'&&(k==='balance'||k==='price'||k==='sub'||k==='total'||k==='vat')?money(v):v)+'</div></div>');
+  return '<div class="detgrid">'+rows.join('')+'</div>'+
+  '<div class="banner info" style="margin-top:18px">'+ic('info')+'<div>Read-only detail. In the React app this becomes a routed detail view with tabs (overview, activity, documents).</div></div>';
+}
+
+/* =================================================================== RENDER + EVENTS */
+const $=s=>document.querySelector(s);
+function renderNav(){
+  $('#nav').innerHTML=NAV.map(g=>{var col=S.navcol.has(g.g);
+    return '<div class="navgroup'+(col?' col':'')+'">'+
+    (g.g?'<button class="gl" data-navgroup="'+g.g+'">'+t(g.g)+ic('chevd','glc')+'</button>':'')+
+    '<div class="navitems">'+g.items.map(it=>'<a class="navitem '+(it.id===S.screen?'active':'')+'" data-go="'+it.id+'">'+ic(it.icon)+'<span class="lbl">'+t(it.label)+'</span>'+(it.tag?'<span class="tag">'+it.tag+'</span>':'')+'</a>').join('')+'</div></div>';}).join('');
+}
+function rerender(){
+  const fn=SCREENS[S.screen]||SCREENS.dashboard;
+  $('#page').innerHTML=fn();
+  renderNav();
+  $('#ctxCo').textContent=DATA.companies[0].name;
+  $('#main').scrollTop=0;
+}
+function go(id){ if(!SCREENS[id])return; S.screen=id; if(S.tstate[id])S.tstate[id].page=1; rerender(); if(document.getElementById('app').classList.contains('mob'))document.getElementById('app').classList.remove('mob'); }
+
+/* overlays */
+function scrim(cb){let s=document.createElement('div');s.className='scrim';document.body.appendChild(s);requestAnimationFrame(()=>s.classList.add('show'));s.onclick=cb;return s;}
+let curOverlay=null;
+function closeOverlay(){ if(!curOverlay)return; const{el,sc}=curOverlay; el.classList.remove('show'); sc.classList.remove('show'); setTimeout(()=>{el.remove();sc.remove();},200); curOverlay=null; }
+function showDrawer(title,body,footer){
+  const sc=scrim(closeOverlay);
+  const d=document.createElement('aside');d.className='drawer';
+  d.innerHTML='<div class="dh"><h3>'+title+'</h3><button class="icbtn" data-close style="margin-inline-start:auto">'+ic('x')+'</button></div><div class="db">'+body+'</div><div class="df">'+footer+'</div>';
+  document.body.appendChild(d);requestAnimationFrame(()=>d.classList.add('show'));
+  curOverlay={el:d,sc:sc};
+}
+function showDialog(title,msg,onOk,danger){
+  const sc=scrim(closeOverlay);
+  const d=document.createElement('div');d.className='dialog';
+  d.innerHTML='<h3>'+title+'</h3><p>'+msg+'</p><div class="da"><button class="btn" data-close>'+t('Cancel')+'</button><button class="btn '+(danger?'danger':'primary')+'" data-ok>'+(danger?'Delete':'Confirm')+'</button></div>';
+  document.body.appendChild(d);requestAnimationFrame(()=>d.classList.add('show'));
+  curOverlay={el:d,sc:sc};
+  d.querySelector('[data-ok]').onclick=()=>{closeOverlay();onOk&&onOk();};
+}
+function toast(msg,kind){
+  const el=document.createElement('div');el.className='toast '+(kind||'success');
+  el.innerHTML=ic(kind==='danger'?'alert':'check')+'<span>'+msg+'</span>';
+  $('#toasts').appendChild(el);requestAnimationFrame(()=>el.classList.add('show'));
+  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),260);},2600);
+}
+/* command palette */
+function openPalette(){
+  const sc=scrim(closeOverlay);
+  const p=document.createElement('div');p.className='palette';
+  const all=[];NAV.forEach(g=>g.items.forEach(it=>all.push({id:it.id,label:it.label,group:g.g,icon:it.icon,tag:it.tag})));
+  p.innerHTML='<div class="pin">'+ic('search')+'<input placeholder="Search screens, actions…" id="palIn"><span class="kbd" style="font-size:10.5px;border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--faint)">esc</span></div><div class="plist" id="palList"></div>';
+  document.body.appendChild(p);requestAnimationFrame(()=>p.classList.add('show'));
+  curOverlay={el:p,sc:sc};
+  const inp=p.querySelector('#palIn');const list=p.querySelector('#palList');let cur=0;
+  function draw(){const q=inp.value.toLowerCase();const res=all.filter(a=>t(a.label).toLowerCase().includes(q)||a.group.toLowerCase().includes(q));
+    if(cur>=res.length)cur=0;
+    list.innerHTML=res.length?res.map((a,i)=>'<div class="pitem '+(i===cur?'cur':'')+'" data-pal="'+a.id+'">'+ic(a.icon)+'<span>'+t(a.label)+'</span>'+(a.tag?'<span class="badge ni" style="font-size:9px">'+(a.tag==='UI'?'UI-only':'Blocked')+'</span>':'')+'<span class="pg">'+t(a.group)+'</span></div>').join(''):'<div class="state" style="padding:26px"><p>No screens match.</p></div>';
+    list._res=res;}
+  draw();inp.focus();
+  inp.oninput=draw;
+  inp.onkeydown=e=>{const res=list._res||[];if(e.key==='ArrowDown'){cur=Math.min(cur+1,res.length-1);draw();e.preventDefault();}else if(e.key==='ArrowUp'){cur=Math.max(cur-1,0);draw();e.preventDefault();}else if(e.key==='Enter'){if(res[cur]){closeOverlay();go(res[cur].id);}}};
+  list.onclick=e=>{const it=e.target.closest('[data-pal]');if(it){closeOverlay();go(it.getAttribute('data-pal'));}};
+}
+/* floating menus */
+function openMenu(btn,html){
+  closeMenu();
+  const m=document.createElement('div');m.className='menu';m.id='floatMenu';m.innerHTML=html;
+  document.body.appendChild(m);
+  const r=btn.getBoundingClientRect();const w=240;
+  m.style.top=(r.bottom+6)+'px';
+  if(document.dir==='rtl'||document.documentElement.dir==='rtl'){m.style.left=r.left+'px';}
+  else{m.style.left=Math.max(8,r.right-w)+'px';m.style.minWidth=w+'px';}
+  requestAnimationFrame(()=>m.classList.add('show'));
+}
+function closeMenu(){const m=$('#floatMenu');if(m)m.remove();}
+
+/* event delegation */
+document.addEventListener('click',e=>{
+  const T=e.target;
+  const go_=T.closest('[data-go]'); if(go_){go(go_.getAttribute('data-go'));return;}
+  const nw=T.closest('[data-new]'); if(nw){openDrawer(nw.getAttribute('data-new'));return;}
+  const op=T.closest('[data-open]'); if(op){const[id,rid]=op.getAttribute('data-open').split(':');openDrawer(id,rid);return;}
+  const row=T.closest('[data-row]'); if(row&&!T.closest('input,button')){const[id,rid]=row.getAttribute('data-row').split(':');openDrawer(id,rid);return;}
+  if(T.closest('[data-close]')){closeOverlay();return;}
+  const sv=T.closest('[data-save]'); if(sv){ // validate required
+    const dr=T.closest('.drawer');let bad=false;
+    if(dr)dr.querySelectorAll('.field').forEach(f=>{const inp=f.querySelector('.inp');if(f.querySelector('.req')&&inp&&!inp.value.trim()){f.classList.add('err');bad=true;}else f.classList.remove('err');});
+    if(bad){toast('Please fill the required fields','danger');return;}
+    closeOverlay();toast(sv.getAttribute('data-save')==='draft'?'Draft saved (prototype — nothing posted)':'Saved (prototype)');return;}
+  const tg=T.closest('[data-toast]'); if(tg){toast(tg.getAttribute('data-toast'));return;}
+  const sw=T.closest('.switch[data-toggle],.switch[data-perm]'); if(sw){sw.classList.toggle('on');return;}
+  // sort
+  const th=T.closest('th[data-sort]'); if(th){const id=th.getAttribute('data-t');const k=th.getAttribute('data-sort');const st=tstate(id);if(st.sort===k)st.dir*=-1;else{st.sort=k;st.dir=1;}rerender();return;}
+  // pager
+  const pg=T.closest('[data-pg]'); if(pg){const[id,v]=pg.getAttribute('data-pg').split(':');const st=tstate(id);const rows=(SCREENS[S.screen],0);const pages=Math.max(1,Math.ceil((filteredCount(id))/st.per));if(v==='prev')st.page=Math.max(1,st.page-1);else if(v==='next')st.page=Math.min(pages,st.page+1);else st.page=+v;rerender();return;}
+  // select all / row
+  const sa=T.closest('[data-selall]'); if(sa){const id=sa.getAttribute('data-selall');const st=tstate(id);const rows=visibleRows(id);if(rows.every(r=>st.sel.has(r.id)))rows.forEach(r=>st.sel.delete(r.id));else rows.forEach(r=>st.sel.add(r.id));rerender();return;}
+  const sr=T.closest('[data-selrow]'); if(sr){const[id,rid]=sr.getAttribute('data-selrow').split(':');const st=tstate(id);if(st.sel.has(+rid))st.sel.delete(+rid);else st.sel.add(+rid);rerender();return;}
+  const bk=T.closest('[data-bulk]'); if(bk){const[act,id]=bk.getAttribute('data-bulk').split(':');const st=tstate(id);if(act==='clear'){st.sel.clear();rerender();}else{toast(act.charAt(0).toUpperCase()+act.slice(1)+' '+(st.sel.size||'all')+' (prototype)');}return;}
+  // topbar
+  const ng=T.closest('[data-navgroup]'); if(ng){const g=ng.getAttribute('data-navgroup');if(S.navcol.has(g))S.navcol.delete(g);else S.navcol.add(g);renderNav();return;}
+  if(T.closest('#collapseBtn')){document.getElementById('app').classList.toggle('collapsed');S.collapsed=!S.collapsed;return;}
+  if(T.closest('#mobBtn')){document.getElementById('app').classList.toggle('mob');return;}
+  if(T.closest('#searchBtn')){openPalette();return;}
+  if(T.closest('#themeBtn')){toggleTheme();return;}
+  if(T.closest('#langBtn')){toggleLang();return;}
+  if(T.closest('#notifBtn')){openNotif(T.closest('#notifBtn'));return;}
+  if(T.closest('#userBtn')){openUser(T.closest('#userBtn'));return;}
+  if(T.closest('#ctxBtn')){toast('Company / branch switcher (prototype)');return;}
+  const mi=T.closest('#floatMenu [data-mi]'); if(mi){const a=mi.getAttribute('data-mi');closeMenu();if(a==='theme')toggleTheme();else if(a==='lang')toggleLang();else if(SCREENS[a])go(a);else toast(mi.textContent.trim()+' (prototype)');return;}
+  if(!T.closest('#floatMenu')&&!T.closest('#notifBtn')&&!T.closest('#userBtn'))closeMenu();
+});
+document.addEventListener('input',e=>{
+  const s=e.target.closest('[data-search]'); if(s){const id=s.getAttribute('data-search');const st=tstate(id);st.q=s.value;st.page=1;
+    // targeted rerender to keep focus
+    rerender();const ni=document.querySelector('[data-search="'+id+'"]');if(ni){ni.focus();ni.setSelectionRange(ni.value.length,ni.value.length);} }
+});
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();if(curOverlay&&curOverlay.el.classList.contains('palette'))closeOverlay();else{closeOverlay();openPalette();}}
+  if(e.key==='Escape'){closeOverlay();closeMenu();}
+});
+function currentRowsFor(id){
+  const map={tenants:DATA.tenants,sessions:null,companies:DATA.companies,branches:DATA.branches,warehouses:DATA.warehouses,users:DATA.users,audit:DATA.audit,customers:DATA.customers,suppliers:DATA.suppliers,items:DATA.items,units:DATA.units,inventory:DATA.items,movement:DATA.movements,salesInv:DATA.salesInv,salesRet:DATA.salesRet,receipts:DATA.receipts,purchInv:DATA.purchInv,purchRet:DATA.purchRet,payments:DATA.payments};
+  return map[id]||[];
+}
+function filteredCount(id){const st=tstate(id);let rows=currentRowsFor(id);if(st.q){const q=st.q.toLowerCase();rows=rows.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(q)));}return rows.length;}
+function visibleRows(id){const st=tstate(id);let rows=currentRowsFor(id);if(st.q){const q=st.q.toLowerCase();rows=rows.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(q)));}return rows.slice((st.page-1)*st.per,st.page*st.per);}
+
+function openNotif(btn){openMenu(btn,'<div class="mt">Notifications</div>'+
+  [["info","Tenant Highland Agri Co. is provisioning","6m ago"],["warning","7 items below reorder level","1h ago"],["success","Backup completed for 8 tenants","3h ago"],["info","New change request CR-072 logged","Yesterday"]].map(n=>'<div class="notif"><div class="ni" style="background:var(--'+n[0]+'-bg);color:var(--'+n[0]+')">'+ic(n[0]==='warning'?'alert':n[0]==='success'?'check':'info')+'</div><div><div>'+n[1]+'</div><small>'+n[2]+'</small></div></div>').join('')+
+  '<div class="sep"></div><div class="mi" data-mi="audit" style="justify-content:center;color:var(--accent)">View all activity</div>');}
+function openUser(btn){openMenu(btn,'<div style="padding:10px 10px 4px;display:flex;gap:10px;align-items:center"><div class="avatar">AM</div><div><div style="font-weight:600;font-size:13px">Abdullah Al Mamun</div><small style="color:var(--muted);font-size:11.5px">Owner</small></div></div><div class="sep"></div>'+
+  '<div class="mi" data-mi="settings">'+ic('cog')+'System settings</div>'+
+  '<div class="mi" data-mi="theme">'+ic('moon')+'Toggle theme</div>'+
+  '<div class="mi" data-mi="lang">'+ic('globe')+'Language: '+(LANG==='en'?'English':'العربية')+'</div>'+
+  '<div class="sep"></div><div class="mi" data-mi="logout" style="color:var(--danger)">'+ic('logout')+'Sign out</div>');}
+
+function toggleTheme(){ S.theme=S.theme==='light'?'dark':'light'; document.documentElement.setAttribute('data-theme',S.theme);
+  $('#themeBtn').innerHTML=ic(S.theme==='light'?'moon':'sun'); closeMenu(); }
+function toggleLang(){ LANG=LANG==='en'?'ar':'en'; const rtl=LANG==='ar';
+  document.documentElement.lang=LANG; document.documentElement.dir=rtl?'rtl':'ltr';
+  $('#langLbl').textContent=LANG.toUpperCase(); document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');el.textContent=({brand_sub:I18N.ar.brand_sub,ctx_branch:LANG==='ar'?I18N.ar.ctx_branch:'Main branch · USD/LBP',search_ph:LANG==='ar'?I18N.ar.search_ph:'Search or jump to…'}[k])||el.textContent;});
+  closeMenu(); rerender(); }
+
+/* ============================ PHASE-1 REDESIGN ADDITIONS ============================ */
+S.treecol=new Set();
+function ubar(used,cap){var pct=(cap==='∞'||cap==='Unlimited')?8:Math.min(100,Math.round(used/(+cap||1)*100));return '<div style="height:8px;border-radius:6px;background:var(--surface-3);overflow:hidden;margin-top:7px"><div style="height:100%;width:'+pct+'%;background:'+(pct>90?'var(--danger)':'var(--accent)')+'"></div></div>';}
+function stepper(labels,cur){return '<div class="stepper">'+labels.map(function(l,i){var cls=i<cur?'done':i===cur?'cur':'todo';return '<div class="step '+cls+'"><span class="sc">'+(i<cur?'✓':(i+1))+'</span><div><div class="sl">'+l+'</div></div></div>';}).join('')+'</div>';}
+
+/* ---- extra demo data ---- */
+DATA.categories=[["Grocery",42],["Hardware",31],["Electronics",27],["Textile",18],["Building",23],["Household",15]].map(function(c,i){return {id:i+1,code:'CAT'+String(i+1).padStart(2,'0'),name:c[0],items:c[1],status:'Active'};});
+DATA.plans=[
+ {id:1,name:"Starter",users:"5",companies:"1",wh:"2",storage:"5 GB",modules:["Sales","Stock"],pop:false},
+ {id:2,name:"Business",users:"25",companies:"3",wh:"10",storage:"50 GB",modules:["Sales","Procurement","Stock","Finance"],pop:true},
+ {id:3,name:"Enterprise",users:"Unlimited",companies:"8+",wh:"Unlimited",storage:"500 GB",modules:["All modules","Offline client","Advanced analytics"],pop:false}
+];
+DATA.subs=DATA.tenants.map(function(tn){return {id:tn.id,tenant:tn.name,plan:tn.plan,cycle:tn.plan==='Trial'?'—':'Monthly',renewal:tn.plan==='Trial'?'2026-09-14':('2026-'+String(10+(tn.id%3)).padStart(2,'0')+'-'+String(1+(tn.id*2)%27).padStart(2,'0')),seats:rnd(3,24),seatcap:tn.plan==='Enterprise'?'∞':tn.plan==='Business'?25:5,status:tn.status==='Suspended'?'Past due':tn.status==='Trial'?'Trialing':'Active'};});
+DATA.platformUsers=[["Abdullah Al Mamun","Platform Owner","Owner"],["Nadia Semaan","Platform Admin","Admin"],["Provisioning Service","Automation","Service"],["Rami Haddad","Support Operator","Support"],["Lea Khoury","Security Admin","Security"]].map(function(u,i){return {id:i+1,name:u[0],role:u[1],kind:u[2],last:["2m ago","1h ago","—","20m ago","Yesterday"][i],status:i===2?'Service':'Active'};});
+DATA.jobs=[["Nightly balance snapshot","Scheduled","Succeeded","02:00","1.4s"],["Provisioning: Highland Agri Co.","Provisioning","Running","09:03","—"],["Backup: 8 tenants","Scheduled","Succeeded","03:10","46s"],["Email: password reset","Queue","Succeeded","09:41","0.2s"],["Migration runner v14","Scheduled","Failed","01:12","—"],["Search reindex","Scheduled","Succeeded","04:00","12s"]].map(function(j,i){return {id:i+1,name:j[0],type:j[1],result:j[2],when:j[3],dur:j[4]};});
+/* Top-level classes are the client's real chart (screenshot, 3 Sep 2026). Sub-accounts below are
+   illustrative standard Lebanese/PCG codes — the client's own sub-accounts and codes are still pending
+   the full export (D-03). */
+DATA.accounts=[
+ {c:"1",n:"Equity & Contingencies",t:"Class",kids:[
+   {c:"101",n:"Capital",t:"Equity"},{c:"106",n:"Reserves",t:"Equity"},{c:"12",n:"Result of the year",t:"Equity"},{c:"15",n:"Provisions for contingencies",t:"Equity"}]},
+ {c:"2",n:"Fixed Assets",t:"Class",kids:[
+   {c:"21",n:"Tangible fixed assets",t:"Asset"},{c:"24",n:"Equipment & vehicles",t:"Asset"},{c:"28",n:"Accumulated depreciation",t:"Asset"}]},
+ {c:"3",n:"Inventories",t:"Class",kids:[
+   {c:"31",n:"Merchandise",t:"Asset"},{c:"37",n:"Goods inventory",t:"Asset"}]},
+ {c:"4",n:"Third Parties",t:"Class",kids:[
+   {c:"401",n:"Suppliers",t:"Liability"},{c:"411",n:"Customers",t:"Asset"},
+   {c:"44",n:"State — VAT & taxes",t:"Liability",kids:[{c:"4425",n:"Deductible VAT",t:"Asset",note:true},{c:"4457",n:"Collected VAT",t:"Liability",note:true}]},
+   {c:"421",n:"Personnel",t:"Liability"}]},
+ {c:"5",n:"Cash & Banks",t:"Class",kids:[
+   {c:"512",n:"Bank accounts",t:"Asset"},{c:"53",n:"Cash box",t:"Asset"},{c:"514",n:"Cheques",t:"Asset"}]},
+ {c:"6",n:"Expenses & Charges",t:"Class",kids:[
+   {c:"60",n:"Purchases (COGS)",t:"Expense"},{c:"62",n:"External services",t:"Expense"},{c:"64",n:"Personnel costs",t:"Expense"},{c:"66",n:"Financial charges",t:"Expense"}]},
+ {c:"7",n:"Revenues",t:"Class",kids:[
+   {c:"70",n:"Sales of merchandise",t:"Revenue"},{c:"706",n:"Services",t:"Revenue"},{c:"76",n:"Financial income",t:"Revenue"}]}
+];
+DATA.statement=(function(){var open=1250.00,bal=open;var seed=[["2026-08-03","Sales Invoice SI-0131",1820.50,0],["2026-08-07","Receipt Voucher RV-0120",0,900.00],["2026-08-12","Sales Invoice SI-0134",640.00,0],["2026-08-18","Sales Return SR-0044",0,120.00],["2026-08-22","Sales Invoice SI-0138",2260.00,0],["2026-08-28","Receipt Voucher RV-0126",0,1500.00]];return {open:open,rows:seed.map(function(r,i){bal=bal+r[2]-r[3];return {id:i+1,date:r[0],ref:r[1],debit:r[2],credit:r[3],bal:bal};}),close:bal};})();
+
+/* ---- tree ---- */
+function filterTree(nodes,q){var out=[];nodes.forEach(function(nd){var kids=nd.kids?filterTree(nd.kids,q):[];var self=(nd.c+' '+nd.n).toLowerCase().indexOf(q)>=0;if(self||kids.length){var cp=Object.assign({},nd);cp.kids=self?(nd.kids||[]):kids;out.push(cp);}});return out;}
+function tree(nodes,forceOpen){
+  function row(nd){var has=nd.kids&&nd.kids.length;var col=!forceOpen&&S.treecol.has(nd.c);
+    var h='<div class="tnode '+((nd.t==='Header'||nd.t==='Class')?'hd ':'')+(col?'col':'')+'"><span class="tw '+(has?'':'leaf')+'"'+(has?' data-tw="'+nd.c+'"':'')+'>'+(has?ic('chevd'):'')+'</span>'+
+      '<span class="tcode">'+nd.c+'</span><span class="tname">'+nd.n+'</span>'+(nd.note?' <span class="demo">VAT · rule pending D-11</span>':'')+'<span class="ttype">'+nd.t+'</span></div>';
+    if(has)h+='<div class="tchild'+(col?' hide':'')+'">'+nd.kids.map(row).join('')+'</div>';
+    return h;}
+  return '<div class="tree">'+nodes.map(row).join('')+'</div>';
+}
+
+/* ---- rebuilt Finance screens ---- */
+SCREENS.coa=function(){
+  var q=S.coaq||'';var nodes=q?filterTree(DATA.accounts,q):DATA.accounts;
+  return phead({crumbs:["Finance","Chart of Accounts"],title:"Chart of Accounts",desc:"The account hierarchy the tenant will post against.",acts:'<button class="btn" data-toast="Expand all (prototype)">'+ic('layers')+'Expand all</button><button class="btn primary" data-new="coa">'+ic('plus')+'New account</button>'})+
+  '<div class="banner info">'+ic('info')+'<div><b>Top level = the client’s real chart</b> (the 7 classes supplied 3 Sep). Sub-accounts shown are <b>illustrative standard codes</b> — the client’s own sub-accounts, full codes and any USD/LBP currency suffix are <b>still pending the full export</b> (D-03/D-05). <b>How entries post is pending accounting sign-off</b> (D-00) — no posting rule is implemented here.</div></div>'+
+  '<div class="card"><div class="tbar"><div class="tinput">'+ic('search')+'<input placeholder="Search code or name…" value="'+q+'" data-search-tree></div><span class="demo" style="margin-inline-start:auto">Demo data</span></div><div style="padding:8px 8px 12px">'+tree(nodes,!!q)+'</div></div>';
+};
+SCREENS.soa=function(){
+  var st=DATA.statement;
+  var rowsHtml='<tr><td>2026-08-01</td><td>Opening balance</td><td class="num">—</td><td class="num">—</td><td class="num mono"><b>'+money(st.open)+'</b></td></tr>'+
+    st.rows.map(function(r){return '<tr><td>'+r.date+'</td><td>'+r.ref+'</td><td class="num mono">'+(r.debit?money(r.debit):'—')+'</td><td class="num mono">'+(r.credit?money(r.credit):'—')+'</td><td class="num mono">'+money(r.bal)+'</td></tr>';}).join('');
+  return phead({crumbs:["Finance","Statement of Account"],title:"Statement of Account",desc:"Account activity over a period, with running balance.",acts:'<button class="btn" data-toast="Export PDF (prototype)">'+ic('print')+'Export</button>'})+
+  '<div class="banner info">'+ic('info')+'<div><b>Demonstration data.</b> The figures below are sample data to show the statement experience. They are <b>not verified accounting</b>: real balances appear once the posting engine is live (D-00) and the tenant’s chart is loaded (D-03).</div></div>'+
+  '<div class="card" style="margin-bottom:14px"><div class="cb"><div class="frow">'+
+    '<div class="field"><label>Account / Party</label><select class="sel"><option>Cedar Distributors (Customer)</option><option>Levant Supplies SARL</option><option>Accounts Receivable — 1130</option></select></div>'+
+    '<div class="field"><label>From</label><input class="inp" value="2026-08-01"></div>'+
+    '<div class="field"><label>To</label><input class="inp" value="2026-08-31"></div>'+
+    '<div class="field" style="justify-content:flex-end"><button class="btn primary" data-toast="Statement generated (demo)">'+ic('search')+'Generate</button></div></div></div></div>'+
+  '<div class="card"><div class="ch"><h3>Cedar Distributors · Aug 2026</h3><span class="demo" style="margin-inline-start:auto">Demo data</span></div>'+
+  '<div class="tscroll"><table class="dt"><thead><tr><th>Date</th><th>Reference</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th></tr></thead><tbody>'+rowsHtml+'</tbody>'+
+  '<tfoot><tr style="font-weight:700;background:var(--surface-2)"><td colspan="4" style="text-align:end">Closing balance</td><td class="num mono">'+money(st.close)+'</td></tr></tfoot></table></div></div>';
+};
+
+/* ---- Master data: Categories ---- */
+SCREENS.categories=listScreen({id:"categories",group:"Master Data",title:"Categories",desc:"Product categories used to classify items.",rows:DATA.categories,cols:[
+  {key:"code",label:"Code",val:function(r){return '<span class="mono">'+r.code+'</span>';}},{key:"name",label:"Category"},
+  {key:"items",label:"Items",num:true,raw:function(r){return r.items;}},{key:"status",label:"Status",val:function(r){return badge(r.status);}}]});
+
+/* ---- Business: My Subscription (read-only) ---- */
+SCREENS.mysub=function(){
+  return phead({crumbs:["Account","My Subscription"],title:"My Subscription",desc:"Your current plan and usage. To change plan, contact your Trend account manager."})+
+  '<div class="banner info">'+ic('info')+'<div>This is your business’s own subscription view — read-only. Platform-wide subscription administration lives in the Owner Console, not here.</div></div>'+
+  '<div class="two">'+
+    '<div class="card"><div class="ch"><h3>Current plan</h3><span class="badge success" style="margin-inline-start:auto"><span class="bd"></span>Active</span></div><div class="cb">'+
+      '<div style="font-size:26px;font-weight:700;color:var(--brand-navy)">Business</div><div style="color:var(--muted);font-size:13px;margin-bottom:14px">Billed monthly · renews 2026-10-01</div>'+
+      '<div class="detgrid"><div><div class="dl">Users</div><div class="dv">18 / 25'+ubar(18,25)+'</div></div>'+
+      '<div><div class="dl">Companies</div><div class="dv">3 / 3'+ubar(3,3)+'</div></div>'+
+      '<div><div class="dl">Warehouses</div><div class="dv">5 / 10'+ubar(5,10)+'</div></div>'+
+      '<div><div class="dl">Storage</div><div class="dv">21 GB / 50 GB'+ubar(21,50)+'</div></div></div>'+
+      '<div style="margin-top:16px"><button class="btn" data-toast="A request would be sent to your account manager (prototype)">'+ic('trend')+'Request plan change</button></div></div></div>'+
+    '<div class="card"><div class="ch"><h3>Enabled modules</h3></div><div class="cb">'+
+      [["Sales",true],["Procurement",true],["Stock",true],["Finance & Accounting",true],["Offline desktop client",false],["Advanced analytics",false]].map(function(m){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)"><span style="color:'+(m[1]?'var(--success)':'var(--faint)')+'">'+ic(m[1]?'check':'x')+'</span><span style="'+(m[1]?'':'color:var(--faint)')+'">'+m[0]+'</span>'+(m[1]?'':'<span class="badge ni" style="margin-inline-start:auto">Not in plan</span>')+'</div>';}).join('')+
+    '</div></div>'+
+  '</div>';
+};
+
+/* ---- Stock: intelligent movement ---- */
+SCREENS.movement=function(){
+  var tab=S.movtab||'All';var rows=DATA.movements.filter(function(m){return tab==='All'||m.type===tab;});
+  return phead({crumbs:["Stock","Stock Movement"],title:"Stock Movement",desc:"Every movement in one place. Opening, Stock In and Stock Out stay distinct transaction types — this screen unifies viewing and capture (CR-071).",acts:'<button class="btn primary" data-new="movement">'+ic('plus')+'New movement</button>'})+
+  '<div class="banner warn">'+ic('info')+'<div><b>Capture only.</b> Movements record quantities; the accounting/valuation effect is gated on the chart of accounts (D-03) and the posting engine.</div></div>'+
+  '<div class="tabs" style="margin-bottom:14px">'+['All','Opening','Stock In','Stock Out'].map(function(x){return '<button class="tab '+(x===tab?'on':'')+'" data-movtab="'+x+'">'+x+'</button>';}).join('')+'</div>'+
+  table({id:"movement",title:"movement",rows:rows,cols:[
+    {key:"no",label:"Number",val:function(r){return '<span class="mono">'+r.no+'</span>';}},{key:"date",label:"Date"},
+    {key:"type",label:"Type",val:function(r){return '<span class="badge '+(r.type==="Stock In"?"success":r.type==="Stock Out"?"danger":"info")+'">'+r.type+'</span>';}},
+    {key:"item",label:"Item"},{key:"wh",label:"Warehouse"},
+    {key:"qty",label:"Qty",num:true,raw:function(r){return r.qty;},val:function(r){return '<b style="color:'+(r.qty<0?'var(--danger)':'var(--success)')+'">'+(r.qty>0?'+':'')+r.qty+'</b>';}},
+    {key:"status",label:"Status",val:function(r){return badge(r.status);}}]});
+};
+
+/* ---- Owner: subscriptions list, plans, platform users, operations, activity ---- */
+SCREENS.subscriptions=function(){
+  return phead({crumbs:["Platform","Subscriptions"],title:"Subscriptions",desc:"Every tenant subscription, its cycle, renewal and seat usage.",acts:'<button class="btn" data-toast="Export (prototype)">'+ic('paperclip')+'Export</button>'})+
+  '<div class="banner info">'+ic('info')+'<div><b>Mechanism preview.</b> Plans and pricing are not commercially defined yet (④) — names shown are placeholders. Seat and renewal data is demonstration data.</div></div>'+
+  table({id:"subs",title:"subscriptions",rows:DATA.subs,cols:[
+    {key:"tenant",label:"Tenant"},{key:"plan",label:"Plan",val:function(r){return '<span class="badge info">'+r.plan+'</span>';}},
+    {key:"cycle",label:"Billing"},{key:"renewal",label:"Renews"},
+    {key:"seats",label:"Seats",num:true,raw:function(r){return r.seats;},val:function(r){return r.seats+' / '+r.seatcap;}},
+    {key:"status",label:"Status",val:function(r){return badge(r.status==='Past due'?'Suspended':r.status==='Trialing'?'Trial':'Active');}}]});
+};
+SCREENS.plans=function(){
+  return phead({crumbs:["Platform","Plans"],title:"Plan Management",desc:"The plans a tenant can subscribe to, and what each includes."})+
+  '<div class="banner info">'+ic('info')+'<div><b>No commercial pricing is defined</b> (④). Feature sets below are placeholders to show plan structure; the owner sets real plans and prices later.</div></div>'+
+  '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">'+
+  DATA.plans.map(function(p){return '<div class="card" style="'+(p.pop?'border-color:var(--accent)':'')+'"><div class="cb">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between"><h3 style="margin:0">'+p.name+'</h3>'+(p.pop?'<span class="badge info">Popular</span>':'')+'</div>'+
+    '<div style="font-size:28px;font-weight:700;color:var(--faint);margin:8px 0 2px">—</div><small style="color:var(--muted)">pricing to be defined</small>'+
+    '<div class="detgrid" style="margin-top:14px;grid-template-columns:1fr 1fr"><div><div class="dl">Users</div><div class="dv">'+p.users+'</div></div><div><div class="dl">Companies</div><div class="dv">'+p.companies+'</div></div><div><div class="dl">Warehouses</div><div class="dv">'+p.wh+'</div></div><div><div class="dl">Storage</div><div class="dv">'+p.storage+'</div></div></div>'+
+    '<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">'+p.modules.map(function(m){return '<div style="display:flex;gap:8px;align-items:center;padding:4px 0;font-size:13px"><span style="color:var(--success)">'+ic('check')+'</span>'+m+'</div>';}).join('')+'</div>'+
+    '<button class="btn" style="width:100%;justify-content:center;margin-top:14px" data-toast="Edit plan '+p.name+' (prototype)">'+ic('edit')+'Manage plan</button></div></div>';}).join('')+'</div>';
+};
+SCREENS.platformUsers=function(){
+  return phead({crumbs:["Operations","Platform Users"],title:"Platform Users",desc:"People and services that operate the Trend platform itself — distinct from a tenant’s business users.",acts:'<button class="btn primary" data-toast="Invite platform user (prototype)">'+ic('plus')+'Invite</button>'})+
+  '<div class="banner info">'+ic('info')+'<div>These are <b>platform</b> operators (owner, admins, support, security). A tenant’s own users live inside that tenant’s Business Console.</div></div>'+
+  table({id:"platformUsers",title:"platform users",rows:DATA.platformUsers,cols:[
+    {key:"name",label:"Name"},{key:"role",label:"Platform role"},
+    {key:"kind",label:"Type",val:function(r){return '<span class="badge '+(r.kind==='Service'?'info':'')+'">'+r.kind+'</span>';}},
+    {key:"last",label:"Last active"},{key:"status",label:"Status",val:function(r){return badge(r.status);}}]});
+};
+SCREENS.operations=function(){
+  var ht=[["API gateway","hup","Operational","check"],["Database","hup","Operational","check"],["Background jobs","hwarn","1 failed job","alert"],["Sync service","hup","Operational","check"],["Storage","hup","62% used","check"]];
+  return phead({crumbs:["Operations","Platform Health"],title:"Platform Health & Operations",desc:"Service status, background jobs and alerts across the platform."})+
+  '<div class="banner warn">'+ic('info')+'<div><b>Prototype monitoring.</b> These indicators are demonstration data, not a live production monitor.</div></div>'+
+  '<div class="health" style="margin-bottom:16px">'+ht.map(function(h){return '<div class="htile"><div class="hi '+h[1]+'">'+ic(h[3])+'</div><div><b>'+h[0]+'</b><small>'+h[2]+'</small></div></div>';}).join('')+'</div>'+
+  '<div class="card"><div class="ch"><h3>Background jobs</h3><span class="demo" style="margin-inline-start:auto">Demo data</span></div><div class="tscroll"><table class="dt"><thead><tr><th>Job</th><th>Type</th><th>Result</th><th>Started</th><th class="num">Duration</th><th></th></tr></thead><tbody>'+
+  DATA.jobs.map(function(j){return '<tr><td>'+j.name+'</td><td><span class="badge">'+j.type+'</span></td><td>'+badge(j.result==='Succeeded'?'Active':j.result==='Failed'?'Suspended':'Provisioning').replace('Active','Succeeded').replace('Suspended','Failed').replace('Provisioning','Running')+'</td><td>'+j.when+'</td><td class="num mono">'+j.dur+'</td><td class="rowact">'+(j.result==='Failed'?'<button class="rowbtn" data-toast="Retry job (prototype)">'+ic('trend')+'</button>':'')+'</td></tr>';}).join('')+
+  '</tbody></table></div></div>';
+};
+SCREENS.activity=function(){
+  var cur=DATA.tenants.filter(function(t){return t.status==='Provisioning';})[0];
+  var rows=DATA.tenants.map(function(tn){return {id:tn.id,when:tn.created,tenant:tn.name,event:tn.status==='Provisioning'?'Provisioning started':tn.status==='Trial'?'Trial created':tn.status==='Suspended'?'Suspended':'Activated',status:tn.status};});
+  return phead({crumbs:["Operations","Provisioning & Activity"],title:"Provisioning & Activity",desc:"Tenant lifecycle across the platform: register → subscribe → provision → activate → company setup → admin → ready (ADR-024)."})+
+  '<div class="card" style="margin-bottom:16px"><div class="ch"><h3>In progress · '+(cur?cur.name:'—')+'</h3><span class="badge info" style="margin-inline-start:auto"><span class="bd"></span>Provisioning</span></div><div class="cb">'+
+    stepper(["Register","Subscribe","Provision","Activate","Company setup","Admin","Ready"],2)+'</div></div>'+
+  '<div class="card"><div class="ch"><h3>Lifecycle events</h3><span class="demo" style="margin-inline-start:auto">Demo data</span></div><div style="height:6px"></div>'+
+  table({id:"activity",title:"activity",rows:rows,cols:[
+    {key:"when",label:"Date"},{key:"tenant",label:"Tenant"},{key:"event",label:"Event"},{key:"status",label:"Status",val:function(r){return badge(r.status);}}]})+'</div>';
+};
+S.tstate.subs={sort:null,dir:1,q:"",page:1,per:9,sel:new Set()};
+S.tstate.platformUsers={sort:null,dir:1,q:"",page:1,per:10,sel:new Set()};
+S.tstate.activity={sort:null,dir:1,q:"",page:1,per:20,sel:new Set()};
+S.tstate.categories={sort:null,dir:1,q:"",page:1,per:10,sel:new Set()};
+
+/* ---- richer detail drawers ---- */
+function detFoot(){return '<button class="btn" data-close>Close</button><button class="btn primary" data-toast="Edit (prototype)">'+ic('edit')+'Edit</button>';}
+function dtabsBar(labels){return '<div class="dtabs">'+labels.map(function(l,i){return '<button class="dtab '+(i===0?'on':'')+'" data-dtab="'+i+'">'+l+'</button>';}).join('')+'</div>';}
+function dhead(initials,name,sub,status){return '<div class="dhead"><div class="dav">'+initials+'</div><div><h4>'+name+'</h4><div class="dsub">'+sub+'</div></div><div style="margin-inline-start:auto">'+(status?badge(status):'')+'</div></div>';}
+function initials(n){return n.split(' ').slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();}
+function tenantDetail(r){
+  var sub=DATA.subs.find(function(s){return s.id==r.id;})||{};
+  var cur=r.status==='Active'?7:r.status==='Provisioning'?2:r.status==='Trial'?3:r.status==='Suspended'?7:0;
+  return dhead(initials(r.name),r.name,r.code+' · '+r.plan+' plan',r.status)+
+   dtabsBar(["Overview","Subscription","Modules","Provisioning","Activity"])+
+   '<div class="dpanel on" data-dp="0"><div class="detgrid"><div><div class="dl">Code</div><div class="dv mono">'+r.code+'</div></div><div><div class="dl">Plan</div><div class="dv">'+r.plan+'</div></div><div><div class="dl">Companies</div><div class="dv">'+r.companies+'</div></div><div><div class="dl">Users</div><div class="dv">'+r.users+'</div></div><div><div class="dl">Created</div><div class="dv">'+r.created+'</div></div><div><div class="dl">Status</div><div class="dv">'+badge(r.status)+'</div></div></div>'+
+     '<div style="margin-top:18px;display:flex;gap:8px">'+(r.status==='Suspended'?'<button class="btn primary" data-confirm="Reactivate tenant|Reactivate '+r.name+'? Users will regain access.|Tenant reactivated (prototype)">'+ic('check')+'Reactivate</button>':'<button class="btn danger" data-danger data-confirm="Suspend tenant|Suspend '+r.name+'? Users will lose access until reactivated.|Tenant suspended (prototype)">'+ic('alert')+'Suspend</button>')+'<button class="btn" data-toast="Impersonate / view tenant (prototype)">'+ic('eye')+'View tenant</button></div></div>'+
+   '<div class="dpanel" data-dp="1"><div class="detgrid"><div><div class="dl">Plan</div><div class="dv">'+(sub.plan||r.plan)+'</div></div><div><div class="dl">Billing</div><div class="dv">'+(sub.cycle||'—')+'</div></div><div><div class="dl">Renews</div><div class="dv">'+(sub.renewal||'—')+'</div></div><div><div class="dl">Status</div><div class="dv">'+(sub.status||'—')+'</div></div></div><div style="margin-top:14px"><div class="dl">Seats used</div><div class="dv">'+(sub.seats||0)+' / '+(sub.seatcap||'—')+ubar(sub.seats||0,sub.seatcap||1)+'</div></div><div class="demo" style="margin-top:14px">Demo data</div></div>'+
+   '<div class="dpanel" data-dp="2">'+[["Sales",true],["Procurement",true],["Finance & Accounting",r.plan==='Enterprise'],["Stock",true],["Offline client",r.plan==='Enterprise'],["Advanced analytics",r.plan==='Enterprise']].map(function(m){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)"><span style="color:'+(m[1]?'var(--success)':'var(--faint)')+'">'+ic(m[1]?'check':'x')+'</span><span style="'+(m[1]?'':'color:var(--faint)')+'">'+m[0]+'</span>'+(m[1]?'<span class="badge success" style="margin-inline-start:auto"><span class="bd"></span>Enabled</span>':'<span class="badge ni" style="margin-inline-start:auto">Off</span>')+'</div>';}).join('')+'<div class="demo" style="margin-top:12px">Entitlements · platform config</div></div>'+
+   '<div class="dpanel" data-dp="3">'+stepper(["Register","Subscribe","Provision","Activate","Company setup","Admin","Ready"],cur)+'<p style="color:var(--muted);font-size:12.5px;margin-top:14px">Lifecycle per ADR-024. Provisioning is idempotent and resumable.</p></div>'+
+   '<div class="dpanel" data-dp="4">'+DATA.audit.slice(0,5).map(function(a){return '<div class="act"><div class="ai">'+ic('clock')+'</div><div><div>'+a.action+'</div><small>'+a.user+'</small></div><div class="at">'+a.when+'</div></div>';}).join('')+'<div class="demo" style="margin-top:10px">Demo data</div></div>';
+}
+function companyDetail(r){
+  return dhead(initials(r.name),r.name,r.code+' · '+r.branches+' branches',r.status)+
+   dtabsBar(["Profile","Addresses","Contacts","Settings"])+
+   '<div class="dpanel on" data-dp="0"><div class="detgrid"><div><div class="dl">Legal name</div><div class="dv">'+r.name+' SARL</div></div><div><div class="dl">Code</div><div class="dv mono">'+r.code+'</div></div><div><div class="dl">Tax / VAT no</div><div class="dv mono">LB-'+(1000+r.id)+'-VAT</div></div><div><div class="dl">Industry</div><div class="dv">Wholesale &amp; distribution</div></div><div><div class="dl">Branches</div><div class="dv">'+r.branches+'</div></div><div><div class="dl">Users</div><div class="dv">'+r.users+'</div></div></div></div>'+
+   '<div class="dpanel" data-dp="1"><div class="card" style="box-shadow:none"><div class="cb"><div class="dl">Head office</div><div class="dv">Beirut Central District, Building 12, Floor 3<br>Beirut, Lebanon</div></div></div><div class="card" style="box-shadow:none;margin-top:10px"><div class="cb"><div class="dl">Warehouse address</div><div class="dv">Sin el Fil Industrial Zone, Beirut, Lebanon</div></div></div></div>'+
+   '<div class="dpanel" data-dp="2"><div class="detgrid"><div><div class="dl">Primary contact</div><div class="dv">George Khoury</div></div><div><div class="dl">Phone</div><div class="dv">+961 1 234 567</div></div><div><div class="dl">Email</div><div class="dv mono">info@'+r.code.toLowerCase()+'.example</div></div></div></div>'+
+   '<div class="dpanel" data-dp="3"><div class="field"><label>Base currency</label><select class="sel"><option>USD</option></select></div><div class="field"><label>Secondary currency</label><select class="sel"><option>LBP</option></select></div><div class="field"><label style="display:flex;align-items:center;gap:10px"><span class="switch '+(r.vat?'on':'')+'" data-toggle></span> VAT enabled</label></div></div>';
+}
+function userDetail(r){
+  return dhead(initials(r.name),r.name,r.email,r.status)+
+   dtabsBar(["Profile","Access","Activity"])+
+   '<div class="dpanel on" data-dp="0"><div class="detgrid"><div><div class="dl">Email</div><div class="dv mono">'+r.email+'</div></div><div><div class="dl">Role</div><div class="dv"><span class="badge">'+r.role+'</span></div></div><div><div class="dl">Status</div><div class="dv">'+badge(r.status)+'</div></div><div><div class="dl">Last seen</div><div class="dv">'+r.lastseen+'</div></div></div>'+
+     '<div style="margin-top:16px;display:flex;gap:8px">'+(r.status==='Disabled'?'<button class="btn primary" data-confirm="Enable user|Re-enable '+r.name+'?|User enabled (prototype)">'+ic('check')+'Enable</button>':'<button class="btn danger" data-danger data-confirm="Disable user|Disable '+r.name+'? They will lose access immediately.|User disabled (prototype)">'+ic('x')+'Disable</button>')+'<button class="btn" data-toast="Resend invite (prototype)">'+ic('inbox')+'Resend invite</button></div></div>'+
+   '<div class="dpanel" data-dp="1"><div class="dl">Role</div><div class="dv" style="margin-bottom:12px"><span class="badge">'+r.role+'</span></div><div class="dl">Branch scope</div><div class="dv" style="margin-bottom:12px">Main branch, Tripoli branch</div><div class="dl">Warehouse scope</div><div class="dv" style="margin-bottom:12px">Main Store — Beirut</div><div class="dl">Can see cost prices</div><div class="dv">'+(r.role==='Accountant'||r.role==='Owner'||r.role==='Admin'?'Yes':'No')+'</div></div>'+
+   '<div class="dpanel" data-dp="2">'+DATA.audit.filter(function(a){return a.user===r.name;}).slice(0,4).map(function(a){return '<div class="act"><div class="ai">'+ic('clock')+'</div><div><div>'+a.action+'</div><small>'+a.scope+'</small></div><div class="at">'+a.when+'</div></div>';}).join('')+'<div class="demo" style="margin-top:10px">Demo data</div></div>';
+}
+function roleDetail(r){
+  var assigned=DATA.users.filter(function(u){return u.role===r.name;});
+  return dhead(ic('shield'),r.name,r.desc,'Active')+
+   dtabsBar(["Summary","Assigned users"])+
+   '<div class="dpanel on" data-dp="0"><p style="color:var(--muted);font-size:13px">'+r.desc+'</p><div class="detgrid"><div><div class="dl">Permissions</div><div class="dv">'+r.perms+'</div></div><div><div class="dl">Users</div><div class="dv">'+r.users+'</div></div></div><div style="margin-top:14px"><button class="btn" data-go="permissions">'+ic('key')+'Open permission matrix</button></div></div>'+
+   '<div class="dpanel" data-dp="1">'+(assigned.length?assigned.map(function(u){return '<div class="act"><div class="ai">'+ic('user')+'</div><div><div>'+u.name+'</div><small>'+u.email+'</small></div><div class="at">'+u.lastseen+'</div></div>';}).join(''):'<div class="state">'+ic('users')+'<h4>No users</h4><p>No users are assigned to this role yet.</p></div>')+'</div>';
+}
+function movementForm(){
+  var type=S.newmovtype||'Stock In';
+  return '<div class="field"><label>Movement type <span class="req">*</span></label><div style="display:flex;gap:8px">'+['Opening','Stock In','Stock Out'].map(function(x){return '<button class="chip '+(x===type?'on':'')+'" data-newmov="'+x+'">'+x+'</button>';}).join('')+'</div></div>'+
+   '<div class="frow"><div class="field"><label>Date <span class="req">*</span></label><input class="inp" value="2026-09-03"></div><div class="field"><label>Warehouse <span class="req">*</span></label><select class="sel">'+DATA.warehouses.map(function(w){return '<option>'+w.name+'</option>';}).join('')+'</select></div></div>'+
+   '<div class="frow"><div class="field"><label>Product <span class="req">*</span></label><select class="sel">'+DATA.items.map(function(it){return '<option>'+it.name+'</option>';}).join('')+'</select></div><div class="field"><label>Quantity <span class="req">*</span></label><input class="inp" value="10"></div></div>'+
+   '<div class="frow"><div class="field"><label>Reference</label><input class="inp" placeholder="e.g. GRN-0231 / supplier DO"></div><div class="field"><label>Reason / notes</label><input class="inp" placeholder="'+(type==='Stock Out'?'e.g. damage, transfer':type==='Opening'?'opening count':'goods received')+'"></div></div>'+
+   '<div class="banner warn" style="margin-top:6px">'+ic('info')+'<div>Records a <b>'+type+'</b> movement (draft). The valuation/accounting effect is not posted — gated on the chart of accounts and posting engine.</div></div>';
+}
+var _openDrawer=openDrawer;
+openDrawer=function(id,rid){
+  var src={tenants:DATA.tenants,companies:DATA.companies,users:DATA.users,roles:DATA.roles}[id];
+  var rec=(rid&&src)?src.find(function(x){return x.id==rid;}):null;
+  if(id==='tenants'&&rec)return showDrawer('Tenant · '+rec.name,tenantDetail(rec),detFoot());
+  if(id==='companies'&&rec)return showDrawer('Company · '+rec.name,companyDetail(rec),detFoot());
+  if(id==='users'&&rec)return showDrawer('User · '+rec.name,userDetail(rec),detFoot());
+  if(id==='roles'&&rec)return showDrawer('Role · '+rec.name,roleDetail(rec),detFoot());
+  if(id==='movement')return showDrawer('New stock movement',movementForm(),'<span class="badge ni" style="margin-inline-start:auto">Capture only</span><button class="btn" data-close>Cancel</button><button class="btn primary" data-save="draft">'+ic('check')+'Save movement</button>');
+  return _openDrawer(id,rid);
+};
+
+/* ---- extra event + input listeners ---- */
+document.addEventListener('click',function(e){
+  var tw=e.target.closest('[data-tw]'); if(tw){var c=tw.getAttribute('data-tw');if(S.treecol.has(c))S.treecol.delete(c);else S.treecol.add(c);rerender();return;}
+  var mt=e.target.closest('[data-movtab]'); if(mt){S.movtab=mt.getAttribute('data-movtab');rerender();return;}
+  var nm=e.target.closest('[data-newmov]'); if(nm){S.newmovtype=nm.getAttribute('data-newmov');var dr=nm.closest('.drawer');if(dr){var body=dr.querySelector('.db');body.innerHTML=movementForm();}return;}
+  var dt=e.target.closest('[data-dtab]'); if(dt){var dr2=dt.closest('.drawer');if(dr2){var i=dt.getAttribute('data-dtab');dr2.querySelectorAll('.dtab').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-dtab')===i);});dr2.querySelectorAll('.dpanel').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-dp')===i);});}return;}
+  var cf=e.target.closest('[data-confirm]'); if(cf){var parts=cf.getAttribute('data-confirm').split('|');var danger=cf.hasAttribute('data-danger');closeOverlay();setTimeout(function(){showDialog(parts[0],parts[1],function(){toast(parts[2]||'Done (prototype)');},danger);},210);return;}
+  if(e.target.closest('#authSignin')){document.getElementById('authgate').classList.add('hidden');return;}
+  if(e.target.closest('#authForgot')){document.getElementById('authLogin').classList.add('hidden');document.getElementById('authReset').classList.remove('hidden');return;}
+  if(e.target.closest('#authSendReset')){toast('Reset link sent (prototype)');document.getElementById('authReset').classList.add('hidden');document.getElementById('authLogin').classList.remove('hidden');return;}
+  if(e.target.closest('#authBack')){document.getElementById('authReset').classList.add('hidden');document.getElementById('authLogin').classList.remove('hidden');return;}
+  if(e.target.closest('[data-mi="logout"]')){document.getElementById('authgate').classList.remove('hidden');}
+});
+document.addEventListener('input',function(e){var s=e.target.closest('[data-search-tree]');if(s){S.coaq=s.value.toLowerCase();rerender();var ni=document.querySelector('[data-search-tree]');if(ni){ni.focus();ni.setSelectionRange(ni.value.length,ni.value.length);}}});
+/* auth kind label per app */
+(function(){var k=document.getElementById('authKind');if(k)k.textContent=document.body.dataset.app==='owner'?'Owner Console':'Business Console';})();
+
+/* ============================ STAGE B — ENTERPRISE FLOORPLANS ============================ */
+function cnt(arr,s){return arr.filter(function(r){return r.status===s;}).length;}
+function newBtn(id){return '<button class="btn primary" data-new="'+id+'">'+ic('plus')+'New</button>';}
+var docViews=[{label:'All'},{label:'Drafts',f:function(r){return r.status==='Draft';}},{label:'Printed',f:function(r){return r.status==='Printed';}}];
+var mdViews=[{label:'All'},{label:'Active',f:function(r){return r.status==='Active';}},{label:'Other',f:function(r){return r.status&&r.status!=='Active';}}];
+
+/* ---- floorplan renderers ---- */
+function workspace(cfg){
+  return phead({crumbs:cfg.crumbs,title:cfg.title,desc:cfg.desc,acts:cfg.acts})+
+  '<div class="cues">'+cfg.cues.map(function(c){return '<button class="cue '+(c.tone||'')+'" '+(c.go?'data-go="'+c.go+'"':(c.obj?'data-obj="'+c.obj+'"':''))+'><div class="cl">'+ic(c.icon)+c.label+'</div><div class="cv">'+c.value+'</div><div class="cd">'+(c.desc||'')+'</div></button>';}).join('')+'</div>'+
+  (cfg.body||'');
+}
+function objectPage(cfg){
+  var tab=(S.obj&&typeof S.obj.tab==='number')?S.obj.tab:0;
+  return crumbs(cfg.crumbs)+
+  '<div class="objhdr"><div class="oh-main"><div class="oh-av">'+cfg.icon+'</div><div><h1>'+cfg.title+'</h1><div class="oh-sub">'+cfg.sub+'</div></div><div class="oh-status">'+(cfg.status?badge(cfg.status):'')+'</div><div class="oh-actions">'+(cfg.actions||'')+'</div></div>'+
+  (cfg.facts?'<div class="oh-facts">'+cfg.facts.map(function(f){return '<div><div class="dl">'+f[0]+'</div><div class="dv">'+f[1]+'</div></div>';}).join('')+'</div>':'')+'</div>'+
+  '<div class="objtabs" role="tablist">'+cfg.sections.map(function(s,i){return '<button class="objtab '+(i===tab?'on':'')+'" data-otab="'+i+'">'+s.label+'</button>';}).join('')+'</div>'+
+  cfg.sections.map(function(s,i){return '<div class="opanel '+(i===tab?'on':'')+'" data-op="'+i+'">'+s.html+'</div>';}).join('');
+}
+function relRow(icon,title,sub,right,objAttr){return '<div class="rel" '+(objAttr||'data-toast="Open related (prototype)"')+'><div class="ri">'+ic(icon)+'</div><div class="rt"><b>'+title+'</b><small>'+sub+'</small></div>'+(right?'<div class="rm">'+right+'</div>':'')+'<div class="rlink">'+ic('chevr')+'</div></div>';}
+function actList(rows){return rows.map(function(a){return '<div class="act"><div class="ai">'+ic('clock')+'</div><div><div>'+a.action+'</div><small>'+a.user+' · '+a.scope+'</small></div><div class="at">'+a.when+'</div></div>';}).join('');}
+
+/* ---- object routing ---- */
+S.obj=null;
+function openObject(type,id){S.obj={type:type,id:id,tab:0};S.screen='__object';rerender();}
+SCREENS.__object=function(){ if(!S.obj)return SCREENS.dashboard(); return objectPageFor(S.obj.type,S.obj.id); };
+function openCreate(type){S.createType=type;S.screen='__create';rerender();}
+SCREENS.__create=function(){ return createWorkspace(S.createType); };
+
+function objectPageFor(type,id){
+  if(['salesInv','salesRet','receipts','purchInv','purchRet','payments'].indexOf(type)>=0)return docObjectPage(type,id);
+  if(type==='tenants')return tenantObjectPage(id);
+  if(type==='items')return itemObjectPage(id);
+  if(type==='customers'||type==='suppliers')return partyObjectPage(type,id);
+  if(type==='users')return userObjectPage(id);
+  return SCREENS.dashboard();
+}
+function docObjectPage(listId,id){
+  var rec=(DATA[listId]||[]).find(function(x){return x.id==id;}); if(!rec)return SCREENS.dashboard();
+  var meta=SCREENMETA[listId]||{group:'Sales',label:listId}; var isSale=listId.indexOf('sales')===0||listId==='receipts';
+  var voucher=listId==='receipts'||listId==='payments';
+  var lines=gen(3,function(i){return {item:ITEMS[i][0],qty:rnd(2,40),price:rnd(5,120)+.5};});
+  var linesHtml='<div class="tscroll"><table class="dt"><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Amount</th></tr></thead><tbody>'+lines.map(function(l){return '<tr><td>'+l.item+'</td><td class="num">'+l.qty+'</td><td class="num mono">'+money(l.price)+'</td><td class="num mono">'+money(l.qty*l.price)+'</td></tr>';}).join('')+'</tbody></table></div>';
+  var payLabel=isSale?'Receipts':'Payments'; var payList=isSale?DATA.receipts:DATA.payments;
+  var payHtml=voucher?'<p style="color:var(--muted);font-size:13px">This voucher records a '+(isSale?'receipt':'payment')+'. Allocation to open documents is a workflow concept; settlement is <b>not posted</b> (gate D-00).</p>':
+    payList.slice(0,2).map(function(p){return relRow('wallet',p.no,p.party+' · '+p.date,money(p.total),'data-obj="'+(isSale?'receipts':'payments')+':'+p.id+'"');}).join('')+'<div class="demo" style="margin-top:8px">Demo data · not settled (D-00)</div>';
+  var partyType=isSale?'customers':'suppliers'; var party=(isSale?DATA.customers:DATA.suppliers).find(function(x){return x.name===rec.party;});
+  return objectPage({
+    crumbs:[meta.group,'<a data-go="'+listId+'" style="cursor:pointer;color:var(--accent)">'+meta.label+'</a>',rec.no],
+    icon:ic(voucher?'wallet':(isSale?'cart':'truck')), title:rec.no, sub:rec.party+' · '+rec.date, status:rec.status,
+    actions:'<button class="btn" data-toast="Print (prototype)">'+ic('print')+'Print</button><button class="btn primary" data-toast="Edit (prototype)">'+ic('edit')+'Edit</button>',
+    facts:[['Party',party?'<a data-obj="'+partyType+':'+party.id+'" style="color:var(--accent);cursor:pointer">'+rec.party+'</a>':rec.party],['Date',rec.date],['Subtotal',money(rec.sub)],['VAT',rec.vat?money(rec.vat):'—'],['Total','<b>'+money(rec.total)+'</b>']],
+    sections:[
+      {label:'Overview',html:'<div class="banner warn">'+ic('info')+'<div><b>Document capture only.</b> This document is not posted to any ledger (gate C-16 / D-00).</div></div><div class="oh-facts" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">'+[['Reference',rec.no],['Branch','Main branch'],['Created by','Rana Haddad'],['Status',badge(rec.status)]].map(function(f){return '<div><div class="dl">'+f[0]+'</div><div class="dv">'+f[1]+'</div></div>';}).join('')+'</div>'},
+      voucher?{label:'Allocation',html:payHtml}:{label:'Items',html:linesHtml},
+      voucher?{label:'Related',html:relRow('cart','Related invoices','Documents this settles','—')+'<div class="demo" style="margin-top:8px">Demo</div>'}:{label:payLabel,html:payHtml},
+      {label:'Returns',html:relRow('cart','No returns','This document has no linked returns','')},
+      {label:'Activity',html:actList(DATA.audit.slice(0,4))+'<div class="demo" style="margin-top:8px">Demo data</div>'},
+      {label:'Audit',html:actList(DATA.audit.slice(2,6))+'<div class="demo" style="margin-top:8px">Demo data</div>'}
+    ]
+  });
+}
+function tenantObjectPage(id){
+  var r=DATA.tenants.find(function(x){return x.id==id;}); if(!r)return SCREENS.dashboard();
+  var sub=DATA.subs.find(function(s){return s.id==r.id;})||{}; var cur=r.status==='Active'?7:r.status==='Provisioning'?2:r.status==='Trial'?3:r.status==='Suspended'?7:0;
+  var comps=DATA.companies.slice(0,r.companies||1);
+  return objectPage({
+    crumbs:['Tenants','<a data-go="tenants" style="cursor:pointer;color:var(--accent)">Tenants</a>',r.name],
+    icon:initials(r.name), title:r.name, sub:r.code+' · '+r.plan+' plan', status:r.status,
+    actions:(r.status==='Suspended'?'<button class="btn primary" data-confirm="Reactivate tenant|Reactivate '+r.name+'?|Reactivated (prototype)">'+ic('check')+'Reactivate</button>':'<button class="btn danger" data-danger data-confirm="Suspend tenant|Suspend '+r.name+'? Users lose access.|Suspended (prototype)">'+ic('alert')+'Suspend</button>')+'<button class="btn" data-toast="View tenant (prototype)">'+ic('eye')+'View</button>',
+    facts:[['Code',r.code],['Plan',r.plan],['Companies',r.companies],['Users',r.users],['Created',r.created]],
+    sections:[
+      {label:'Overview',html:'<div class="oh-facts" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">'+[['Status',badge(r.status)],['Lifecycle stage',r.status==='Provisioning'?'Provisioning':'Active'],['Region','Beirut'],['Onboarded',r.created]].map(function(f){return '<div><div class="dl">'+f[0]+'</div><div class="dv">'+f[1]+'</div></div>';}).join('')+'</div>'},
+      {label:'Companies',html:comps.map(function(c){return relRow('building',c.name,c.code+' · '+c.branches+' branches','');}).join('')},
+      {label:'Users',html:'<p style="color:var(--muted);font-size:13px">'+r.users+' users across this tenant. Managed inside the tenant’s Business Console.</p>'+relRow('users',r.users+' users','Tenant-scoped identities','')},
+      {label:'Subscription',html:'<div class="oh-facts" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">'+[['Plan',sub.plan||r.plan],['Billing',sub.cycle||'—'],['Renews',sub.renewal||'—'],['Status',sub.status||'—']].map(function(f){return '<div><div class="dl">'+f[0]+'</div><div class="dv">'+f[1]+'</div></div>';}).join('')+'</div><div style="margin-top:12px"><div class="dl">Seats</div><div class="dv">'+(sub.seats||0)+' / '+(sub.seatcap||'—')+ubar(sub.seats||0,sub.seatcap||1)+'</div></div><div class="demo" style="margin-top:10px">Demo data</div>'},
+      {label:'Entitlements',html:[['Sales',true],['Procurement',true],['Finance',r.plan==='Enterprise'],['Stock',true],['Offline client',r.plan==='Enterprise']].map(function(m){return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:'+(m[1]?'var(--success)':'var(--faint)')+'">'+ic(m[1]?'check':'x')+'</span>'+m[0]+(m[1]?'<span class="badge success" style="margin-inline-start:auto"><span class="bd"></span>Enabled</span>':'<span class="badge ni" style="margin-inline-start:auto">Off</span>')+'</div>';}).join('')},
+      {label:'Provisioning',html:stepper(["Register","Subscribe","Provision","Activate","Company setup","Admin","Ready"],cur)+'<p style="color:var(--muted);font-size:12.5px;margin-top:12px">Lifecycle per ADR-024, idempotent and resumable.</p>'},
+      {label:'Audit',html:actList(DATA.audit.slice(0,5))+'<div class="demo" style="margin-top:8px">Demo data</div>'}
+    ]
+  });
+}
+function itemObjectPage(id){
+  var it=DATA.items.find(function(x){return x.id==id;}); if(!it)return SCREENS.dashboard();
+  var whrows=DATA.warehouses.slice(0,4).map(function(w,i){return {wh:w.name,qty:rnd(0,Math.round(it.onhand/2))};});
+  var moves=DATA.movements.filter(function(m){return m.item===it.name;}); if(!moves.length)moves=DATA.movements.slice(0,4);
+  return objectPage({
+    crumbs:['Stock','<a data-go="inventory" style="cursor:pointer;color:var(--accent)">Inventory</a>',it.name],
+    icon:ic('box'), title:it.name, sub:it.code+' · '+it.type, status:it.onhand<50?'Draft':it.status,
+    actions:'<button class="btn" data-toast="Adjust (prototype)">'+ic('edit')+'Adjust</button><button class="btn primary" data-create="salesInv">'+ic('cart')+'Sell</button>',
+    facts:[['Code',it.code],['Category',it.type],['Unit',it.unit],['On hand','<b>'+it.onhand+'</b>'],['Sale price',money(it.price)]],
+    sections:[
+      {label:'Overview',html:'<div class="oh-facts" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">'+[['Reorder level','50'],['Track inventory','Yes'],['Cost','— not posted'],['Valuation','— (D-03)']].map(function(f){return '<div><div class="dl">'+f[0]+'</div><div class="dv">'+f[1]+'</div></div>';}).join('')+'</div>'},
+      {label:'Stock by warehouse',html:'<div class="tscroll"><table class="dt"><thead><tr><th>Warehouse</th><th class="num">On hand</th></tr></thead><tbody>'+whrows.map(function(w){return '<tr><td>'+w.wh+'</td><td class="num"><b>'+w.qty+'</b></td></tr>';}).join('')+'</tbody></table></div><div class="demo" style="margin-top:8px">Demo quantities</div>'},
+      {label:'Movements',html:'<div class="tscroll"><table class="dt"><thead><tr><th>Number</th><th>Date</th><th>Type</th><th class="num">Qty</th></tr></thead><tbody>'+moves.slice(0,6).map(function(m){return '<tr><td class="mono">'+m.no+'</td><td>'+m.date+'</td><td><span class="badge '+(m.type==='Stock In'?'success':m.type==='Stock Out'?'danger':'info')+'">'+m.type+'</span></td><td class="num"><b>'+(m.qty>0?'+':'')+m.qty+'</b></td></tr>';}).join('')+'</tbody></table></div>'},
+      {label:'Documents',html:relRow('cart','Sales invoices','Documents referencing this item','—','data-go="salesInv"')+relRow('truck','Purchase invoices','Documents referencing this item','—','data-go="purchInv"')}
+    ]
+  });
+}
+function partyObjectPage(type,id){
+  var r=DATA[type].find(function(x){return x.id==id;}); if(!r)return SCREENS.dashboard();
+  var isCust=type==='customers'; var docs=isCust?DATA.salesInv:DATA.purchInv;
+  return objectPage({
+    crumbs:['Master Data','<a data-go="'+type+'" style="cursor:pointer;color:var(--accent)">'+(isCust?'Customers':'Suppliers')+'</a>',r.name],
+    icon:initials(r.name), title:r.name, sub:r.code+' · '+(r.city||r.country||''), status:r.status,
+    actions:'<button class="btn" data-go="soa">'+ic('scroll')+'Statement</button><button class="btn primary" data-create="'+(isCust?'salesInv':'purchInv')+'">'+ic('plus')+'New '+(isCust?'invoice':'purchase')+'</button>',
+    facts:[['Code',r.code],['Phone',r.phone],[isCust?'City':'Country',r.city||r.country],['Balance',money2(r.balance,true)]],
+    sections:[
+      {label:'Overview',html:'<div class="oh-facts" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">'+[['Contact',r.name],['Phone',r.phone],['Balance',money2(r.balance,true)],['Status',badge(r.status)]].map(function(f){return '<div><div class="dl">'+f[0]+'</div><div class="dv">'+f[1]+'</div></div>';}).join('')+'</div>'},
+      {label:'Documents',html:'<div class="tscroll"><table class="dt"><thead><tr><th>Number</th><th>Date</th><th class="num">Total</th><th>Status</th></tr></thead><tbody>'+docs.slice(0,6).map(function(d){return '<tr data-obj="'+(isCust?'salesInv':'purchInv')+':'+d.id+'"><td class="mono">'+d.no+'</td><td>'+d.date+'</td><td class="num mono">'+money(d.total)+'</td><td>'+badge(d.status)+'</td></tr>';}).join('')+'</tbody></table></div>'},
+      {label:'Statement',html:'<p style="color:var(--muted);font-size:13px">Full statement with running balance opens in the Statement of Account workspace.</p><button class="btn primary" data-go="soa">'+ic('scroll')+'Open statement</button><div class="demo" style="margin-top:10px">Balances are demo data (D-00)</div>'},
+      {label:'Activity',html:actList(DATA.audit.slice(0,4))+'<div class="demo" style="margin-top:8px">Demo data</div>'}
+    ]
+  });
+}
+function userObjectPage(id){
+  var r=DATA.users.find(function(x){return x.id==id;}); if(!r)return SCREENS.dashboard();
+  return objectPage({
+    crumbs:['Administration','<a data-go="users" style="cursor:pointer;color:var(--accent)">Users</a>',r.name],
+    icon:initials(r.name), title:r.name, sub:r.email, status:r.status,
+    actions:(r.status==='Disabled'?'<button class="btn primary" data-confirm="Enable user|Re-enable '+r.name+'?|Enabled (prototype)">'+ic('check')+'Enable</button>':'<button class="btn danger" data-danger data-confirm="Disable user|Disable '+r.name+'?|Disabled (prototype)">'+ic('x')+'Disable</button>')+'<button class="btn" data-toast="Resend invite (prototype)">'+ic('inbox')+'Resend invite</button>',
+    facts:[['Email',r.email],['Role',r.role],['Last seen',r.lastseen],['Status',badge(r.status)]],
+    sections:[
+      {label:'Profile',html:'<div class="oh-facts" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">'+[['Full name',r.name],['Email',r.email],['Role','<span class="badge">'+r.role+'</span>'],['Status',badge(r.status)]].map(function(f){return '<div><div class="dl">'+f[0]+'</div><div class="dv">'+f[1]+'</div></div>';}).join('')+'</div>'},
+      {label:'Access',html:'<div class="dl">Branch scope</div><div class="dv" style="margin-bottom:12px">Main branch, Tripoli branch</div><div class="dl">Warehouse scope</div><div class="dv" style="margin-bottom:12px">Main Store — Beirut</div><div class="dl">Can see cost prices</div><div class="dv">'+(['Owner','Admin','Accountant'].indexOf(r.role)>=0?'Yes':'No')+'</div>'},
+      {label:'Activity',html:actList(DATA.audit.filter(function(a){return a.user===r.name;}).slice(0,4))+'<div class="demo" style="margin-top:8px">Demo data</div>'}
+    ]
+  });
+}
+
+/* ---- create workspace (full page) ---- */
+function createWorkspace(type){
+  var meta=SCREENMETA[type]||{group:'Sales',label:type}; var isSale=type.indexOf('sales')===0||type==='receipts'; var voucher=type==='receipts'||type==='payments';
+  var parties=isSale?CUSTNAMES:SUPPNAMES; var head='<div class="objhdr"><div class="oh-main"><div><h1>New '+meta.label.replace(/s$/,'')+'</h1><div class="oh-sub">Draft · not posted</div></div><div class="oh-actions"><button class="btn" data-go="'+type+'">Cancel</button><button class="btn primary" data-createsave="'+type+'">'+ic('check')+'Save draft</button></div></div></div>';
+  var body;
+  if(voucher){
+    body='<div class="card"><div class="cb"><div class="frow"><div class="field"><label>'+(isSale?'Customer':'Supplier')+' <span class="req">*</span></label><select class="sel">'+parties.map(function(p){return '<option>'+p+'</option>';}).join('')+'</select></div><div class="field"><label>Date</label><input class="inp" value="2026-09-03"></div></div><div class="frow"><div class="field"><label>Method</label><select class="sel"><option>Cash</option><option>Cheque</option><option>Bank transfer</option></select></div><div class="field"><label>Amount <span class="req">*</span></label><input class="inp" value="0.00"></div></div><div class="field"><label>Reference / notes</label><textarea class="inp"></textarea></div></div></div>';
+  } else {
+    var lines=gen(3,function(i){return {item:ITEMS[i][0],qty:rnd(2,40),price:rnd(5,120)+.5};}); var sub=lines.reduce(function(a,l){return a+l.qty*l.price;},0); var vat=Math.round(sub*.11*100)/100;
+    body='<div class="card" style="margin-bottom:14px"><div class="cb"><div class="frow"><div class="field"><label>'+(isSale?'Customer':'Supplier')+' <span class="req">*</span></label><select class="sel">'+parties.map(function(p){return '<option>'+p+'</option>';}).join('')+'</select></div><div class="field"><label>Date</label><input class="inp" value="2026-09-03"></div><div class="field"><label>Reference</label><input class="inp"></div></div></div></div>'+
+    '<div class="card" style="margin-bottom:14px"><div class="ch"><h3>Lines</h3><button class="btn sm" style="margin-inline-start:auto" data-toast="Add line (prototype)">'+ic('plus')+'Add line</button></div><div class="tscroll"><table class="dt"><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Amount</th><th></th></tr></thead><tbody>'+lines.map(function(l){return '<tr><td>'+l.item+'</td><td class="num">'+l.qty+'</td><td class="num mono">'+money(l.price)+'</td><td class="num mono">'+money(l.qty*l.price)+'</td><td class="rowact"><button class="rowbtn">'+ic('trash')+'</button></td></tr>';}).join('')+'</tbody></table></div></div>'+
+    '<div style="display:flex;justify-content:flex-end"><div style="min-width:280px"><div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--muted)">Subtotal</span><span class="mono">'+money(sub)+'</span></div><div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--muted)">VAT 11%</span><span class="mono">'+money(vat)+'</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);font-weight:700"><span>Total</span><span class="mono">'+money(sub+vat)+'</span></div></div></div>';
+  }
+  return crumbs([meta.group,'<a data-go="'+type+'" style="cursor:pointer;color:var(--accent)">'+meta.label+'</a>','New'])+head+
+    '<div class="banner warn">'+ic('info')+'<div><b>Capture only.</b> Totals compute for display; saving keeps a draft. Nothing posts to a ledger (C-16 / D-00).</div></div>'+body;
+}
+
+/* ---- workspaces ---- */
+SCREENS.dashboard=function(){
+  return workspace({crumbs:["Overview","Home"],title:"Home",desc:"What needs your attention today. Prototype sample data.",acts:'<button class="btn primary" data-create="salesInv">'+ic('plus')+'New invoice</button>',
+    cues:[
+      {icon:"cart",label:"Sales drafts",value:cnt(DATA.salesInv,'Draft'),desc:"awaiting review",go:"salesInv",tone:"warn"},
+      {icon:"truck",label:"Purchase drafts",value:cnt(DATA.purchInv,'Draft'),desc:"awaiting review",go:"purchInv",tone:"warn"},
+      {icon:"boxes",label:"Low-stock items",value:"7",desc:"below reorder",go:"inventory",tone:"danger"},
+      {icon:"wallet",label:"Receipts",value:DATA.receipts.length,desc:"recorded",go:"receipts"},
+      {icon:"book",label:"Ledger",value:"—",desc:"not posted"}
+    ],
+    body:'<div class="wsgrid" style="margin-bottom:14px"><div class="card"><div class="ch"><h3>Document activity</h3><span class="sub">last 8 weeks · drafts captured</span></div><div class="cb">'+bars([12,18,9,22,16,25,14,20],["W1","W2","W3","W4","W5","W6","W7","W8"])+'<div class="legend"><span><i style="background:var(--brand-navy)"></i>Captured documents</span><span style="color:var(--faint)"><i style="background:var(--border-strong)"></i>Ledger unavailable until posting is live</span></div></div></div>'+
+    '<div class="card"><div class="ch"><h3>Draft mix</h3></div><div class="cb" style="display:flex;gap:16px;align-items:center">'+donut([{v:cnt(DATA.salesInv,'Draft'),color:'#12204F'},{v:cnt(DATA.purchInv,'Draft'),color:'#12788E'},{v:6,color:'#8DC637'}])+'<div class="legend" style="margin:0;flex-direction:column;gap:8px"><span><i style="background:#12204F"></i>Sales</span><span><i style="background:#12788E"></i>Purchase</span><span><i style="background:#8DC637"></i>Stock</span></div></div></div></div>'+
+    '<div class="wsgrid"><div class="card"><div class="ch"><h3>Recent activity</h3><a class="sub" data-go="audit" style="margin-inline-start:auto;color:var(--accent);cursor:pointer">View audit</a></div><div class="cb" style="padding-top:6px">'+actList(DATA.audit.slice(0,6))+'</div></div>'+
+    '<div class="card"><div class="ch"><h3>Quick create</h3></div><div class="cb"><div class="qa">'+[["Sales invoice","cart","salesInv"],["Purchase invoice","truck","purchInv"],["Receipt","wallet","receipts"],["Stock movement","trend","movement"]].map(function(q){return '<button class="qab" data-create="'+q[2]+'"><div class="qi">'+ic(q[1])+'</div><b>'+q[0]+'</b><small>New</small></button>';}).join('')+'</div></div></div></div>'});
+};
+SCREENS.salesws=function(){
+  return workspace({crumbs:["Sales","Workspace"],title:"Sales Workspace",desc:"Operational overview for Sales.",acts:'<button class="btn primary" data-create="salesInv">'+ic('plus')+'New invoice</button>',
+    cues:[{icon:"edit",label:"Draft invoices",value:cnt(DATA.salesInv,'Draft'),desc:"to review",go:"salesInv",tone:"warn"},{icon:"check",label:"Printed",value:cnt(DATA.salesInv,'Printed'),desc:"this period",go:"salesInv",tone:"ok"},{icon:"wallet",label:"Receipts",value:DATA.receipts.length,desc:"recorded",go:"receipts"},{icon:"cart",label:"Returns",value:DATA.salesRet.length,desc:"recorded",go:"salesRet"}],
+    body:'<div class="wsgrid"><div class="card"><div class="ch"><h3>Recent sales invoices</h3><a class="sub" data-go="salesInv" style="margin-inline-start:auto;color:var(--accent);cursor:pointer">View all</a></div><div class="tscroll"><table class="dt"><thead><tr><th>Number</th><th>Customer</th><th class="num">Total</th><th>Status</th></tr></thead><tbody>'+DATA.salesInv.slice(0,6).map(function(r){return '<tr data-obj="salesInv:'+r.id+'"><td class="mono">'+r.no+'</td><td>'+r.party+'</td><td class="num mono">'+money(r.total)+'</td><td>'+badge(r.status)+'</td></tr>';}).join('')+'</tbody></table></div></div>'+
+    '<div class="card"><div class="ch"><h3>Attention</h3></div><div class="cb">'+relRow('edit',cnt(DATA.salesInv,'Draft')+' draft invoices','need review before issuing','','data-go="salesInv"')+relRow('users','Customer balances','Review outstanding receivables','','data-go="customers"')+'</div></div></div>'});
+};
+SCREENS.procws=function(){
+  return workspace({crumbs:["Procurement","Workspace"],title:"Procurement Workspace",desc:"Operational overview for Procurement.",acts:'<button class="btn primary" data-create="purchInv">'+ic('plus')+'New purchase</button>',
+    cues:[{icon:"edit",label:"Draft purchases",value:cnt(DATA.purchInv,'Draft'),desc:"to review",go:"purchInv",tone:"warn"},{icon:"check",label:"Printed",value:cnt(DATA.purchInv,'Printed'),desc:"this period",go:"purchInv",tone:"ok"},{icon:"wallet",label:"Payments",value:DATA.payments.length,desc:"recorded",go:"payments"},{icon:"truck",label:"Returns",value:DATA.purchRet.length,desc:"recorded",go:"purchRet"}],
+    body:'<div class="wsgrid"><div class="card"><div class="ch"><h3>Recent purchase invoices</h3><a class="sub" data-go="purchInv" style="margin-inline-start:auto;color:var(--accent);cursor:pointer">View all</a></div><div class="tscroll"><table class="dt"><thead><tr><th>Number</th><th>Supplier</th><th class="num">Total</th><th>Status</th></tr></thead><tbody>'+DATA.purchInv.slice(0,6).map(function(r){return '<tr data-obj="purchInv:'+r.id+'"><td class="mono">'+r.no+'</td><td>'+r.party+'</td><td class="num mono">'+money(r.total)+'</td><td>'+badge(r.status)+'</td></tr>';}).join('')+'</tbody></table></div></div>'+
+    '<div class="card"><div class="ch"><h3>Attention</h3></div><div class="cb">'+relRow('alert','Purchase-VAT rule pending','Decision D-11 blocks purchase-VAT posting','','data-toast="See open decisions"')+relRow('truck','Supplier balances','Review payables','','data-go="suppliers"')+'</div></div></div>'});
+};
+SCREENS.stockws=function(){
+  return workspace({crumbs:["Stock","Workspace"],title:"Stock Workspace",desc:"Inventory overview and recent movements.",acts:'<button class="btn primary" data-new="movement">'+ic('plus')+'New movement</button>',
+    cues:[{icon:"box",label:"Items tracked",value:DATA.items.length,desc:"active catalogue",go:"inventory"},{icon:"boxes",label:"Warehouses",value:DATA.warehouses.length,desc:"locations",go:"warehouses"},{icon:"alert",label:"Low stock",value:"7",desc:"below reorder",go:"inventory",tone:"danger"},{icon:"trend",label:"Movements",value:DATA.movements.length,desc:"recorded",go:"movement"}],
+    body:'<div class="wsgrid"><div class="card"><div class="ch"><h3>Recent movements</h3><a class="sub" data-go="movement" style="margin-inline-start:auto;color:var(--accent);cursor:pointer">View all</a></div><div class="tscroll"><table class="dt"><thead><tr><th>Number</th><th>Type</th><th>Item</th><th class="num">Qty</th></tr></thead><tbody>'+DATA.movements.slice(0,6).map(function(m){return '<tr><td class="mono">'+m.no+'</td><td><span class="badge '+(m.type==='Stock In'?'success':m.type==='Stock Out'?'danger':'info')+'">'+m.type+'</span></td><td>'+m.item+'</td><td class="num"><b>'+(m.qty>0?'+':'')+m.qty+'</b></td></tr>';}).join('')+'</tbody></table></div></div>'+
+    '<div class="card"><div class="ch"><h3>Attention</h3></div><div class="cb">'+relRow('alert','7 items below reorder','Review and replenish','','data-go="inventory"')+relRow('book','Valuation not posted','Stock value awaits posting engine (D-00)','','')+'</div></div></div>'});
+};
+
+/* ---- Owner: Security Center ---- */
+SCREENS.security=function(){
+  var events=[["Failed sign-in attempt","zrahme@trend.app","3 attempts, locked","High","5m ago"],["Suspicious login blocked","unknown · 5.62.x.x","geo mismatch","High","2h ago"],["MFA enabled","naziz@trend.app","platform admin","OK","1h ago"],["Password reset completed","gkhoury@trend.app","self-service","OK","Yesterday"],["Admin role granted","amamun@trend.app","platform owner","Info","2d ago"]];
+  return workspace({crumbs:["Operations","Security"],title:"Security Center",desc:"Authentication and administrative security events across the platform.",
+    cues:[{icon:"shield",label:"Failed sign-ins (24h)",value:"12",desc:"across tenants",tone:"warn"},{icon:"alert",label:"Suspicious events",value:"2",desc:"need review",tone:"danger"},{icon:"key",label:"MFA coverage",value:"78%",desc:"platform admins",tone:"ok"},{icon:"user",label:"Active sessions",value:"34",desc:"platform users"}],
+    body:'<div class="banner warn">'+ic('info')+'<div><b>Prototype security view.</b> Demonstration data — not a live security monitor. Backend requirements (event pipeline, alerting, retention) are documented separately.</div></div><div class="card"><div class="ch"><h3>Recent security events</h3><span class="demo" style="margin-inline-start:auto">Demo data</span></div><div class="tscroll"><table class="dt"><thead><tr><th>Event</th><th>Actor</th><th>Detail</th><th>Severity</th><th>When</th></tr></thead><tbody>'+events.map(function(e){return '<tr><td>'+e[0]+'</td><td class="mono">'+e[1]+'</td><td>'+e[2]+'</td><td><span class="badge '+(e[3]==='High'?'danger':e[3]==='OK'?'success':'info')+'">'+e[3]+'</span></td><td>'+e[4]+'</td></tr>';}).join('')+'</tbody></table></div></div>'});
+};
+
+/* ---- Business: Onboarding wizard ---- */
+SCREENS.onboarding=function(){
+  var steps=["Company","Organization","Branches","Warehouses","Preferences","First user"];var cur=S.onbStep||0;
+  var panels=[
+    '<h3 style="margin:0 0 12px">Company information</h3><div class="frow"><div class="field"><label>Company name <span class="req">*</span></label><input class="inp" value="Beirut Trading Co."></div><div class="field"><label>Legal name</label><input class="inp" value="Beirut Trading Co. SARL"></div></div><div class="frow"><div class="field"><label>Tax / VAT number</label><input class="inp"></div><div class="field"><label>Industry</label><input class="inp" value="Wholesale & distribution"></div></div>',
+    '<h3 style="margin:0 0 12px">Organization</h3><p style="color:var(--muted);font-size:13px">Set your base currency and fiscal year. No accounting rules are configured here.</p><div class="frow"><div class="field"><label>Base currency</label><select class="sel"><option>USD</option></select></div><div class="field"><label>Secondary currency</label><select class="sel"><option>LBP</option></select></div></div><div class="field"><label>Fiscal year start</label><select class="sel"><option>1 January</option></select></div>',
+    '<h3 style="margin:0 0 12px">Branches</h3><p style="color:var(--muted);font-size:13px">Add the branches you operate. You can add more later.</p><div class="field"><label>First branch name</label><input class="inp" value="Main branch"></div>',
+    '<h3 style="margin:0 0 12px">Warehouses</h3><p style="color:var(--muted);font-size:13px">Add the places your stock lives.</p><div class="field"><label>First warehouse</label><input class="inp" value="Main Store — Beirut"></div>',
+    '<h3 style="margin:0 0 12px">Preferences</h3><div class="field"><label style="display:flex;align-items:center;gap:10px"><span class="switch on" data-toggle></span> Enable VAT for this company</label></div><div class="field"><label>Default language</label><select class="sel"><option>English</option><option>العربية</option></select></div>',
+    '<h3 style="margin:0 0 12px">First administrator</h3><div class="frow"><div class="field"><label>Full name <span class="req">*</span></label><input class="inp"></div><div class="field"><label>Email <span class="req">*</span></label><input class="inp"></div></div><div class="demo grey">Invite is a prototype — not sent</div>'
+  ];
+  return phead({crumbs:["Setup","Onboarding"],title:"Company Setup",desc:"Guided first-run setup. Complete these steps to start using Trend."})+
+  '<div class="banner info">'+ic('info')+'<div>Prototype wizard demonstrating the onboarding flow. No accounting-sensitive defaults are set.</div></div>'+
+  '<div class="wizgrid"><div class="card" style="padding:8px"><div class="wizrail">'+steps.map(function(s,i){return '<button class="wizstep '+(i<cur?'done':i===cur?'cur':'')+'" data-onbnav="'+i+'" style="width:100%;text-align:start;background:0;border:0"><span class="wc">'+(i<cur?'✓':(i+1))+'</span>'+s+'</button>';}).join('')+'</div></div>'+
+  '<div class="card"><div class="cb">'+panels[cur]+'<div style="margin-top:20px;display:flex;gap:8px;justify-content:flex-end">'+(cur>0?'<button class="btn" data-onbnav="'+(cur-1)+'">Back</button>':'')+(cur<steps.length-1?'<button class="btn primary" data-onbnav="'+(cur+1)+'">Continue</button>':'<button class="btn primary" data-toast="Setup complete (prototype)">'+ic('check')+'Finish setup</button>')+'</div></div></div></div>';
+};
+
+/* ---- upgraded lists: views + object navigation ---- */
+function docList(id,title,group,withVat,extraBanner){return function(){ return phead({crumbs:[group,title],title:title,tag:"UI",desc:"",acts:'<button class="btn primary" data-create="'+id+'">'+ic('plus')+'New</button>'})+uiBanner+(extraBanner||'')+table({id:id,title:title,rows:DATA[id],cols:docCols(withVat),views:docViews,obj:id,canNew:false}); };}
+SCREENS.salesInv=docList('salesInv','Sales Invoices','Sales',true);
+SCREENS.salesRet=docList('salesRet','Sales Returns','Sales',true);
+SCREENS.receipts=docList('receipts','Receipt Vouchers','Sales',false);
+SCREENS.purchInv=docList('purchInv','Purchase Invoices','Procurement',true,'<div class="banner block">'+ic('alert')+'<div><b>Purchase-VAT posting is an open hole (D-11).</b> The screen shows VAT; how it posts is undecided and not built.</div></div>');
+SCREENS.purchRet=docList('purchRet','Purchase Returns','Procurement',true);
+SCREENS.payments=docList('payments','Payment Vouchers','Procurement',false);
+SCREENS.customers=function(){return phead({crumbs:["Master Data","Customers"],title:"Customers",desc:"Sales depends on these.",acts:newBtn('customers')})+table({id:"customers",title:"Customers",rows:DATA.customers,views:mdViews,obj:"customers",cols:[{key:"code",label:"Code",val:function(r){return '<span class="mono">'+r.code+'</span>';}},{key:"name",label:"Name"},{key:"phone",label:"Phone"},{key:"city",label:"City"},{key:"balance",label:"Balance",num:true,raw:function(r){return r.balance;},val:function(r){return money2(r.balance,true);}},{key:"status",label:"Status",val:function(r){return badge(r.status);}}]});};
+SCREENS.suppliers=function(){return phead({crumbs:["Master Data","Suppliers"],title:"Suppliers",acts:newBtn('suppliers')})+table({id:"suppliers",title:"Suppliers",rows:DATA.suppliers,views:mdViews,obj:"suppliers",cols:[{key:"code",label:"Code",val:function(r){return '<span class="mono">'+r.code+'</span>';}},{key:"name",label:"Name"},{key:"phone",label:"Phone"},{key:"country",label:"Country"},{key:"balance",label:"Balance",num:true,raw:function(r){return r.balance;},val:function(r){return money2(r.balance);}},{key:"status",label:"Status",val:function(r){return badge(r.status);}}]});};
+SCREENS.items=function(){return phead({crumbs:["Master Data","Items"],title:"Items",desc:"Item type is a maintainable lookup list (CR-070).",acts:newBtn('items')})+table({id:"items",title:"Items",rows:DATA.items,views:mdViews,obj:"items",cols:[{key:"code",label:"Code",val:function(r){return '<span class="mono">'+r.code+'</span>';}},{key:"name",label:"Item"},{key:"type",label:"Type",val:function(r){return '<span class="badge">'+r.type+'</span>';}},{key:"unit",label:"Unit"},{key:"price",label:"Price",num:true,raw:function(r){return r.price;},val:function(r){return money2(r.price);}},{key:"onhand",label:"On hand",num:true,raw:function(r){return r.onhand;}},{key:"status",label:"Status",val:function(r){return badge(r.status);}}]});};
+SCREENS.users=function(){return phead({crumbs:["Administration","Users"],title:"Users",desc:"Users, roles, and last activity.",acts:'<button class="btn primary" data-toast="Invite user (prototype)">'+ic('plus')+'Invite user</button>'})+table({id:"users",title:"Users",rows:DATA.users,views:mdViews,obj:"users",cols:[{key:"name",label:"Name"},{key:"email",label:"Email",val:function(r){return '<span class="mono" style="font-size:12px">'+r.email+'</span>';}},{key:"role",label:"Role",val:function(r){return '<span class="badge">'+r.role+'</span>';}},{key:"lastseen",label:"Last seen"},{key:"status",label:"Status",val:function(r){return badge(r.status);}}]});};
+SCREENS.tenants=function(){return phead({crumbs:["Platform","Tenants"],title:"Tenants",desc:"Tenant lifecycle: create → provisioning → configured → active → suspended → archived (ADR-024).",acts:'<button class="btn primary" data-new="tenants">'+ic('plus')+'New tenant</button>'})+table({id:"tenants",title:"Tenants",rows:DATA.tenants,obj:"tenants",views:[{label:'All'},{label:'Active',f:function(r){return r.status==='Active';}},{label:'Trial',f:function(r){return r.status==='Trial';}},{label:'Suspended',f:function(r){return r.status==='Suspended';}},{label:'Provisioning',f:function(r){return r.status==='Provisioning';}}],cols:[{key:"code",label:"Code",val:function(r){return '<span class="mono">'+r.code+'</span>';}},{key:"name",label:"Tenant"},{key:"plan",label:"Plan",val:function(r){return '<span class="badge info">'+r.plan+'</span>';}},{key:"companies",label:"Companies",num:true,raw:function(r){return r.companies;}},{key:"users",label:"Users",num:true,raw:function(r){return r.users;}},{key:"status",label:"Status",val:function(r){return badge(r.status);}},{key:"created",label:"Created"}]});};
+/* inventory rows open the item explorer object page */
+SCREENS.inventory=function(){
+  return phead({crumbs:["Stock","Inventory"],title:"Inventory",desc:"On-hand quantities across warehouses. Quantities are real stock data; stock valuation is a posting concern and not shown."})+
+  '<div class="kpis" style="margin-bottom:16px">'+
+    kpi({icon:"box",label:"Distinct items",value:"312"})+kpi({icon:"boxes",label:"Warehouses",value:"5"})+
+    kpi({icon:"alert",label:"Below reorder",value:"7",note:"needs attention"})+kpi({icon:"book",label:"Stock value",value:"— not posted",na:true})+
+  '</div>'+
+  table({id:"inventory",title:"inventory",rows:DATA.items,obj:"items",views:mdViews,cols:[
+    {key:"code",label:"Code",val:function(r){return '<span class="mono">'+r.code+'</span>';}},{key:"name",label:"Item"},
+    {key:"type",label:"Type",val:function(r){return '<span class="badge">'+r.type+'</span>';}},{key:"unit",label:"Unit"},
+    {key:"onhand",label:"On hand",num:true,raw:function(r){return r.onhand;},val:function(r){return '<b>'+r.onhand+'</b>';}},
+    {key:"status",label:"Status",val:function(r){return r.onhand<50?'<span class="badge warning"><span class="bd"></span>Low</span>':badge(r.status);}}]});
+};
+
+/* ---- Finance: Linked Accounts (accounting routing — CR-025/026, ADR-013/023) ---- */
+SCREENS.linked=function(){
+  var rows=[
+    ["Sales revenue","70 · Sales of merchandise","Class 7 · per company"],
+    ["AR control (receivable)","411 · Customers","Class 4 · per company · per payment term (ADR-023)"],
+    ["VAT collected (payable)","4457 · Collected VAT","Class 4 · rule pending D-11"],
+    ["AP control (payable)","401 · Suppliers","Class 4 · per company"],
+    ["Inventory","31 · Merchandise","Class 3 · per company · per warehouse"],
+    ["Cost of goods sold","60 · Purchases","Class 6 · per company"],
+    ["Cash / settlement","53 · Cash box","Class 5 · per payment term (ADR-023)"],
+    ["Opening equity","111 · Opening balance","Class 1 · per company (his link)"],
+    ["Stock difference / adjustment","6037 · Stock difference","Class 6 · per company (his link)"],
+    ["Early-settlement discount","—","Per payment term (ADR-023)"]
+  ];
+  return phead({crumbs:["Finance","Linked Accounts"],title:"Linked Accounts",tag:"BLK",desc:"Which account each automatic entry posts to — configured per company, never hard-coded (ADR-013)."})+
+  '<div class="banner info">'+ic('info')+'<div><b>Demonstration mapping.</b> This is the accounting-routing table the client asked for (CR-025/026): every automatic entry resolves its account here, <b>per company</b> — the software never contains an account code (ADR-013). The <b>real account targets come from the client’s chart (D-03)</b>, the precedence when several rules match is <b>undecided (D-01)</b>, and nothing posts until the matrix is signed (D-00).</div></div>'+
+  '<div class="card"><div class="tbar"><div class="tinput">'+ic('search')+'<input placeholder="Search posting purposes…"></div><button class="chip">'+ic('building')+'Company: Beirut Trading Co.</button><span class="demo" style="margin-inline-start:auto">Demo data</span></div>'+
+  '<div class="tscroll"><table class="dt"><thead><tr><th>Posting purpose</th><th>Linked account</th><th>Scope</th><th style="width:44px"></th></tr></thead><tbody>'+
+  rows.map(function(r){return '<tr><td>'+r[0]+'</td><td class="mono">'+r[1]+'</td><td>'+r[2]+(r[1]==='—'?' <span class="badge ni">unmapped</span>':'')+'</td><td class="rowact"><button class="rowbtn" data-toast="Edit mapping (prototype)" aria-label="Edit">'+ic('edit')+'</button></td></tr>';}).join('')+
+  '</tbody></table></div></div>'+
+  '<div class="banner warn" style="margin-top:14px">'+ic('info')+'<div><b>Dynamic linking &amp; currency.</b> A company can create its own payment term and link it to a chart account (ADR-023); whether accounts carry a USD/LBP currency suffix (e.g. <span class="mono">71100001002</span>) depends on decision <b>D-05</b> and changes the size of the chart.</div></div>';
+};
+
+/* ---- Stage B event listeners ---- */
+document.addEventListener('click',function(e){
+  var v=e.target.closest('[data-view]'); if(v){var p=v.getAttribute('data-view').split(':');var st=tstate(p[0]);st.view=+p[1];st.page=1;st.sel.clear();rerender();return;}
+  var cm=e.target.closest('[data-colmenu]'); if(cm){var id=cm.getAttribute('data-colmenu');var st2=tstate(id);var cols=COLREG[id]||[];openMenu(cm,'<div class="mt">Columns</div>'+cols.map(function(c){return '<div class="cm" data-coltoggle="'+id+':'+c.key+'"><span class="chkbx" style="width:14px;height:14px;border:1.5px solid '+(!st2.hidden.has(c.key)?'var(--accent);background:var(--accent)':'var(--border-strong)')+';border-radius:3px;display:inline-grid;place-items:center;color:#fff">'+(!st2.hidden.has(c.key)?'✓':'')+'</span>'+t(c.label)+'</div>';}).join(''));return;}
+  var ct=e.target.closest('[data-coltoggle]'); if(ct){var q=ct.getAttribute('data-coltoggle').split(':');var st3=tstate(q[0]);if(st3.hidden.has(q[1]))st3.hidden.delete(q[1]);else st3.hidden.add(q[1]);closeMenu();rerender();return;}
+  var ob=e.target.closest('[data-obj]'); if(ob&&!e.target.closest('input')){var pp=ob.getAttribute('data-obj').split(':');openObject(pp[0],pp[1]);return;}
+  var ot=e.target.closest('[data-otab]'); if(ot&&!ot.closest('.drawer')){var i=ot.getAttribute('data-otab');if(S.obj)S.obj.tab=+i;document.querySelectorAll('#page .objtab').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-otab')===i);});document.querySelectorAll('#page .opanel').forEach(function(pn){pn.classList.toggle('on',pn.getAttribute('data-op')===i);});return;}
+  var cr=e.target.closest('[data-create]'); if(cr){openCreate(cr.getAttribute('data-create'));return;}
+  var cs=e.target.closest('[data-createsave]'); if(cs){var ty=cs.getAttribute('data-createsave');toast('Draft saved (prototype — nothing posted)');go(ty);return;}
+  var on=e.target.closest('[data-onbnav]'); if(on){S.onbStep=+on.getAttribute('data-onbnav');rerender();return;}
+});
+
+/* boot */
+$('#collapseBtn').innerHTML=ic('panel'); $('#themeBtn').innerHTML=ic('moon'); $('#mobBtn').innerHTML=ic('panel');
+renderNav(); rerender();
+</script>
+</body>
+</html>
